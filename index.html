@@ -236,6 +236,13 @@
   }
   .emergency-top-btn:active { background: #a3291d; }
   #lockStatusBtn.unlocked { background: #2f6e3f !important; color: #fff !important; border-color: #2f6e3f !important; }
+  /* ── Emergency Active Banner ── */
+  .emergency-active-banner { display:none; background:#C0392B; color:#fff; padding:12px 16px; border-radius:10px; margin-bottom:12px; text-align:center; }
+  .emergency-active-banner.visible { display:block; animation:emergPulse 1.5s ease-in-out infinite; }
+  .emergency-banner-title { font-size:18px; font-weight:800; letter-spacing:1px; margin:0 0 4px; }
+  .emergency-banner-sub { font-size:13px; margin:0 0 8px; opacity:.9; }
+  .clear-emerg-btn { background:#fff; color:#C0392B; border:none; border-radius:8px; padding:8px 20px; font-weight:700; font-size:14px; cursor:pointer; }
+  @keyframes emergPulse { 0%,100%{opacity:1;} 50%{opacity:.65;} }
 </style>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
@@ -243,6 +250,11 @@
 <body>
 <div class="wrap">
   <h1>Fujifilm Aura Project &mdash; HSE Directory</h1>
+  <div class="emergency-active-banner" id="emergencyActiveBanner">
+    <p class="emergency-banner-title">&#9888;&#65039; EMERGENCY CURRENTLY ACTIVE</p>
+    <p class="emergency-banner-sub" id="emergencyActiveSub">An emergency has been reported. Alert sent to building management.</p>
+    <button class="clear-emerg-btn" id="clearEmergencyBtn">Clear Emergency &nbsp;/&nbsp; Cancelar Emergencia</button>
+  </div>
   <p class="sync-status" id="syncStatus">Connecting...</p>
   <button class="hotline-bar emergency-top-btn" id="topEmergencyBtn" data-en="EMERGENCY" data-es="EMERGENCIA">EMERGENCY</button>
 
@@ -1344,57 +1356,56 @@
     var body = document.getElementById('modalBody');
     var msg = emergencyMessageText(building);
     var nums = gatherNotifyNumbers(building);
-    var ios = isIosDevice();
-    var explainEn, explainEs;
-    if(ios){
-      explainEn = 'iPhones only let a webpage address one person at a time. This will open Messages addressed to the first tagged number, with the text already filled in. The other numbers are listed below &mdash; add them to the &ldquo;To&rdquo; field yourself to include everyone.';
-      explainEs = 'Los iPhone solo permiten que una p&aacute;gina web dirija a una persona a la vez. Esto abrir&aacute; Mensajes dirigido al primer n&uacute;mero marcado, con el texto ya completado. Los dem&aacute;s n&uacute;meros aparecen abajo &mdash; agr&eacute;guelos usted mismo al campo &ldquo;Para&rdquo; para incluir a todos.';
-    } else {
-      explainEn = 'This will try to open Messages addressed to all '+nums.length+' tagged numbers as a group, with the text already filled in. If your phone only shows one person, add the rest from the list below.';
-      explainEs = 'Esto intentar&aacute; abrir Mensajes dirigido a los '+nums.length+' n&uacute;meros marcados como grupo, con el texto ya completado. Si su tel&eacute;fono solo muestra una persona, agregue al resto desde la lista de abajo.';
-    }
     body.innerHTML =
       '<p class="topname">Are you sure? <span style="color:#2a5dab; font-size:14px;">/ &iquest;Est&aacute; seguro?</span></p>'
-      + '<p style="font-size:14px; color:#222; margin:0 0 8px;">'+explainEn+'<br><span style="color:#2a5dab;">'+explainEs+'</span></p>'
+      + '<p style="font-size:14px; color:#222; margin:0 0 8px;">This will send an SMS alert to '+nums.length+' tagged contact'+(nums.length===1?'':'s')+' for '+building+' immediately.<br><span style="color:#2a5dab;">Esto enviar&aacute; una alerta SMS a '+nums.length+' contacto'+(nums.length===1?'':'s')+' marcado'+(nums.length===1?'':'s')+' en '+building+' de inmediato.</span></p>'
       + recipientListHtml(building)
       + '<div class="notify-msg-box">'+escapeHtml(msg)+'</div>'
-      + '<p style="font-size:12px; color:#777; margin:8px 0 0;">The message text has also been copied to your clipboard as a backup, in case your phone doesn&rsquo;t fill it in automatically.<br><span style="color:#999;">El texto tambi&eacute;n se ha copiado como respaldo, en caso de que su tel&eacute;fono no lo complete autom&aacute;ticamente.</span></p>'
       + '<div class="modal-btns">'
-      + '<button class="danger" id="notifyConfirmBtn">Confirm &amp; Open Messages <span style="opacity:.8;">/ Confirmar y Abrir Mensajes</span></button>'
+      + '<button class="danger" id="notifyConfirmBtn">Confirm &amp; Send Alert <span style="opacity:.8;">/ Confirmar y Enviar Alerta</span></button>'
       + '<button id="notifyFinalCancelBtn">Cancel <span style="opacity:.6;">/ Cancelar</span></button>'
       + '</div>';
     document.getElementById('notifyFinalCancelBtn').addEventListener('click', closeModal);
     document.getElementById('notifyConfirmBtn').addEventListener('click', function(){
-      sendNotifySms(building);
       closeModal();
+      sendNotifySms(building);
     });
   }
 
   function sendNotifySms(building){
     var nums = gatherNotifyNumbers(building);
     var msg = emergencyMessageText(building);
-    if(!nums.length) return;
-    try {
-      if(navigator.clipboard && navigator.clipboard.writeText){
-        navigator.clipboard.writeText(msg);
-      } else {
-        var ta = document.createElement('textarea');
-        ta.value = msg;
-        ta.style.position = 'fixed';
-        ta.style.opacity = '0';
-        document.body.appendChild(ta);
-        ta.select();
-        document.execCommand('copy');
-        document.body.removeChild(ta);
-      }
-    } catch(e){ console.error('Clipboard copy failed:', e); }
-    // iPhones cap a web sms: link to one recipient no matter how it's
-    // formatted, so we don't waste the attempt there -- just open to the
-    // first number. Android and most other phones generally do honor a
-    // comma-separated recipient list, so we try the full group there.
-    var recipients = isIosDevice() ? nums[0] : nums.join(',');
-    var href = 'sms:' + recipients + '?&body=' + encodeURIComponent(msg);
-    window.location.href = href;
+    if(!nums.length){
+      alert('No tagged contacts with phone numbers found for ' + building + '.');
+      return;
+    }
+    try { db.collection('config').doc('emergencyState').set({ active: true, building: building, activatedAt: new Date() }); } catch(e){}
+    fetch('https://bitter-moon-3327.bdiaz8448.workers.dev/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Notify-Key': '413ba4e45ce612d5cd6baf0e27ab986f' },
+      body: JSON.stringify({ numbers: nums, message: msg })
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      var sent = data.sent || 0; var total = data.total || nums.length;
+      alert('\u2705 Alert sent to ' + sent + ' of ' + total + ' contacts.');
+    })
+    .catch(function(err){
+      alert('\u26a0\ufe0f Could not send alert. Check your internet connection and try again.');
+    });
+  }
+
+  /* ---------- EMERGENCY STATE SYNC (cross-device via Firestore) ---------- */
+  function updateEmergencyBanner(active, building){
+    var banner = document.getElementById('emergencyActiveBanner');
+    if(!banner) return;
+    if(active){
+      banner.classList.add('visible');
+      var sub = document.getElementById('emergencyActiveSub');
+      if(sub) sub.textContent = 'EMERGENCY active at ' + (building || 'building') + '. Alert sent to management.';
+    } else {
+      banner.classList.remove('visible');
+    }
   }
 
   /* ---------- DOCUMENTS (Firestore -- live synced, syncs automatically when internet is available) ---------- */
@@ -1710,12 +1721,21 @@
     db.collection('config').doc('app').onSnapshot(function(doc){
       if(doc.exists && doc.data().editPin) editPin = doc.data().editPin;
     }, function(err){ console.error('Config sync error:', err); });
+    db.collection('config').doc('emergencyState').onSnapshot(function(doc){
+      if(doc.exists){ var d = doc.data(); updateEmergencyBanner(d.active === true, d.building || ''); }
+      else { updateEmergencyBanner(false, ''); }
+    }, function(err){ console.error('Emergency state sync error:', err); });
   });
   updateLockUI();
   applyLang();
   document.getElementById('lockStatusBtn').addEventListener('click', function(){
     if(isUnlocked()) setUnlocked(false);
     else requireUnlock(function(){});
+  });
+  document.getElementById('clearEmergencyBtn').addEventListener('click', function(){
+    if(!confirm('Clear the active emergency? All devices will be updated.\n\n¿Cancelar la emergencia activa? Todos los dispositivos se actualizarán.')) return;
+    db.collection('config').doc('emergencyState').set({ active: false, building: '', clearedAt: new Date() })
+      .catch(function(err){ alert('Could not clear: ' + err.message); });
   });
   document.getElementById('changePinBtn').addEventListener('click', function(){
     var next = prompt('Set a new edit PIN (share only with the people you want to be able to add/edit/delete):');
