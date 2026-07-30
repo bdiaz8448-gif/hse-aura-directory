@@ -3474,42 +3474,83 @@
     return L.join('\r\n');
   }
 
+  /* ---------------------------------------------------------------
+     SAVE TO CONTACTS - cross platform
+
+     The hard constraint: iOS Safari BLOCKS top level navigation to
+     data: URLs (WebKit anti phishing policy). A
+     <a href="data:text/vcard" download> link therefore downloads fine
+     on desktop and Android but does nothing at all on iPhone/iPad.
+     blob: URLs are NOT blocked, so the href is a blob and every
+     platform gets a path that its own rules permit:
+
+       iOS + share sheet   -> navigator.share({files}) -> Add to Contacts
+       iOS, no share sheet -> navigate to blob: URL    -> Contacts preview
+       Android / desktop   -> anchor download of blob  -> .vcf file
+     --------------------------------------------------------------- */
+  var _vcfUrls = [];
+  function makeVcfUrl(text){
+    try{
+      var b = new Blob([text], {type:'text/vcard;charset=utf-8'});
+      var u = URL.createObjectURL(b);
+      _vcfUrls.push(u);
+      if(_vcfUrls.length > 40){ try{ URL.revokeObjectURL(_vcfUrls.shift()); }catch(e){} }
+      return u;
+    }catch(e){
+      return 'data:text/vcard;charset=utf-8,' + encodeURIComponent(text);
+    }
+  }
+  function isAppleMobile(){
+    return /iPad|iPhone|iPod/.test(navigator.userAgent)
+        || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  }
+
   function saveToContactsBtnHtml(p){
     var text  = vcardText(p);
-    var href  = 'data:text/vcard;charset=utf-8,' + encodeURIComponent(text);
     var fname = escapeHtml((p.name||'contact').replace(/[^a-z0-9]+/gi,'_')) + '.vcf';
+    var href  = makeVcfUrl(text);
     var b64   = btoa(unescape(encodeURIComponent(text)));
-    /* Base is a REAL anchor with a data:text/vcard href + download attribute.
-       This is the exact approach that worked in the original directory and is
-       what iOS Safari needs: tapping a genuine link is user-initiated
-       navigation, so Safari recognises the vCard and offers Add to Contacts.
-       shareVcf() only intercepts when the Web Share API can take files —
-       that covers home-screen (standalone) mode, where iOS silently drops
-       plain downloads. If anything in shareVcf throws, the anchor still
-       works natively. */
     return '<a class="primary doc-link-btn" href="'+href+'" download="'+fname+'" '
          + 'data-vcf="'+b64+'" data-vcname="'+fname+'" '
-         + 'onclick="return shareVcf(this,event)" '
+         + 'onclick="return saveVcf(this,event)" '
          + 'style="user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;touch-action:manipulation;">'
          + 'Save to Contacts</a>';
   }
 
-  /* Returns true  -> let the browser follow the anchor (normal download path)
-     Returns false -> we handled it via the native share sheet instead.
-     Must stay fully synchronous up to the share() call to keep the browser's
-     transient user activation, otherwise iOS rejects it. */
-  function shareVcf(a, ev){
+  /* true  -> let the anchor download proceed (desktop / Android)
+     false -> handled here (share sheet or blob navigation on iOS)
+     Stays synchronous up to share() so iOS keeps user activation. */
+  function saveVcf(a, ev){
+    var text, fname = a.getAttribute('data-vcname') || 'contact.vcf';
+    try{ text = decodeURIComponent(escape(atob(a.getAttribute('data-vcf')))); }
+    catch(e){ return true; }
+
+    /* 1. Native share sheet - offers "Add to Contacts" directly. */
     try{
-      if(navigator.canShare && typeof File !== 'undefined'){
-        var txt = decodeURIComponent(escape(atob(a.getAttribute('data-vcf'))));
-        var f   = new File([txt], a.getAttribute('data-vcname') || 'contact.vcf', {type:'text/vcard'});
+      if(navigator.canShare && window.File){
+        var f = new File([text], fname, {type:'text/vcard'});
         if(navigator.canShare({files:[f]})){
           ev.preventDefault();
-          navigator.share({files:[f]}).catch(function(){});
+          navigator.share({files:[f]}).catch(function(err){
+            if(err && err.name === 'AbortError') return;   // user dismissed
+            try{ window.location.href = makeVcfUrl(text); }catch(e2){}
+          });
           return false;
         }
       }
-    }catch(e){ /* fall through to the plain anchor */ }
+    }catch(e){ /* fall through */ }
+
+    /* 2. iOS without file sharing: navigate to the blob so Safari shows
+          its vCard preview with Add to Contacts. download= is ignored
+          by iOS, and data: would be blocked outright, hence blob. */
+    if(isAppleMobile()){
+      ev.preventDefault();
+      window.location.href = makeVcfUrl(text);
+      return false;
+    }
+
+    /* 3. Desktop / Android - the anchor already points at a blob and
+          carries download=, so the browser saves the .vcf natively. */
     return true;
   }
   function openContactForm(existing){
