@@ -3404,32 +3404,76 @@
     }).join(' / ');
     return '<tr><td class="lbl">'+label+'</td><td class="val">'+linksHtml+'</td></tr>';
   }
+  /* ---- vCard escaping (RFC 2426 3.1.2 / 4) ----
+     ; and , are structural delimiters. Leaving them raw in a value
+     corrupts the card - e.g. a role of "Ground Superintendent; Civil"
+     silently truncates or shifts every field after it. */
+  function vcfEsc(s){
+    return String(s == null ? '' : s)
+      .replace(/\\/g, '\\\\')
+      .replace(/;/g,  '\\;')
+      .replace(/,/g,  '\\,')
+      .replace(/\r\n|\r|\n/g, '\\n');
+  }
+
+  /* Split a display name into vCard N components.
+     Handles "Dale Mulkey, Jr." / "Dr. Stephanie Kilburn" /
+     "Jeremy Jaramillo (JJ)" / '"AK" Anand Kadari'. */
+  function splitName(full){
+    var raw = String(full || '').trim();
+    var nick = '';
+    var s = raw;
+    s = s.replace(/["“”']([^"“”']+)["“”']/g, function(m,g){ nick = nick||g; return ' '; });
+    s = s.replace(/\(([^)]+)\)/g, function(m,g){ nick = nick||g; return ' '; });
+    s = s.replace(/,\s*/g, ' ').replace(/\s+/g,' ').trim();
+
+    var PREFIX = /^(dr|mr|mrs|ms|miss|prof|rev|fr)$/i;
+    var SUFFIX = /^(jr|sr|ii|iii|iv|md|phd|pe|csp|chst|esq)$/i;
+    var parts  = s.split(' ').filter(Boolean);
+    var prefix = '', suffix = '';
+
+    if(parts.length > 1 && PREFIX.test(parts[0].replace(/\.$/,''))) prefix = parts.shift();
+    while(parts.length > 1 && SUFFIX.test(parts[parts.length-1].replace(/\.$/,''))){
+      suffix = parts.pop() + (suffix ? ' ' + suffix : '');
+    }
+    var given='', middle='', family='';
+    if(parts.length === 1){ given = parts[0]; }
+    else if(parts.length > 1){
+      given  = parts[0];
+      family = parts[parts.length-1];
+      if(parts.length > 2) middle = parts.slice(1,-1).join(' ');
+    } else { family = raw; }
+    return {given:given, middle:middle, family:family, prefix:prefix, suffix:suffix, nick:nick, display:raw};
+  }
+
   function vcardText(p){
-    var lines = ['BEGIN:VCARD','VERSION:3.0'];
-    var fullName = (p.name||'').trim();
-    lines.push('FN:' + fullName);
-    // N: field required by iOS/Android to import name correctly
-    var nameParts = fullName.split(/\s+/);
-    var lastName  = nameParts.length > 1 ? nameParts[nameParts.length - 1] : fullName;
-    var firstName = nameParts.length > 1 ? nameParts.slice(0, -1).join(' ') : '';
-    lines.push('N:' + lastName + ';' + firstName + ';;;');
-    if(p.company) lines.push('ORG:' + p.company);
-    if(p.role) lines.push('TITLE:' + p.role);
+    var n = splitName(p.name);
+    var L = ['BEGIN:VCARD','VERSION:3.0'];
+    /* N is MANDATORY in vCard 3.0. Without it, Apple Contacts and Android
+       classify the card as an organisation and display ORG (the company)
+       where the person's name should be. */
+    L.push('N:' + vcfEsc(n.family) + ';' + vcfEsc(n.given) + ';' + vcfEsc(n.middle) + ';' + vcfEsc(n.prefix) + ';' + vcfEsc(n.suffix));
+    L.push('FN:' + vcfEsc(n.display));
+    if(n.nick)    L.push('NICKNAME:' + vcfEsc(n.nick));
+    if(p.company) L.push('ORG:' + vcfEsc(p.company));
+    if(p.role)    L.push('TITLE:' + vcfEsc(p.role));
     if(p.cellPhone && /\d/.test(p.cellPhone)){
-      p.cellPhone.split('/').forEach(function(num){
-        lines.push('TEL;TYPE=CELL:' + num.trim());
+      String(p.cellPhone).split('/').forEach(function(x){
+        if(/\d/.test(x)) L.push('TEL;TYPE=CELL,VOICE:' + vcfEsc(x.trim()));
       });
     }
     if(p.officePhone && /\d/.test(p.officePhone)){
-      p.officePhone.split('/').forEach(function(num){
-        lines.push('TEL;TYPE=WORK:' + num.trim());
+      String(p.officePhone).split('/').forEach(function(x){
+        if(/\d/.test(x)) L.push('TEL;TYPE=WORK,VOICE:' + vcfEsc(x.trim()));
       });
     }
-    if(p.email) lines.push('EMAIL:' + p.email);
-    if(p.trailer) lines.push('NOTE:Trailer/office: ' + p.trailer);
-    lines.push('END:VCARD');
-    return lines.join('\r\n');
+    if(p.email)   L.push('EMAIL;TYPE=INTERNET,WORK:' + vcfEsc(p.email));
+    if(p.trailer) L.push('NOTE:' + vcfEsc('Trailer/office: ' + p.trailer));
+    L.push('REV:' + new Date().toISOString().replace(/\.\d{3}/,''));
+    L.push('END:VCARD');
+    return L.join('\r\n');
   }
+
   function saveToContactsBtnHtml(p){
     var text  = vcardText(p);
     var href  = 'data:text/vcard;charset=utf-8,' + encodeURIComponent(text);
