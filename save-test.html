@@ -32,7 +32,7 @@
 </div>
 
 <div class="card">
-  <div class="lbl">Method 1 — plain link + download (what the app uses)</div>
+  <div class="lbl">Method 1 — data: link (BLOCKED on iOS — expected to fail)</div>
   <a class="btn" id="m1" download="Test_Contact.vcf">Save Test Contact</a>
 </div>
 
@@ -42,8 +42,8 @@
 </div>
 
 <div class="card">
-  <div class="lbl">Method 3 — open vCard directly</div>
-  <button class="btn" onclick="m3()">Open Test Contact</button>
+  <div class="lbl">Method 3 — blob: link (what the app now uses on iPhone)</div>
+  <button class="btn" onclick="m3()">Save Test Contact (blob)</button>
 </div>
 
 <div class="card">
