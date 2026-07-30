@@ -875,6 +875,7 @@
       + '<button id="closeDsm4DetailBtn">Close</button>'
       + '</div>';
     document.getElementById('overlay').style.display = 'flex';
+    document.getElementById('saveContactBtn').addEventListener('click', function(){ doSaveContact(p); });
     document.getElementById('closeDsm4DetailBtn').addEventListener('click', closeModal);
     document.getElementById('editDsm4Btn').addEventListener('click', function(){ requireUnlock(function(){ openDsm4Form(p); }); });
     document.getElementById('deleteDsm4Btn').addEventListener('click', function(){
@@ -1012,6 +1013,7 @@
       + '<button id="closeDsm3DetailBtn">Close</button>'
       + '</div>';
     document.getElementById('overlay').style.display = 'flex';
+    document.getElementById('saveContactBtn').addEventListener('click', function(){ doSaveContact(p); });
     document.getElementById('closeDsm3DetailBtn').addEventListener('click', closeModal);
     document.getElementById('editDsm3Btn').addEventListener('click', function(){ requireUnlock(function(){ openDsm3Form(p); }); });
     document.getElementById('deleteDsm3Btn').addEventListener('click', function(){
@@ -1097,6 +1099,7 @@
       + '<button id="closeDetailBtn">Close</button>'
       + '</div>';
     document.getElementById('overlay').style.display = 'flex';
+    document.getElementById('saveContactBtn').addEventListener('click', function(){ doSaveContact(p); });
     document.getElementById('closeDetailBtn').addEventListener('click', closeModal);
     document.getElementById('editPersonBtn').addEventListener('click', function(){ requireUnlock(function(){ openContactForm(p); }); });
     document.getElementById('deletePersonBtn').addEventListener('click', function(){
@@ -1152,8 +1155,23 @@
     return lines.join('\r\n');
   }
   function saveToContactsBtnHtml(p){
-    var href = 'data:text/vcard;charset=utf-8,' + encodeURIComponent(vcardText(p));
-    return '<a class="primary doc-link-btn" href="'+href+'" download="'+escapeHtml((p.name||'contact').replace(/[^a-z0-9]+/gi,'_'))+'.vcf">Save to Contacts</a>';
+    return '<button class="primary doc-link-btn" id="saveContactBtn">Save to Contacts</button>';
+  }
+  function doSaveContact(p){
+    var text = vcardText(p);
+    try{
+      var blob = new Blob([text], {type:'text/vcard;charset=utf-8'});
+      var url  = URL.createObjectURL(blob);
+      var a    = document.createElement('a');
+      a.href   = url;
+      a.download = (p.name||'contact').replace(/[^a-z0-9]+/gi,'_') + '.vcf';
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      setTimeout(function(){ URL.revokeObjectURL(url); }, 2000);
+    } catch(e){
+      alert('Save contact manually:\n\nName: '+(p.name||'')+
+            '\nPhone: '+(p.cellPhone||p.officePhone||'N/A')+
+            '\nEmail: '+(p.email||'N/A'));
+    }
   }
   function openContactForm(existing){
     var p = existing || {id:'id_'+Date.now()+'_'+Math.random().toString(36).slice(2,7), name:'', role:'', company:'', cellPhone:'', officePhone:'', email:'', trailer:'', notifyDSM4:false, notifyDSM3:false};
@@ -1391,7 +1409,9 @@
       alert('\u2705 Alert sent to ' + sent + ' of ' + total + ' contacts.');
     })
     .catch(function(err){
-      alert('\u26a0\ufe0f Could not send alert. Check your internet connection and try again.');
+      var nums = gatherNotifyNumbers(building);
+      var numsText = nums.length ? '\\n\\nEmergency contacts:\\n' + nums.join('\\n') : '';
+      alert('\u26a0\ufe0f No internet \u2014 SMS not sent.\\n\\nCall emergency contacts manually.' + numsText);
     });
   }
 
@@ -1401,10 +1421,12 @@
     if(!banner) return;
     if(active){
       banner.classList.add('visible');
+      try{ localStorage.setItem('aura_emergency_building', building||''); }catch(e){}
       var sub = document.getElementById('emergencyActiveSub');
       if(sub) sub.textContent = 'EMERGENCY active at ' + (building || 'building') + '. Alert sent to management.';
     } else {
       banner.classList.remove('visible');
+      try{ localStorage.removeItem('aura_emergency_building'); }catch(e){}
     }
   }
 
@@ -1706,25 +1728,48 @@
   }).then(function(){
     db.collection('contacts').onSnapshot(function(snapshot){
       contacts = snapshot.docs.map(function(doc){ var d = doc.data(); d.id = doc.id; return d; });
+      try{ localStorage.setItem('hse_contacts_cache', JSON.stringify(contacts)); }catch(e){}
       renderContacts();
       updateSyncStatus(snapshot.metadata.fromCache);
       if(document.getElementById('sectionEmergency').classList.contains('active')) renderEmergencyContent();
-    }, function(err){ console.error('Contacts sync error:', err); updateSyncStatus(true); });
+    }, function(err){
+      console.error('Contacts sync error:', err); updateSyncStatus(true);
+      try{
+        var c = localStorage.getItem('hse_contacts_cache');
+        if(c && !contacts.length){
+          contacts = JSON.parse(c); renderContacts();
+          if(document.getElementById('sectionEmergency').classList.contains('active')) renderEmergencyContent();
+        }
+      }catch(e){}
+    });
     db.collection('dsm4').onSnapshot(function(snapshot){
       dsm4 = snapshot.docs.map(function(doc){ var d = doc.data(); d.id = doc.id; return d; });
+      try{ localStorage.setItem('hse_dsm4_cache', JSON.stringify(dsm4)); }catch(e){}
       renderDSM4();
-    }, function(err){ console.error('DSM4 sync error:', err); });
+    }, function(err){
+      console.error('DSM4 sync error:', err);
+      try{ var c=localStorage.getItem('hse_dsm4_cache'); if(c&&!dsm4.length){dsm4=JSON.parse(c);renderDSM4();} }catch(e){}
+    });
     db.collection('dsm3').onSnapshot(function(snapshot){
       dsm3 = snapshot.docs.map(function(doc){ var d = doc.data(); d.id = doc.id; return d; });
+      try{ localStorage.setItem('hse_dsm3_cache', JSON.stringify(dsm3)); }catch(e){}
       renderDSM3();
-    }, function(err){ console.error('DSM3 sync error:', err); });
+    }, function(err){
+      console.error('DSM3 sync error:', err);
+      try{ var c=localStorage.getItem('hse_dsm3_cache'); if(c&&!dsm3.length){dsm3=JSON.parse(c);renderDSM3();} }catch(e){}
+    });
     db.collection('config').doc('app').onSnapshot(function(doc){
       if(doc.exists && doc.data().editPin) editPin = doc.data().editPin;
     }, function(err){ console.error('Config sync error:', err); });
     db.collection('config').doc('emergencyState').onSnapshot(function(doc){
       if(doc.exists){ var d = doc.data(); updateEmergencyBanner(d.active === true, d.building || ''); }
       else { updateEmergencyBanner(false, ''); }
-    }, function(err){ console.error('Emergency state sync error:', err); });
+    }, function(err){
+      console.error('Emergency state sync error:', err);
+      var wasActive = localStorage.getItem('aura_emergency_active') === 'true';
+      var cachedBuilding = localStorage.getItem('aura_emergency_building') || '';
+      updateEmergencyBanner(wasActive, cachedBuilding);
+    });
   });
   updateLockUI();
   applyLang();
@@ -1746,6 +1791,12 @@
   });
   loadDocs();
 })();
+
+// Service Worker — enables full offline access (contacts, emergency tab, documents)
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('/hse-aura-directory/sw.js', {scope:'/hse-aura-directory/'})
+    .catch(function(e){ console.log('SW reg failed (non-critical):', e); });
+}
 </script>
 </body>
 </html>
