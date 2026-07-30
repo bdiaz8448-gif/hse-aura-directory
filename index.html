@@ -3431,11 +3431,42 @@
     return lines.join('\r\n');
   }
   function saveToContactsBtnHtml(p){
-    var href = 'data:text/vcard;charset=utf-8,' + encodeURIComponent(vcardText(p));
+    var text  = vcardText(p);
+    var href  = 'data:text/vcard;charset=utf-8,' + encodeURIComponent(text);
     var fname = escapeHtml((p.name||'contact').replace(/[^a-z0-9]+/gi,'_')) + '.vcf';
+    var b64   = btoa(unescape(encodeURIComponent(text)));
+    /* Base is a REAL anchor with a data:text/vcard href + download attribute.
+       This is the exact approach that worked in the original directory and is
+       what iOS Safari needs: tapping a genuine link is user-initiated
+       navigation, so Safari recognises the vCard and offers Add to Contacts.
+       shareVcf() only intercepts when the Web Share API can take files —
+       that covers home-screen (standalone) mode, where iOS silently drops
+       plain downloads. If anything in shareVcf throws, the anchor still
+       works natively. */
     return '<a class="primary doc-link-btn" href="'+href+'" download="'+fname+'" '
+         + 'data-vcf="'+b64+'" data-vcname="'+fname+'" '
+         + 'onclick="return shareVcf(this,event)" '
          + 'style="user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;touch-action:manipulation;">'
          + 'Save to Contacts</a>';
+  }
+
+  /* Returns true  -> let the browser follow the anchor (normal download path)
+     Returns false -> we handled it via the native share sheet instead.
+     Must stay fully synchronous up to the share() call to keep the browser's
+     transient user activation, otherwise iOS rejects it. */
+  function shareVcf(a, ev){
+    try{
+      if(navigator.canShare && typeof File !== 'undefined'){
+        var txt = decodeURIComponent(escape(atob(a.getAttribute('data-vcf'))));
+        var f   = new File([txt], a.getAttribute('data-vcname') || 'contact.vcf', {type:'text/vcard'});
+        if(navigator.canShare({files:[f]})){
+          ev.preventDefault();
+          navigator.share({files:[f]}).catch(function(){});
+          return false;
+        }
+      }
+    }catch(e){ /* fall through to the plain anchor */ }
+    return true;
   }
   function openContactForm(existing){
     var p = existing || {id:'id_'+Date.now()+'_'+Math.random().toString(36).slice(2,7), name:'', role:'', company:'', cellPhone:'', officePhone:'', email:'', trailer:'', notifyDSM4:false, notifyDSM3:false};
@@ -4171,7 +4202,7 @@
   Promise.all([seedContactsIfEmpty(), seedDsm4IfEmpty(), seedDsm3IfEmpty(), seedConfigIfEmpty(), seedWeekendIfEmpty(), seedCQVIfEmpty(), seedNightShiftIfEmpty()]).then(function(){
     return linkDatasetsOnce();
   }).then(function(){
-    db.collection('contacts').onSnapshot(function(snapshot){
+    db.collection('contacts').onSnapshot({includeMetadataChanges:true}, function(snapshot){
       contacts = snapshot.docs.map(function(doc){ var d = doc.data(); d.id = doc.id; return d; });
       // Auto-clear expired vacation entries so Out badges don't linger after the return date
       contacts.forEach(function(c){
@@ -4184,14 +4215,14 @@
         }
       });
       renderContacts(); renderWeekend(); renderCQV(); renderNightShift();
-      updateSyncStatus(snapshot.metadata.fromCache);
+      updateSyncStatus(snapshot.metadata.fromCache && !snapshot.metadata.hasPendingWrites);
       if(document.getElementById('sectionEmergency').classList.contains('active')) renderEmergencyContent();
     }, function(err){ console.error('Contacts sync error:', err); updateSyncStatus(true); });
-    db.collection('dsm4').onSnapshot(function(snapshot){
+    db.collection('dsm4').onSnapshot({includeMetadataChanges:true}, function(snapshot){
       dsm4 = snapshot.docs.map(function(doc){ var d = doc.data(); d.id = doc.id; return d; });
       renderDSM4();
     }, function(err){ console.error('DSM4 sync error:', err); });
-    db.collection('dsm3').onSnapshot(function(snapshot){
+    db.collection('dsm3').onSnapshot({includeMetadataChanges:true}, function(snapshot){
       dsm3 = snapshot.docs.map(function(doc){ var d = doc.data(); d.id = doc.id; return d; });
       renderDSM3();
     }, function(err){ console.error('DSM3 sync error:', err); });
