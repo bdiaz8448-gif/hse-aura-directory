@@ -3498,7 +3498,93 @@
      Android hands it to Contacts, and desktop downloads it.
      Cards live in /c/<id>.vcf and are regenerated from Firestore.
      --------------------------------------------------------------- */
-  var AURA_BUILD = 'v12-vcf';
+  var AURA_BUILD = 'v13-safari-notice';
+
+  /* ---------------------------------------------------------------
+     IN-APP BROWSER NOTICE
+
+     Tapping a link inside Gmail / Messages / Outlook / Teams opens an
+     embedded browser, not Safari. Those browsers hand a downloaded
+     .vcf to a Quick Look PREVIEW window, which shows the contact but
+     offers no way to import it - it lists "Add Friend on Game Center"
+     instead of "Create New Contact".
+
+     Real Safari, a home-screen install, and QR scans from the camera
+     all pass the file to Contacts properly. So when we detect an
+     embedded browser we say so plainly and give a one-tap copy of the
+     address rather than letting people hit a dead end.
+     --------------------------------------------------------------- */
+  function auraInAppBrowser(){
+    var ua = navigator.userAgent || '';
+    var iOS = /iPad|iPhone|iPod/.test(ua);
+    if(!iOS) return false;
+    if(window.navigator.standalone === true) return false;   // home screen install
+    // Known embedded browsers
+    if(/(FBAN|FBAV|Instagram|Line\/|Twitter|LinkedInApp|MicroMessenger|Snapchat|GSA\/)/i.test(ua)) return true;
+    // Real Safari reports BOTH Version/ and Safari/. Embedded WKWebViews usually don't.
+    var realSafari = /Version\//.test(ua) && /Safari\//.test(ua) && !/CriOS|FxiOS|EdgiOS|OPiOS/.test(ua);
+    return !realSafari;
+  }
+
+  function auraShowBrowserNotice(){
+    try{
+      if(!auraInAppBrowser()) return;
+      if(sessionStorage.getItem('auraNoticeDismissed') === '1') return;
+      if(document.getElementById('auraBrowserNotice')) return;
+
+      var d = document.createElement('div');
+      d.id = 'auraBrowserNotice';
+      d.style.cssText =
+        'position:fixed;left:0;right:0;top:0;z-index:99998;'
+        + 'background:linear-gradient(135deg,#C9A84C,#a8862f);color:#1a1400;'
+        + 'padding:12px 14px;font-size:13px;line-height:1.45;'
+        + 'box-shadow:0 4px 18px rgba(0,0,0,.45);font-family:inherit;';
+      d.innerHTML =
+          '<div style="display:flex;gap:10px;align-items:flex-start;max-width:640px;margin:0 auto">'
+        +   '<div style="flex:1">'
+        +     '<b>Open in Safari to save contacts.</b><br>'
+        +     'You are in an in-app browser, which can view contact cards but cannot add them to your phone. '
+        +     'Tap <b>&#183;&#183;&#183;</b> at the top right &rarr; <b>Open in Safari</b>.'
+        +     '<div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">'
+        +       '<button type="button" id="auraCopyLink" style="padding:8px 12px;border-radius:8px;border:1px solid rgba(0,0,0,.35);'
+        +         'background:rgba(0,0,0,.14);color:#1a1400;font-weight:800;font-size:12px;font-family:inherit;cursor:pointer">Copy link</button>'
+        +       '<button type="button" id="auraDismissNotice" style="padding:8px 12px;border-radius:8px;border:1px solid rgba(0,0,0,.25);'
+        +         'background:transparent;color:#1a1400;font-weight:700;font-size:12px;font-family:inherit;cursor:pointer">Dismiss</button>'
+        +     '</div>'
+        +   '</div>'
+        + '</div>';
+      document.body.appendChild(d);
+      document.body.style.paddingTop = (d.offsetHeight + 6) + 'px';
+
+      document.getElementById('auraDismissNotice').onclick = function(){
+        try{ sessionStorage.setItem('auraNoticeDismissed','1'); }catch(e){}
+        document.body.style.paddingTop = '';
+        d.remove();
+      };
+      document.getElementById('auraCopyLink').onclick = function(){
+        var url = location.origin + location.pathname;
+        var btn = this;
+        function done(){ btn.textContent = 'Copied ✓'; setTimeout(function(){ btn.textContent='Copy link'; }, 2000); }
+        try{
+          if(navigator.clipboard && navigator.clipboard.writeText){
+            navigator.clipboard.writeText(url).then(done).catch(fallback);
+          } else { fallback(); }
+        }catch(e){ fallback(); }
+        function fallback(){
+          var ta=document.createElement('textarea');
+          ta.value=url; ta.style.cssText='position:fixed;opacity:0';
+          document.body.appendChild(ta); ta.select();
+          try{ document.execCommand('copy'); done(); }catch(e){ btn.textContent='Copy failed'; }
+          ta.remove();
+        }
+      };
+    }catch(e){ /* never let the notice break the app */ }
+  }
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', auraShowBrowserNotice);
+  } else {
+    auraShowBrowserNotice();
+  }
 
   function saveToContactsBtnHtml(p){
     var href = 'c/' + encodeURIComponent(p.id) + '.vcf';
