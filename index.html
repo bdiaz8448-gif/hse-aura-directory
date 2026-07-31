@@ -426,7 +426,12 @@
   .hotline-tel { color: #fff; text-decoration: underline; }
 
   /* ── Sync row ── */
-  .sync-row { display: flex; gap: 10px; margin-bottom: 8px; }
+  .sync-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+  .sync-row button { flex: 1 1 auto; min-width: 110px; max-width: 100%; white-space: nowrap; }
+  #lockStatusBtn { flex: 1 1 100%; }
+  @media (min-width: 700px){
+    #lockStatusBtn { flex: 1 1 auto; }
+  }
   .sync-row button {
     flex: 1; height: 46px; font-size: 15px;
     background: var(--surface-1);
@@ -3959,7 +3964,7 @@
      Android hands it to Contacts, and desktop downloads it.
      Cards live in /c/<id>.vcf and are regenerated from Firestore.
      --------------------------------------------------------------- */
-  var AURA_BUILD = 'v19-add-buildings';
+  var AURA_BUILD = 'v20-wrap';
 
   function saveToContactsBtnHtml(p){
     var href = 'c/' + encodeURIComponent(p.id) + '.vcf';
