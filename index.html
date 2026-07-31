@@ -1320,6 +1320,10 @@
 
   /* ---------- TAB SWITCHING ---------- */
   function setTab(tab){
+    currentCustomTab = null;
+    document.querySelectorAll('.crTabBtn').forEach(function(b){ b.classList.remove('active'); });
+    var _sc = document.getElementById('sectionCustom');
+    if(_sc) _sc.classList.remove('active');
     document.getElementById('tabContacts').classList.toggle('active', tab === 'contacts');
     document.getElementById('tabDSM4').classList.toggle('active', tab === 'dsm4');
     document.getElementById('tabDSM3').classList.toggle('active', tab === 'dsm3');
@@ -1355,6 +1359,92 @@
   document.getElementById('tabIncidents').addEventListener('click', function(){ setTab('incidents'); });
   document.getElementById('topEmergencyBtn').addEventListener('click', function(){ setTab('emergency'); });
   document.getElementById('backFromEmergencyBtn').addEventListener('click', function(){ setTab('contacts'); });
+
+  /* ============ CUSTOM BUILDINGS / ROSTERS (owner-added tabs) ============
+     Owner adds any number of buildings, areas, or shifts in the 🏷 Buildings
+     panel. Each becomes a real tab listing its member contacts. Membership
+     lives on each contact document as customRosters:{<id>:true}, so it syncs
+     live across devices exactly like everything else. Emergency notify
+     remains DSM4/DSM3 in this phase. */
+  var customRosters = [];        /* [{id, name}] from config/customRosters */
+  var currentCustomTab = null;
+
+  (function makeCustomSection(){
+    var ns = document.getElementById('sectionNightShift');
+    if(!ns || document.getElementById('sectionCustom')) return;
+    var sec = document.createElement('div');
+    sec.className = 'section';
+    sec.id = 'sectionCustom';
+    sec.innerHTML =
+        '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:4px 2px 10px;">'
+      +   '<h2 id="customRosterTitle" style="margin:0;font-size:18px;"></h2>'
+      +   '<span id="customRosterCount" style="font-size:12px;color:#999;"></span>'
+      + '</div>'
+      + '<div class="grid" id="customRosterGrid"></div>'
+      + '<div id="customRosterEmpty" style="display:none;text-align:center;color:#999;padding:34px 12px;font-size:14px;line-height:1.6;"></div>';
+    ns.parentNode.insertBefore(sec, ns.nextSibling);
+  })();
+
+  function renderCustomTabs(){
+    var after = document.getElementById('tabNightShift');
+    if(!after) return;
+    /* drop buttons for rosters that no longer exist */
+    document.querySelectorAll('.crTabBtn').forEach(function(b){
+      if(!customRosters.some(function(cr){ return 'tabCR_'+cr.id === b.id; })) b.remove();
+    });
+    var prev = after;
+    customRosters.forEach(function(cr){
+      var btn = document.getElementById('tabCR_'+cr.id);
+      if(!btn){
+        btn = document.createElement('button');
+        btn.className = 'tab-btn crTabBtn';
+        btn.id = 'tabCR_'+cr.id;
+        btn.addEventListener('click', (function(id){ return function(){ setCustomTab(id); }; })(cr.id));
+        prev.parentNode.insertBefore(btn, prev.nextSibling);
+      }
+      btn.textContent = cr.name;
+      prev = btn;
+    });
+  }
+
+  function setCustomTab(id){
+    setTab('__custom__');                       /* deactivates every built-in tab+section */
+    currentCustomTab = id;
+    var btn = document.getElementById('tabCR_'+id);
+    if(btn) btn.classList.add('active');
+    var sec = document.getElementById('sectionCustom');
+    if(sec) sec.classList.add('active');
+    renderCustomRoster();
+  }
+
+  function renderCustomRoster(){
+    if(!currentCustomTab) return;
+    var cr = customRosters.filter(function(c){ return c.id === currentCustomTab; })[0];
+    if(!cr){ currentCustomTab = null; setTab('contacts'); return; }
+    var title = document.getElementById('customRosterTitle');
+    var count = document.getElementById('customRosterCount');
+    var grid  = document.getElementById('customRosterGrid');
+    var empty = document.getElementById('customRosterEmpty');
+    if(!grid) return;
+    if(title) title.textContent = cr.name;
+    var members = contacts.filter(function(c){ return c.customRosters && c.customRosters[cr.id]; })
+      .sort(function(a,b){ return (a.name||'').localeCompare(b.name||''); });
+    if(count) count.textContent = members.length + ' ' + (members.length===1?'person':'people');
+    if(!members.length){
+      grid.innerHTML = '';
+      empty.innerHTML = 'No one in <b>'+escapeHtml(cr.name)+'</b> yet.<br>'
+        +'Open any contact &rarr; Edit &rarr; check &ldquo;Add to '+escapeHtml(cr.name)+'&rdquo;.';
+      empty.style.display = 'block';
+      return;
+    }
+    empty.style.display = 'none';
+    grid.innerHTML = members.map(buildContactCardHtml).join('');
+    Array.prototype.forEach.call(grid.querySelectorAll('.card'), function(el){
+      var cid = el.getAttribute('data-id');
+      el.addEventListener('click', function(){ openContactDetail(cid); });
+      el.addEventListener('contextmenu', function(e){ e.preventDefault(); showContactCtxMenu(e.clientX, e.clientY, cid); });
+    });
+  }
 
   // If app was opened via a room QR code, jump straight to Emergency tab
   if(qrContext){ setTab('emergency'); }
@@ -1517,7 +1607,7 @@
   }
 
   function manageBuildings(){
-    var entered = prompt('Owner PIN required to rename buildings/rosters:');
+    var entered = prompt('Owner PIN required to manage buildings/rosters:');
     if(entered === null) return;
     if(entered !== editPin){ alert('Incorrect owner PIN.'); return; }
     sessionStorage.setItem('aura_who','Owner');
@@ -1528,12 +1618,24 @@
       ['CQV','CQV roster tab'],
       ['NIGHT','Night shift roster tab']
     ];
+    var work = customRosters.map(function(c){ return {id:c.id, name:c.name}; });
     var ov=document.createElement('div');
     ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;';
-    ov.innerHTML='<div style="background:#fff;border-radius:14px;max-width:520px;width:100%;max-height:82vh;display:flex;flex-direction:column;overflow:hidden;">'
-      +'<div style="padding:16px 18px 6px;"><b style="font-size:17px;color:#111;">🏷 Building &amp; Roster Names</b>'
-      +'<div style="font-size:12px;color:#555;margin-top:2px;">Rename anything — tabs, emergency alerts, and the SMS message update everywhere instantly. Existing data is untouched.</div></div>'
+    function customHtml(){
+      var r = work.map(function(c,idx){
+        return '<div style="display:flex;gap:8px;margin-bottom:8px;align-items:center;">'
+          +'<input class="crInp" data-i="'+idx+'" value="'+escapeHtml(c.name)+'" placeholder="Building / roster name" '
+          +'style="flex:1;padding:9px 11px;border:1px solid #999;border-radius:7px;font-size:14px;font-weight:700;color:#111;background:#fff;">'
+          +'<button class="crDel" data-i="'+idx+'" style="padding:7px 11px;border:1px solid #e57373;border-radius:7px;background:#fff;color:#c62828;font-weight:800;cursor:pointer;">×</button>'
+          +'</div>';
+      }).join('');
+      return r || '<div style="color:#777;font-size:13px;margin-bottom:8px;">None yet — add your first below.</div>';
+    }
+    ov.innerHTML='<div style="background:#fff;border-radius:14px;max-width:560px;width:100%;max-height:86vh;display:flex;flex-direction:column;overflow:hidden;">'
+      +'<div style="padding:16px 18px 6px;"><b style="font-size:17px;color:#111;">🏷 Buildings &amp; Rosters</b>'
+      +'<div style="font-size:12px;color:#555;margin-top:2px;">Rename the built-ins, or add your own buildings, areas, and shifts — each gets its own tab.</div></div>'
       +'<div style="overflow-y:auto;padding:12px 18px 4px;">'
+      +'<div style="font-size:11px;font-weight:800;color:#1565c0;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:8px;">Rename built-ins</div>'
       + rows.map(function(r){
           return '<div style="margin-bottom:12px;">'
             +'<div style="font-size:11px;color:#666;margin-bottom:3px;">'+r[1]+'</div>'
@@ -1541,29 +1643,65 @@
             +'style="width:100%;padding:9px 11px;border:1px solid #999;border-radius:7px;font-size:14px;font-weight:700;color:#111;background:#fff;box-sizing:border-box;">'
             +'</div>';
         }).join('')
+      +'<div style="font-size:11px;font-weight:800;color:#2e7d32;text-transform:uppercase;letter-spacing:0.04em;margin:16px 0 8px;">Your added buildings / rosters</div>'
+      +'<div id="crList">'+customHtml()+'</div>'
+      +'<button id="crAdd" style="padding:8px 14px;border:1px dashed #2e7d32;border-radius:8px;background:#f0f9f0;color:#2e7d32;font-weight:700;cursor:pointer;margin-bottom:6px;">+ Add building / roster</button>'
+      +'<div style="font-size:11px;color:#888;margin-top:2px;">People are added to a new roster from their contact card (Edit &rarr; checkboxes). Removing a roster removes its tab; contacts themselves are never deleted.</div>'
       +'</div>'
       +'<div style="padding:12px 18px 14px;text-align:right;border-top:1px solid #eee;display:flex;gap:8px;justify-content:flex-end;">'
-      +'<button id="blReset" style="padding:9px 14px;border-radius:8px;border:1px solid #ccc;background:#f9f9f9;color:#333;font-weight:700;cursor:pointer;">Reset defaults</button>'
-      +'<button id="blSave" style="padding:9px 18px;border-radius:8px;border:none;background:#2e7d32;color:#fff;font-weight:800;cursor:pointer;">✓ Save</button>'
+      +'<button id="blReset" style="padding:9px 14px;border-radius:8px;border:1px solid #ccc;background:#f9f9f9;color:#333;font-weight:700;cursor:pointer;">Reset names</button>'
+      +'<button id="blSave" style="padding:9px 18px;border-radius:8px;border:none;background:#2e7d32;color:#fff;font-weight:800;cursor:pointer;">✓ Save All</button>'
       +'<button id="blClose" style="padding:9px 18px;border-radius:8px;border:1px solid #ccc;background:#f5f5f5;color:#111;font-weight:700;cursor:pointer;">Close</button></div></div>';
     document.body.appendChild(ov);
     ov.addEventListener('click',function(e){ if(e.target===ov) ov.remove(); });
     document.getElementById('blClose').onclick=function(){ ov.remove(); };
+    function syncCustom(){
+      ov.querySelectorAll('.crInp').forEach(function(inp){
+        var i=parseInt(inp.getAttribute('data-i'),10);
+        if(work[i]) work[i].name = inp.value.trim();
+      });
+    }
+    function rewire(){
+      ov.querySelectorAll('.crDel').forEach(function(b){
+        b.onclick=function(){
+          syncCustom();
+          var i=parseInt(b.getAttribute('data-i'),10);
+          if(!confirm('Remove "'+(work[i].name||'this roster')+'"? Its tab disappears; no contacts are deleted.')) return;
+          work.splice(i,1);
+          document.getElementById('crList').innerHTML=customHtml(); rewire();
+        };
+      });
+    }
+    rewire();
+    document.getElementById('crAdd').onclick=function(){
+      syncCustom();
+      work.push({id:'cr_'+Date.now().toString(36)+Math.random().toString(36).slice(2,6), name:''});
+      document.getElementById('crList').innerHTML=customHtml(); rewire();
+      var inps=ov.querySelectorAll('.crInp'); if(inps.length) inps[inps.length-1].focus();
+    };
     document.getElementById('blReset').onclick=function(){
       ov.querySelectorAll('.blInp').forEach(function(inp){ inp.value = LABEL_DEFAULTS[inp.getAttribute('data-k')]; });
     };
     document.getElementById('blSave').onclick=function(){
+      syncCustom();
+      var cleaned = work.filter(function(c){ return c.name; });
       var next={};
       ov.querySelectorAll('.blInp').forEach(function(inp){
         var v=inp.value.trim();
         if(v && v!==LABEL_DEFAULTS[inp.getAttribute('data-k')]) next[inp.getAttribute('data-k')]=v;
       });
-      db.collection('config').doc('labels').set(next).then(function(){
+      Promise.all([
+        db.collection('config').doc('labels').set(next),
+        db.collection('config').doc('customRosters').set({list: cleaned})
+      ]).then(function(){
         buildingLabels = next;
+        customRosters = cleaned;
         applyBuildingLabels();
+        renderCustomTabs();
+        if(currentCustomTab && !cleaned.some(function(c){return c.id===currentCustomTab;})) setTab('contacts');
         try{ renderContacts(); renderWeekend(); renderCQV(); renderNightShift(); }catch(e){}
-        auditEvent('admin','renamed buildings/rosters');
-        alert('✓ Names updated everywhere.');
+        auditEvent('admin','updated buildings/rosters ('+cleaned.length+' custom)');
+        alert('✓ Saved. '+(cleaned.length?cleaned.length+' custom tab'+(cleaned.length===1?'':'s')+' live.':'Names updated.'));
         ov.remove();
       }).catch(function(e){ alert('Could not save: '+e.message); });
     };
@@ -3821,7 +3959,7 @@
      Android hands it to Contacts, and desktop downloads it.
      Cards live in /c/<id>.vcf and are regenerated from Firestore.
      --------------------------------------------------------------- */
-  var AURA_BUILD = 'v18-buildings';
+  var AURA_BUILD = 'v19-add-buildings';
 
   function saveToContactsBtnHtml(p){
     var href = 'c/' + encodeURIComponent(p.id) + '.vcf';
@@ -3920,6 +4058,11 @@
       + '<label style="display:flex; align-items:center; gap:8px; font-size:14px; color:#f2ede2; margin-bottom:6px;"><input type="checkbox" id="f_addWeekend" style="width:18px; height:18px;" '+(p.linkedWeekendId?'checked':'')+'> Add to '+bl('WEEKEND')+'</label>'
       + '<label style="display:flex; align-items:center; gap:8px; font-size:14px; color:#f2ede2; margin-bottom:6px;"><input type="checkbox" id="f_addCQV" style="width:18px; height:18px;" '+(p.linkedCqvId?'checked':'')+'> Add to '+bl('CQV')+'</label>'
       + '<label style="display:flex; align-items:center; gap:8px; font-size:14px; color:#f2ede2;"><input type="checkbox" id="f_addNightShift" style="width:18px; height:18px;" '+(p.linkedNightShiftId?'checked':'')+'> Add to '+bl('NIGHT')+'</label>'
+      + customRosters.map(function(cr){
+          var on = p.customRosters && p.customRosters[cr.id];
+          return '<label style="display:flex; align-items:center; gap:8px; font-size:14px; color:#f2ede2; margin-bottom:6px;">'
+            +'<input type="checkbox" class="f_customRoster" data-crid="'+cr.id+'" style="width:18px; height:18px;" '+(on?'checked':'')+'> Add to '+escapeHtml(cr.name)+'</label>';
+        }).join('')
       + '</div>'
       + '<div class="field"><label>Emergency notify lists</label>'
       + '<label style="display:flex; align-items:center; gap:8px; font-size:14px; color:#f2ede2; margin-bottom:6px;"><input type="checkbox" id="f_notifyDSM4" style="width:18px; height:18px;" '+(p.notifyDSM4?'checked':'')+'> Notify &ndash; '+bl('DSM4')+' Emergency</label>'
@@ -4023,6 +4166,11 @@
         db.collection('nightshift').doc(p.linkedNightShiftId).delete().catch(function(){});
       }
 
+      var _crm = {};
+      document.querySelectorAll('.f_customRoster').forEach(function(cb){
+        if(cb.checked) _crm[cb.getAttribute('data-crid')] = true;
+      });
+      updated.customRosters = _crm;
       auditEvent('contact','saved '+(updated.name||p.id));
       db.collection('contacts').doc(p.id).set(updated).catch(function(err){ alert('Could not save: ' + err.message); });
       closeModal();
@@ -4691,7 +4839,7 @@
           }).catch(function(e){ console.warn('Auto-clear vacation (contacts):', e.message); });
         }
       });
-      renderContacts(); renderWeekend(); renderCQV(); renderNightShift();
+      renderContacts(); renderWeekend(); renderCQV(); renderNightShift(); renderCustomTabs(); if(currentCustomTab) renderCustomRoster();
       updateSyncStatus(snapshot.metadata.fromCache && !snapshot.metadata.hasPendingWrites);
       if(document.getElementById('sectionEmergency').classList.contains('active')) renderEmergencyContent();
     }, function(err){ console.error('Contacts sync error:', err); updateSyncStatus(true); });
@@ -4712,6 +4860,10 @@
         if(d.exists) buildingLabels = d.data() || {};
         applyBuildingLabels();
       }).catch(function(){ applyBuildingLabels(); });
+      db.collection('config').doc('customRosters').get().then(function(d){
+        if(d.exists && Array.isArray(d.data().list)) customRosters = d.data().list;
+        renderCustomTabs();
+      }).catch(function(){});
     }, function(err){ console.error('Config sync error:', err); });
     db.collection('config').doc('companyPins').onSnapshot(function(doc){
       if(doc.exists && doc.data().pins) companyPins = doc.data().pins;
