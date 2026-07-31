@@ -1475,7 +1475,101 @@
      to the auditLog collection, viewable in the Activity panel (unlocked
      users only). The vacation self-service path is untouched and remains
      the only PIN-free edit. */
-  var adminUsers = [];
+  /* ============ CUSTOM BUILDING / ROSTER NAMES (owner-editable) ============
+     Display names are stored in config/labels and applied everywhere the
+     defaults appear: tabs, emergency screens, contact-form checkboxes, the
+     notify modal, and the emergency SMS itself. Internal data keys
+     (notifyDSM4, linkedDsm3Id, incident.building='DSM4'...) never change,
+     so renaming is purely cosmetic and needs no data migration. */
+  var LABEL_DEFAULTS = {
+    DSM4:'DSM4', DSM3:'DSM3',
+    WEEKEND:'Weekend Jacobs', CQV:'CQV Contacts', NIGHT:'Night Shift Jacobs'
+  };
+  var buildingLabels = {};
+  function bl(key){
+    if(buildingLabels[key]) return buildingLabels[key];
+    if(LABEL_DEFAULTS[key]) return LABEL_DEFAULTS[key];
+    return key;   /* unknown key: show as-is (e.g. legacy incident values) */
+  }
+  function applyBuildingLabels(){
+    var map = [
+      ['DSM4', bl('DSM4')], ['DSM3', bl('DSM3')],
+      ['Weekend Jacobs', bl('WEEKEND')], ['CQV Contacts', bl('CQV')],
+      ['Night Shift Jacobs', bl('NIGHT')]
+    ];
+    document.querySelectorAll('[data-en]').forEach(function(el){
+      if(!el.getAttribute('data-en0')){
+        el.setAttribute('data-en0', el.getAttribute('data-en')||'');
+        el.setAttribute('data-es0', el.getAttribute('data-es')||'');
+      }
+      var en = el.getAttribute('data-en0'), es = el.getAttribute('data-es0');
+      var hit=false;
+      map.forEach(function(m){
+        if(en.indexOf(m[0])!==-1){ en=en.split(m[0]).join(m[1]); hit=true; }
+        if(es.indexOf(m[0])!==-1){ es=es.split(m[0]).join(m[1]); }
+      });
+      if(hit){
+        el.setAttribute('data-en', en);
+        el.setAttribute('data-es', es);
+        el.innerHTML = (typeof uiLang!=='undefined' && uiLang==='es') ? es : en;
+      }
+    });
+  }
+
+  function manageBuildings(){
+    var entered = prompt('Owner PIN required to rename buildings/rosters:');
+    if(entered === null) return;
+    if(entered !== editPin){ alert('Incorrect owner PIN.'); return; }
+    sessionStorage.setItem('aura_who','Owner');
+    var rows = [
+      ['DSM4','Building 1 (tabs, emergency alerts, SMS text)'],
+      ['DSM3','Building 2 (tabs, emergency alerts, SMS text)'],
+      ['WEEKEND','Weekend roster tab'],
+      ['CQV','CQV roster tab'],
+      ['NIGHT','Night shift roster tab']
+    ];
+    var ov=document.createElement('div');
+    ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;';
+    ov.innerHTML='<div style="background:#fff;border-radius:14px;max-width:520px;width:100%;max-height:82vh;display:flex;flex-direction:column;overflow:hidden;">'
+      +'<div style="padding:16px 18px 6px;"><b style="font-size:17px;color:#111;">🏷 Building &amp; Roster Names</b>'
+      +'<div style="font-size:12px;color:#555;margin-top:2px;">Rename anything — tabs, emergency alerts, and the SMS message update everywhere instantly. Existing data is untouched.</div></div>'
+      +'<div style="overflow-y:auto;padding:12px 18px 4px;">'
+      + rows.map(function(r){
+          return '<div style="margin-bottom:12px;">'
+            +'<div style="font-size:11px;color:#666;margin-bottom:3px;">'+r[1]+'</div>'
+            +'<input class="blInp" data-k="'+r[0]+'" value="'+escapeHtml(bl(r[0]))+'" '
+            +'style="width:100%;padding:9px 11px;border:1px solid #999;border-radius:7px;font-size:14px;font-weight:700;color:#111;background:#fff;box-sizing:border-box;">'
+            +'</div>';
+        }).join('')
+      +'</div>'
+      +'<div style="padding:12px 18px 14px;text-align:right;border-top:1px solid #eee;display:flex;gap:8px;justify-content:flex-end;">'
+      +'<button id="blReset" style="padding:9px 14px;border-radius:8px;border:1px solid #ccc;background:#f9f9f9;color:#333;font-weight:700;cursor:pointer;">Reset defaults</button>'
+      +'<button id="blSave" style="padding:9px 18px;border-radius:8px;border:none;background:#2e7d32;color:#fff;font-weight:800;cursor:pointer;">✓ Save</button>'
+      +'<button id="blClose" style="padding:9px 18px;border-radius:8px;border:1px solid #ccc;background:#f5f5f5;color:#111;font-weight:700;cursor:pointer;">Close</button></div></div>';
+    document.body.appendChild(ov);
+    ov.addEventListener('click',function(e){ if(e.target===ov) ov.remove(); });
+    document.getElementById('blClose').onclick=function(){ ov.remove(); };
+    document.getElementById('blReset').onclick=function(){
+      ov.querySelectorAll('.blInp').forEach(function(inp){ inp.value = LABEL_DEFAULTS[inp.getAttribute('data-k')]; });
+    };
+    document.getElementById('blSave').onclick=function(){
+      var next={};
+      ov.querySelectorAll('.blInp').forEach(function(inp){
+        var v=inp.value.trim();
+        if(v && v!==LABEL_DEFAULTS[inp.getAttribute('data-k')]) next[inp.getAttribute('data-k')]=v;
+      });
+      db.collection('config').doc('labels').set(next).then(function(){
+        buildingLabels = next;
+        applyBuildingLabels();
+        try{ renderContacts(); renderWeekend(); renderCQV(); renderNightShift(); }catch(e){}
+        auditEvent('admin','renamed buildings/rosters');
+        alert('✓ Names updated everywhere.');
+        ov.remove();
+      }).catch(function(e){ alert('Could not save: '+e.message); });
+    };
+  }
+
+    var adminUsers = [];
   function whoAmI(){ return sessionStorage.getItem('aura_who') || ''; }
   function isOwner(){ return whoAmI() === 'Owner'; }
   function auditEvent(kind, detail){
@@ -1512,9 +1606,22 @@
         pinBtn.parentNode.insertBefore(mad, pinBtn.nextSibling);
       }
       mad.style.display = isOwner() ? 'inline-block' : 'none';
+      var bld = document.getElementById('manageBuildingsBtn');
+      if(!bld){
+        var pb2 = document.getElementById('changePinBtn');
+        bld = document.createElement('button');
+        bld.id='manageBuildingsBtn'; bld.className = pb2.className;
+        bld.textContent = '🏷 Buildings';
+        bld.style.cssText = pb2.style.cssText;
+        bld.onclick = manageBuildings;
+        pb2.parentNode.insertBefore(bld, pb2.nextSibling);
+      }
+      bld.style.display = isOwner() ? 'inline-block' : 'none';
     } else {
       if(act) act.style.display='none';
       if(mad) mad.style.display='none';
+      var bld2 = document.getElementById('manageBuildingsBtn');
+      if(bld2) bld2.style.display='none';
     }
   }
 
@@ -2600,7 +2707,7 @@
         +'</div>'
         +(tags ? '<div style="margin-top:6px;display:flex;gap:5px;flex-wrap:wrap;">'+tags+'</div>' : '')
         +'<div style="margin-top:5px;font-size:11px;color:#aaa;">'
-        +'Building: '+escapeHtml(d.building||'Unknown')+' &nbsp;|&nbsp; Area: '+escapeHtml(d.area||'Unknown')+' &nbsp;|&nbsp; Project: '+escapeHtml(d.project||'Unknown')
+        +'Building: '+escapeHtml(bl(d.building)||'Unknown')+' &nbsp;|&nbsp; Area: '+escapeHtml(d.area||'Unknown')+' &nbsp;|&nbsp; Project: '+escapeHtml(d.project||'Unknown')
         +'</div>'
         +editBtns
         +'</div></div></div>';
@@ -3714,7 +3821,7 @@
      Android hands it to Contacts, and desktop downloads it.
      Cards live in /c/<id>.vcf and are regenerated from Firestore.
      --------------------------------------------------------------- */
-  var AURA_BUILD = 'v17-admin';
+  var AURA_BUILD = 'v18-buildings';
 
   function saveToContactsBtnHtml(p){
     var href = 'c/' + encodeURIComponent(p.id) + '.vcf';
@@ -3797,7 +3904,7 @@
             return 'Trade Partner';
           })();
           return '<div class="field"><label>Company type</label>'
-            +'<select id="f_companyType" style="width:100%;padding:10px 12px;border:1.5px solid #ddd;border-radius:8px;font-size:15px;background:#fff;">'
+            +'<select id="f_companyType" style="width:100%;padding:10px 12px;border:1.5px solid rgba(255,255,255,0.28);border-radius:8px;font-size:15px;background:#10151c;color:#f2ede2;-webkit-appearance:none;appearance:none;">'
             +['Client','GC','Trade Partner'].map(function(o){
               return '<option value="'+o+'"'+(ct===o?' selected':'')+'>'+o+'</option>';
             }).join('')
@@ -3808,15 +3915,15 @@
       + field('f_email','Email', p.email)
       + field('f_trailer','Trailer / office location', p.trailer)
       + '<div class="field"><label>Management rosters</label>'
-      + '<label style="display:flex; align-items:center; gap:8px; font-size:14px; color:#f2ede2; margin-bottom:6px;"><input type="checkbox" id="f_addDSM4" style="width:18px; height:18px;" '+(p.linkedDsm4Id?'checked':'')+'> Add to DSM4 Management</label>'
-      + '<label style="display:flex; align-items:center; gap:8px; font-size:14px; color:#f2ede2; margin-bottom:6px;"><input type="checkbox" id="f_addDSM3" style="width:18px; height:18px;" '+(p.linkedDsm3Id?'checked':'')+'> Add to DSM3 Management</label>'
-      + '<label style="display:flex; align-items:center; gap:8px; font-size:14px; color:#f2ede2; margin-bottom:6px;"><input type="checkbox" id="f_addWeekend" style="width:18px; height:18px;" '+(p.linkedWeekendId?'checked':'')+'> Add to Weekend Jacobs</label>'
-      + '<label style="display:flex; align-items:center; gap:8px; font-size:14px; color:#f2ede2; margin-bottom:6px;"><input type="checkbox" id="f_addCQV" style="width:18px; height:18px;" '+(p.linkedCqvId?'checked':'')+'> Add to CQV Contacts</label>'
-      + '<label style="display:flex; align-items:center; gap:8px; font-size:14px; color:#f2ede2;"><input type="checkbox" id="f_addNightShift" style="width:18px; height:18px;" '+(p.linkedNightShiftId?'checked':'')+'> Add to Night Shift Jacobs</label>'
+      + '<label style="display:flex; align-items:center; gap:8px; font-size:14px; color:#f2ede2; margin-bottom:6px;"><input type="checkbox" id="f_addDSM4" style="width:18px; height:18px;" '+(p.linkedDsm4Id?'checked':'')+'> Add to '+bl('DSM4')+' Management</label>'
+      + '<label style="display:flex; align-items:center; gap:8px; font-size:14px; color:#f2ede2; margin-bottom:6px;"><input type="checkbox" id="f_addDSM3" style="width:18px; height:18px;" '+(p.linkedDsm3Id?'checked':'')+'> Add to '+bl('DSM3')+' Management</label>'
+      + '<label style="display:flex; align-items:center; gap:8px; font-size:14px; color:#f2ede2; margin-bottom:6px;"><input type="checkbox" id="f_addWeekend" style="width:18px; height:18px;" '+(p.linkedWeekendId?'checked':'')+'> Add to '+bl('WEEKEND')+'</label>'
+      + '<label style="display:flex; align-items:center; gap:8px; font-size:14px; color:#f2ede2; margin-bottom:6px;"><input type="checkbox" id="f_addCQV" style="width:18px; height:18px;" '+(p.linkedCqvId?'checked':'')+'> Add to '+bl('CQV')+'</label>'
+      + '<label style="display:flex; align-items:center; gap:8px; font-size:14px; color:#f2ede2;"><input type="checkbox" id="f_addNightShift" style="width:18px; height:18px;" '+(p.linkedNightShiftId?'checked':'')+'> Add to '+bl('NIGHT')+'</label>'
       + '</div>'
       + '<div class="field"><label>Emergency notify lists</label>'
-      + '<label style="display:flex; align-items:center; gap:8px; font-size:14px; color:#f2ede2; margin-bottom:6px;"><input type="checkbox" id="f_notifyDSM4" style="width:18px; height:18px;" '+(p.notifyDSM4?'checked':'')+'> Notify &ndash; DSM4 Emergency</label>'
-      + '<label style="display:flex; align-items:center; gap:8px; font-size:14px; color:#f2ede2;"><input type="checkbox" id="f_notifyDSM3" style="width:18px; height:18px;" '+(p.notifyDSM3?'checked':'')+'> Notify &ndash; DSM3 Emergency</label>'
+      + '<label style="display:flex; align-items:center; gap:8px; font-size:14px; color:#f2ede2; margin-bottom:6px;"><input type="checkbox" id="f_notifyDSM4" style="width:18px; height:18px;" '+(p.notifyDSM4?'checked':'')+'> Notify &ndash; '+bl('DSM4')+' Emergency</label>'
+      + '<label style="display:flex; align-items:center; gap:8px; font-size:14px; color:#f2ede2;"><input type="checkbox" id="f_notifyDSM3" style="width:18px; height:18px;" '+(p.notifyDSM3?'checked':'')+'> Notify &ndash; '+bl('DSM3')+' Emergency</label>'
       + '</div>'
       + '<div class="modal-btns">'
       + '<button class="primary" id="saveFormBtn">Save</button>'
@@ -3952,7 +4059,7 @@
   var EMERGENCY_CLINIC_DISPLAY = '(984) 284-7565';
 
   function emergencyMessageText(buildingName){
-    var msg = 'EMERGENCY reported at ' + buildingName + ' (Fujifilm Aura Project). Assistance needed immediately.';
+    var msg = 'EMERGENCY reported at ' + bl(buildingName) + ' (Fujifilm Aura Project). Assistance needed immediately.';
     if(qrContext && qrContext.room){
       msg += '\nLocation: ' + qrContext.room + ' (' + qrContext.roomNo + ') – ' + qrContext.floor + ', ' + qrContext.sector + '.';
     }
@@ -4078,7 +4185,7 @@
     body.innerHTML =
       '<p class="topname">Notify Building Management <span style="color:#2a5dab; font-size:14px;">/ Notificar a la Gerencia</span></p>'
       + (contactList.length === 0 ? '<p class="notify-warn">No contacts are currently tagged to receive this text for '+building+'. Tag people in Contacts &rarr; Edit &rarr; Emergency notify lists.<br><span style="color:#a01818;">Ning&uacute;n contacto est&aacute; marcado actualmente para recibir este mensaje en '+building+'.</span></p>' : '')
-      + '<p style="font-size:14px; color:#555; margin:0 0 4px;">This message will be sent to '+contactList.length+' tagged contact'+(contactList.length===1?'':'s')+' for '+building+':<br><span style="color:#2a5dab;">Este mensaje se enviar&aacute; a '+contactList.length+' contacto'+(contactList.length===1?'':'s')+' marcado'+(contactList.length===1?'':'s')+' para '+building+':</span></p>'
+      + '<p style="font-size:14px; color:#555; margin:0 0 4px;">This message will be sent to '+contactList.length+' tagged contact'+(contactList.length===1?'':'s')+' for '+building+':<br><span style="color:#2a5dab;">Este mensaje se enviar&aacute; a '+contactList.length+' contacto'+(contactList.length===1?'':'s')+' marcado'+(contactList.length===1?'':'s')+' para '+bl(building)+':</span></p>'
       + recipientListHtml(building)
       + '<div class="notify-msg-box">'+escapeHtml(msg)+'</div>'
       + '<div class="modal-btns">'
@@ -4601,6 +4708,10 @@
       db.collection('config').doc('admins').get().then(function(d){
         if(d.exists && Array.isArray(d.data().list)) adminUsers = d.data().list;
       }).catch(function(){});
+      db.collection('config').doc('labels').get().then(function(d){
+        if(d.exists) buildingLabels = d.data() || {};
+        applyBuildingLabels();
+      }).catch(function(){ applyBuildingLabels(); });
     }, function(err){ console.error('Config sync error:', err); });
     db.collection('config').doc('companyPins').onSnapshot(function(doc){
       if(doc.exists && doc.data().pins) companyPins = doc.data().pins;
