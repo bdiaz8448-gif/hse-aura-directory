@@ -1003,6 +1003,13 @@
   firebase.initializeApp(firebaseConfig);
   var db = firebase.firestore();
   try{ db.enablePersistence({synchronizeTabs:true}).catch(function(e){ console.warn('Offline persistence unavailable:', e.message); }); }catch(e){}
+  // One lightweight visit record per browser session (admin Activity panel)
+  try{
+    if(!sessionStorage.getItem('aura_visit_logged')){
+      sessionStorage.setItem('aura_visit_logged','1');
+      setTimeout(function(){ auditEvent('visit','page opened'); }, 2500);
+    }
+  }catch(e){}
   /* Service worker REMOVED. It repeatedly served stale copies of this page,
      which meant fixes appeared not to work when they had simply never been
      delivered to the device. Any previously installed worker is torn down
@@ -1425,6 +1432,7 @@
     else {
       sessionStorage.removeItem(EDIT_UNLOCK_KEY);
       sessionStorage.removeItem(COMPANY_ACCESS_KEY); // clear company view on admin lock
+      sessionStorage.removeItem('aura_who');
     }
     updateLockUI();
   }
@@ -1441,7 +1449,9 @@
       if(aib) aib.style.display = 'inline-block';
       var mpb = document.getElementById('managePinsBtn');
       if(mpb) mpb.style.display = 'inline-block';
+      ensureAdminButtons(true);
     } else {
+      ensureAdminButtons(false);
       btn.innerHTML = uiLang === 'es' ? '&#128274; Bloqueado' : '&#128274; Locked';
       btn.classList.remove('unlocked');
       pinBtn.style.display = 'none';
@@ -1456,12 +1466,171 @@
       if(si && si.classList.contains('active')) renderIncidentLog();
     }
   }
+  /* ================= MULTI-ADMIN ACCESS + ACTIVITY LOG =================
+     Owner  = the existing Edit PIN (config/app.editPin). Full control,
+              including managing the admin list. Unchanged behaviour.
+     Admin  = a named person in config/admins {list:[{name,pin}]}.
+              Their own PIN unlocks editing exactly like before.
+     Every unlock records WHO unlocked. Visits and key actions are written
+     to the auditLog collection, viewable in the Activity panel (unlocked
+     users only). The vacation self-service path is untouched and remains
+     the only PIN-free edit. */
+  var adminUsers = [];
+  function whoAmI(){ return sessionStorage.getItem('aura_who') || ''; }
+  function isOwner(){ return whoAmI() === 'Owner'; }
+  function auditEvent(kind, detail){
+    try{
+      db.collection('auditLog').add({
+        ts: new Date(), kind: kind||'', who: whoAmI(),
+        detail: (detail||'').slice(0,200),
+        ua: (navigator.userAgent||'').slice(0,110)
+      });
+    }catch(e){}
+  }
+
+  function ensureAdminButtons(show){
+    var pinBtn = document.getElementById('changePinBtn');
+    if(!pinBtn || !pinBtn.parentNode) return;
+    var act = document.getElementById('activityBtn');
+    var mad = document.getElementById('manageAdminsBtn');
+    if(show){
+      if(!act){
+        act = document.createElement('button');
+        act.id='activityBtn'; act.className = pinBtn.className;
+        act.textContent = '📊 Activity';
+        act.style.cssText = pinBtn.style.cssText;
+        act.onclick = showActivityPanel;
+        pinBtn.parentNode.insertBefore(act, pinBtn.nextSibling);
+      }
+      act.style.display='inline-block';
+      if(!mad){
+        mad = document.createElement('button');
+        mad.id='manageAdminsBtn'; mad.className = pinBtn.className;
+        mad.textContent = '👥 Admins';
+        mad.style.cssText = pinBtn.style.cssText;
+        mad.onclick = manageAdmins;
+        pinBtn.parentNode.insertBefore(mad, pinBtn.nextSibling);
+      }
+      mad.style.display = isOwner() ? 'inline-block' : 'none';
+    } else {
+      if(act) act.style.display='none';
+      if(mad) mad.style.display='none';
+    }
+  }
+
+  function showActivityPanel(){
+    if(!isUnlocked()){ alert('Unlock first.'); return; }
+    var ov=document.createElement('div');
+    ov.id='activityOverlay';
+    ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;';
+    ov.innerHTML='<div style="background:#fff;border-radius:14px;max-width:680px;width:100%;max-height:82vh;display:flex;flex-direction:column;overflow:hidden;">'
+      +'<div style="padding:16px 18px 10px;"><b style="font-size:17px;color:#111;">📊 Site Activity</b>'
+      +'<div style="font-size:12px;color:#555;margin-top:2px;">Last 100 events — visible to unlocked admins only.</div></div>'
+      +'<div id="activityRows" style="overflow-y:auto;padding:0 18px 8px;font-size:12.5px;color:#111;">Loading…</div>'
+      +'<div style="padding:10px 18px 14px;text-align:right;border-top:1px solid #eee;">'
+      +'<button id="activityCloseBtn" style="padding:9px 18px;border-radius:8px;border:1px solid #ccc;background:#f5f5f5;color:#111;font-weight:700;cursor:pointer;">Close</button></div></div>';
+    document.body.appendChild(ov);
+    document.getElementById('activityCloseBtn').onclick=function(){ ov.remove(); };
+    ov.addEventListener('click',function(e){ if(e.target===ov) ov.remove(); });
+    db.collection('auditLog').orderBy('ts','desc').limit(100).get().then(function(snap){
+      var rows=[];
+      snap.forEach(function(doc){
+        var d=doc.data();
+        var t = d.ts && d.ts.toDate ? d.ts.toDate() : new Date();
+        var when = t.toLocaleDateString() + ' ' + t.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+        var kindColors={unlock:'#1565c0',visit:'#888',incident:'#b3541e',contact:'#2e7d32',admin:'#6a1b9a'};
+        rows.push('<div style="display:flex;gap:10px;padding:7px 0;border-bottom:1px solid #f0f0f0;align-items:baseline;">'
+          +'<span style="white-space:nowrap;color:#666;font-size:11.5px;min-width:118px;">'+when+'</span>'
+          +'<span style="font-weight:800;color:'+(kindColors[d.kind]||'#333')+';min-width:58px;text-transform:uppercase;font-size:10.5px;letter-spacing:0.03em;">'+escapeHtml(d.kind||'')+'</span>'
+          +'<span style="color:#111;">'+escapeHtml(d.who||'—')+(d.detail?' · '+escapeHtml(d.detail):'')+'</span>'
+          +'</div>');
+      });
+      document.getElementById('activityRows').innerHTML = rows.length ? rows.join('') : '<div style="color:#777;padding:14px 0;">No activity recorded yet.</div>';
+    }).catch(function(e){
+      document.getElementById('activityRows').innerHTML='<div style="color:#b00;">Could not load activity: '+escapeHtml(e.message)+'</div>';
+    });
+  }
+
+  function manageAdmins(){
+    /* Owner only - and re-verify the owner PIN even if already unlocked. */
+    var entered = prompt('Owner PIN required to manage admins:');
+    if(entered === null) return;
+    if(entered !== editPin){ alert('Incorrect owner PIN.'); return; }
+    sessionStorage.setItem('aura_who','Owner');
+    var ov=document.createElement('div');
+    ov.id='adminMgrOverlay';
+    ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;';
+    function rowsHtml(){
+      var r = adminUsers.map(function(a,idx){
+        return '<div class="admRow" style="display:flex;gap:8px;margin-bottom:8px;align-items:center;">'
+          +'<input class="admName" data-i="'+idx+'" value="'+escapeHtml(a.name||'')+'" placeholder="Name" style="flex:1;padding:8px 10px;border:1px solid #999;border-radius:6px;font-size:13px;color:#111;background:#fff;">'
+          +'<input class="admPin" data-i="'+idx+'" value="'+escapeHtml(a.pin||'')+'" placeholder="PIN" style="width:90px;padding:8px 10px;border:1px solid #999;border-radius:6px;font-size:14px;font-weight:700;color:#111;background:#fff;">'
+          +'<button class="admDel" data-i="'+idx+'" style="padding:7px 10px;border:1px solid #e57373;border-radius:6px;background:#fff;color:#c62828;font-weight:700;cursor:pointer;">×</button>'
+          +'</div>';
+      }).join('');
+      return r || '<div style="color:#777;font-size:13px;margin-bottom:8px;">No admins yet — add the first one below.</div>';
+    }
+    ov.innerHTML='<div style="background:#fff;border-radius:14px;max-width:520px;width:100%;max-height:82vh;display:flex;flex-direction:column;overflow:hidden;">'
+      +'<div style="padding:16px 18px 6px;"><b style="font-size:17px;color:#111;">👥 Admin Personnel</b>'
+      +'<div style="font-size:12px;color:#555;margin-top:2px;">Each admin gets their own PIN with full edit access. Only the Owner PIN can open this panel.</div></div>'
+      +'<div id="admList" style="overflow-y:auto;padding:12px 18px 4px;">'+rowsHtml()+'</div>'
+      +'<div style="padding:6px 18px 4px;"><button id="admAdd" style="padding:8px 14px;border:1px dashed #1565c0;border-radius:8px;background:#eff6ff;color:#1565c0;font-weight:700;cursor:pointer;">+ Add admin</button></div>'
+      +'<div style="padding:12px 18px 14px;text-align:right;border-top:1px solid #eee;display:flex;gap:8px;justify-content:flex-end;">'
+      +'<button id="admSave" style="padding:9px 18px;border-radius:8px;border:none;background:#2e7d32;color:#fff;font-weight:800;cursor:pointer;">✓ Save All</button>'
+      +'<button id="admClose" style="padding:9px 18px;border-radius:8px;border:1px solid #ccc;background:#f5f5f5;color:#111;font-weight:700;cursor:pointer;">Close</button></div></div>';
+    document.body.appendChild(ov);
+    function syncFromInputs(){
+      var names=ov.querySelectorAll('.admName'), pins=ov.querySelectorAll('.admPin');
+      adminUsers = [];
+      for(var i2=0;i2<names.length;i2++){
+        var nm=names[i2].value.trim(), pn=pins[i2].value.trim();
+        if(nm && pn) adminUsers.push({name:nm, pin:pn});
+      }
+    }
+    function rewire(){
+      ov.querySelectorAll('.admDel').forEach(function(b){
+        b.onclick=function(){ syncFromInputs(); adminUsers.splice(parseInt(b.getAttribute('data-i'),10),1);
+          document.getElementById('admList').innerHTML=rowsHtml(); rewire(); };
+      });
+    }
+    rewire();
+    document.getElementById('admAdd').onclick=function(){
+      syncFromInputs(); adminUsers.push({name:'',pin:''});
+      document.getElementById('admList').innerHTML=rowsHtml(); rewire();
+    };
+    document.getElementById('admClose').onclick=function(){ ov.remove(); };
+    ov.addEventListener('click',function(e){ if(e.target===ov) ov.remove(); });
+    document.getElementById('admSave').onclick=function(){
+      syncFromInputs();
+      var bad = adminUsers.some(function(a){ return a.pin === editPin; });
+      if(bad){ alert('An admin PIN cannot be the same as the Owner PIN.'); return; }
+      db.collection('config').doc('admins').set({list: adminUsers}).then(function(){
+        auditEvent('admin','admin list updated ('+adminUsers.length+' admins)');
+        alert('✓ Saved. '+adminUsers.length+' admin'+(adminUsers.length===1?'':'s')+' can now unlock with their own PIN.');
+        ov.remove();
+      }).catch(function(e){ alert('Could not save: '+e.message); });
+    };
+  }
+
   function requireUnlock(action){
     if(isUnlocked()){ action(); return; }
     var entered = prompt('Enter edit PIN to add, edit, or delete:');
     if(entered === null) return;
-    if(entered === editPin){ setUnlocked(true); action(); }
-    else alert('Incorrect PIN.');
+    var who = null;
+    if(entered === editPin){ who = 'Owner'; }
+    else {
+      for(var ai=0; ai<adminUsers.length; ai++){
+        if(adminUsers[ai].pin && adminUsers[ai].pin === entered){ who = adminUsers[ai].name || 'Admin'; break; }
+      }
+    }
+    if(who){
+      sessionStorage.setItem('aura_who', who);
+      setUnlocked(true);
+      auditEvent('unlock', who + ' unlocked editing');
+      action();
+    } else {
+      alert('Incorrect PIN.');
+    }
   }
   // Expose to inline onclick handlers (outside IIFE global scope)
   window.requireUnlock = requireUnlock;
@@ -1535,9 +1704,9 @@
     var rows = companies.map(function(c){
       var id = 'cpinRow_'+c.replace(/[^a-zA-Z0-9]/g,'_');
       return '<tr data-company="'+escapeHtml(c)+'">'
-        +'<td style="padding:6px 8px;font-size:13px;font-weight:600;">'+escapeHtml(c)+'</td>'
+        +'<td style="padding:6px 8px;font-size:13px;font-weight:600;color:#111;font-weight:700;">'+escapeHtml(c)+'</td>'
         +'<td style="padding:6px 8px;"><input type="text" id="'+id+'" value="'+escapeHtml(companyPins[c]||'')+'" '
-        +'style="padding:5px 8px;border:1px solid #ddd;border-radius:5px;font-size:13px;width:90px;"></td>'
+        +'style="padding:5px 8px;border:1px solid #999;border-radius:5px;font-size:14px;font-weight:700;width:90px;color:#111;background:#fff;"></td>'
         +'<td style="padding:6px 8px;"><button onclick="removeCPin(this)" '
         +'style="font-size:11px;padding:3px 8px;background:#fff;border:1px solid #c62828;color:#c62828;border-radius:4px;cursor:pointer;">&#215; Remove</button></td></tr>';
     }).join('');
@@ -1556,8 +1725,8 @@
       +'<div style="background:#f0f7ff;border:1px solid #bfdbfe;border-radius:8px;padding:10px 12px;margin-bottom:16px;">'
       +'<div style="font-size:11px;color:#1e40af;font-weight:600;margin-bottom:6px;">Add new company</div>'
       +'<div style="display:flex;gap:8px;align-items:center;">'
-      +'<input id="newCpinCompany" type="text" placeholder="Company name" style="flex:1;padding:7px 9px;border:1.5px solid #c7d2fe;border-radius:6px;font-size:13px;">'
-      +'<input id="newCpinPin" type="text" placeholder="PIN" style="width:80px;padding:7px 9px;border:1.5px solid #c7d2fe;border-radius:6px;font-size:13px;">'
+      +'<input id="newCpinCompany" type="text" placeholder="Company name" style="flex:1;padding:7px 9px;border:1.5px solid #c7d2fe;border-radius:6px;font-size:13px;color:#111;background:#fff;">'
+      +'<input id="newCpinPin" type="text" placeholder="PIN" style="width:80px;padding:7px 9px;border:1.5px solid #c7d2fe;border-radius:6px;font-size:13px;color:#111;background:#fff;">'
       +'<button onclick="addCPin()" style="background:#1565c0;color:#fff;border:none;border-radius:6px;padding:7px 14px;font-size:13px;font-weight:700;cursor:pointer;">Add</button>'
       +'</div></div>'
       +'<div style="display:flex;gap:8px;justify-content:flex-end;">'
@@ -1578,7 +1747,7 @@
     tr.setAttribute('data-company', co);
     tr.innerHTML = '<td style="padding:6px 8px;font-size:13px;font-weight:600;">'+escapeHtml(co)+'</td>'
       +'<td style="padding:6px 8px;"><input type="text" id="'+id+'" value="'+escapeHtml(pin)+'" '
-      +'style="padding:5px 8px;border:1px solid #ddd;border-radius:5px;font-size:13px;width:90px;"></td>'
+      +'style="padding:5px 8px;border:1px solid #999;border-radius:5px;font-size:14px;font-weight:700;width:90px;color:#111;background:#fff;"></td>'
       +'<td style="padding:6px 8px;"><button onclick="removeCPin(this)" '
       +'style="font-size:11px;padding:3px 8px;background:#fff;border:1px solid #c62828;color:#c62828;border-radius:4px;cursor:pointer;">&#215; Remove</button></td>';
     tbody.appendChild(tr);
@@ -2222,6 +2391,46 @@
     return 'background:#f5f5f5;color:#444;border:1px solid #ddd;';
   }
 
+  /* ---- Incident log pagination: 10 per page across every tab/search ---- */
+  var incidentPage = 1;
+  var INCIDENTS_PER_PAGE = 10;
+  var _incLastKey = '';
+  function gotoIncidentPage(n){
+    incidentPage = n;
+    renderIncidentLog();
+    var g = document.getElementById('incidentGrid');
+    if(g) g.scrollIntoView({behavior:'smooth', block:'start'});
+  }
+  window.gotoIncidentPage = gotoIncidentPage;   /* inline onclick needs global */
+  function incPaginationHtml(total, pages, page){
+    if(pages <= 1) return '';
+    function btn(n, label, active, disabled){
+      return '<button onclick="gotoIncidentPage('+n+')" '+(disabled?'disabled ':'')
+        +'style="min-width:38px;padding:8px 10px;border-radius:8px;font-size:13px;font-weight:700;cursor:'+(disabled?'default':'pointer')+';'
+        +(active
+          ? 'background:#1565c0;color:#fff;border:1px solid #1565c0;'
+          : 'background:rgba(255,255,255,0.06);color:#ddd;border:1px solid rgba(255,255,255,0.25);')
+        +(disabled?'opacity:0.35;':'')+'">'+label+'</button>';
+    }
+    var parts=[];
+    parts.push(btn(Math.max(1,page-1),'&#8249; Prev',false,page===1));
+    var shown={};
+    [1,2,page-1,page,page+1,pages-1,pages].forEach(function(p){
+      if(p>=1 && p<=pages) shown[p]=1;
+    });
+    var keys=Object.keys(shown).map(Number).sort(function(a,b){return a-b;});
+    var last=0;
+    keys.forEach(function(p){
+      if(p-last>1) parts.push('<span style="color:#888;padding:0 2px;">&hellip;</span>');
+      parts.push(btn(p, p, p===page, false));
+      last=p;
+    });
+    parts.push(btn(Math.min(pages,page+1),'Next &#8250;',false,page===pages));
+    return '<div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center;align-items:center;padding:18px 0 6px;">'
+      + parts.join('')
+      + '</div>';
+  }
+
   function setIncidentFilter(val, btn){
     incidentFilter = val;
     document.querySelectorAll('#incidentFilterRow .filter-btn').forEach(function(b){ b.classList.remove('active'); });
@@ -2342,9 +2551,14 @@
       var textOk = !q || [d.description||'',d.correctiveAction||'',d.contractor||'',d.area||'',(d.topicTags||[]).join(' ')].join(' ').toLowerCase().indexOf(q)!==-1;
       return typeOk && textOk;
     });
+    var _incKey = incidentFilter + '|' + q + '|' + (companyView||'');
+    if(_incKey !== _incLastKey){ incidentPage = 1; _incLastKey = _incKey; }
+    var totalPages = Math.max(1, Math.ceil(visible.length / INCIDENTS_PER_PAGE));
+    if(incidentPage > totalPages) incidentPage = totalPages;
+    var pageItems = visible.slice((incidentPage-1)*INCIDENTS_PER_PAGE, incidentPage*INCIDENTS_PER_PAGE);
     if(countLbl) countLbl.textContent = companyView
       ? ('Showing ' + visible.length + ' of ' + viewBase.length + ' ' + companyView + ' incidents')
-      : ('Showing ' + visible.length + ' of ' + allIncidents.length + ' incidents');
+      : ('Showing ' + visible.length + ' of ' + allIncidents.length + ' incidents' + (totalPages>1 ? ' \u2014 page '+incidentPage+' of '+totalPages : ''));
     // Show/hide company access banner
     var existingBanner = document.getElementById('companyAccessBanner');
     if(companyView && !existingBanner){
@@ -2363,7 +2577,7 @@
     }
     empty.style.display='none';
     var unlocked = isUnlocked();
-    grid.innerHTML = visible.map(function(d){
+    grid.innerHTML = pageItems.map(function(d){
       var tags = (d.topicTags||[]).map(function(t){ return '<span style="font-size:10px;background:#f0f0f0;border:1px solid #ddd;border-radius:4px;padding:2px 6px;color:#555;">'+escapeHtml(t)+'</span>'; }).join(' ');
       var flags = [];
       if(d.injury==='Yes') flags.push('<span style="font-size:10px;background:#fff7ed;border:1px solid #fed7aa;border-radius:4px;padding:2px 6px;color:#9a3412;">Injury</span>');
@@ -2390,7 +2604,7 @@
         +'</div>'
         +editBtns
         +'</div></div></div>';
-    }).join('');
+    }).join('') + incPaginationHtml(visible.length, totalPages, incidentPage);
   }
   // Expose to inline onclick handlers (outside IIFE global scope)
   window.renderIncidentLog = renderIncidentLog;
@@ -2517,6 +2731,7 @@
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     };
     var ref = id ? db.collection('incidents').doc(id) : db.collection('incidents').doc();
+    auditEvent('incident', (id ? 'edited ' : 'added ') + (id || 'new incident'));
     ref.set(data, {merge: true}).then(function(){
       closeModal();
     }).catch(function(err){ alert('Error saving: '+err.message); });
@@ -2537,6 +2752,7 @@
   function deleteIncident(id){
     requireUnlock(function(){
       if(!confirm('Delete this incident? This cannot be undone.')) return;
+      auditEvent('incident','deleted '+id);
       db.collection('incidents').doc(id).delete().catch(function(err){ alert('Error: '+err.message); });
     });
   }
@@ -3498,7 +3714,7 @@
      Android hands it to Contacts, and desktop downloads it.
      Cards live in /c/<id>.vcf and are regenerated from Firestore.
      --------------------------------------------------------------- */
-  var AURA_BUILD = 'v16-twilio-restored';
+  var AURA_BUILD = 'v17-admin';
 
   function saveToContactsBtnHtml(p){
     var href = 'c/' + encodeURIComponent(p.id) + '.vcf';
@@ -3592,15 +3808,15 @@
       + field('f_email','Email', p.email)
       + field('f_trailer','Trailer / office location', p.trailer)
       + '<div class="field"><label>Management rosters</label>'
-      + '<label style="display:flex; align-items:center; gap:8px; font-size:14px; color:#1a1a1a; margin-bottom:6px;"><input type="checkbox" id="f_addDSM4" style="width:18px; height:18px;" '+(p.linkedDsm4Id?'checked':'')+'> Add to DSM4 Management</label>'
-      + '<label style="display:flex; align-items:center; gap:8px; font-size:14px; color:#1a1a1a; margin-bottom:6px;"><input type="checkbox" id="f_addDSM3" style="width:18px; height:18px;" '+(p.linkedDsm3Id?'checked':'')+'> Add to DSM3 Management</label>'
-      + '<label style="display:flex; align-items:center; gap:8px; font-size:14px; color:#1a1a1a; margin-bottom:6px;"><input type="checkbox" id="f_addWeekend" style="width:18px; height:18px;" '+(p.linkedWeekendId?'checked':'')+'> Add to Weekend Jacobs</label>'
-      + '<label style="display:flex; align-items:center; gap:8px; font-size:14px; color:#1a1a1a; margin-bottom:6px;"><input type="checkbox" id="f_addCQV" style="width:18px; height:18px;" '+(p.linkedCqvId?'checked':'')+'> Add to CQV Contacts</label>'
-      + '<label style="display:flex; align-items:center; gap:8px; font-size:14px; color:#1a1a1a;"><input type="checkbox" id="f_addNightShift" style="width:18px; height:18px;" '+(p.linkedNightShiftId?'checked':'')+'> Add to Night Shift Jacobs</label>'
+      + '<label style="display:flex; align-items:center; gap:8px; font-size:14px; color:#f2ede2; margin-bottom:6px;"><input type="checkbox" id="f_addDSM4" style="width:18px; height:18px;" '+(p.linkedDsm4Id?'checked':'')+'> Add to DSM4 Management</label>'
+      + '<label style="display:flex; align-items:center; gap:8px; font-size:14px; color:#f2ede2; margin-bottom:6px;"><input type="checkbox" id="f_addDSM3" style="width:18px; height:18px;" '+(p.linkedDsm3Id?'checked':'')+'> Add to DSM3 Management</label>'
+      + '<label style="display:flex; align-items:center; gap:8px; font-size:14px; color:#f2ede2; margin-bottom:6px;"><input type="checkbox" id="f_addWeekend" style="width:18px; height:18px;" '+(p.linkedWeekendId?'checked':'')+'> Add to Weekend Jacobs</label>'
+      + '<label style="display:flex; align-items:center; gap:8px; font-size:14px; color:#f2ede2; margin-bottom:6px;"><input type="checkbox" id="f_addCQV" style="width:18px; height:18px;" '+(p.linkedCqvId?'checked':'')+'> Add to CQV Contacts</label>'
+      + '<label style="display:flex; align-items:center; gap:8px; font-size:14px; color:#f2ede2;"><input type="checkbox" id="f_addNightShift" style="width:18px; height:18px;" '+(p.linkedNightShiftId?'checked':'')+'> Add to Night Shift Jacobs</label>'
       + '</div>'
       + '<div class="field"><label>Emergency notify lists</label>'
-      + '<label style="display:flex; align-items:center; gap:8px; font-size:14px; color:#1a1a1a; margin-bottom:6px;"><input type="checkbox" id="f_notifyDSM4" style="width:18px; height:18px;" '+(p.notifyDSM4?'checked':'')+'> Notify &ndash; DSM4 Emergency</label>'
-      + '<label style="display:flex; align-items:center; gap:8px; font-size:14px; color:#1a1a1a;"><input type="checkbox" id="f_notifyDSM3" style="width:18px; height:18px;" '+(p.notifyDSM3?'checked':'')+'> Notify &ndash; DSM3 Emergency</label>'
+      + '<label style="display:flex; align-items:center; gap:8px; font-size:14px; color:#f2ede2; margin-bottom:6px;"><input type="checkbox" id="f_notifyDSM4" style="width:18px; height:18px;" '+(p.notifyDSM4?'checked':'')+'> Notify &ndash; DSM4 Emergency</label>'
+      + '<label style="display:flex; align-items:center; gap:8px; font-size:14px; color:#f2ede2;"><input type="checkbox" id="f_notifyDSM3" style="width:18px; height:18px;" '+(p.notifyDSM3?'checked':'')+'> Notify &ndash; DSM3 Emergency</label>'
       + '</div>'
       + '<div class="modal-btns">'
       + '<button class="primary" id="saveFormBtn">Save</button>'
@@ -3700,6 +3916,7 @@
         db.collection('nightshift').doc(p.linkedNightShiftId).delete().catch(function(){});
       }
 
+      auditEvent('contact','saved '+(updated.name||p.id));
       db.collection('contacts').doc(p.id).set(updated).catch(function(err){ alert('Could not save: ' + err.message); });
       closeModal();
     });
@@ -4381,6 +4598,9 @@
     }, function(err){ console.error('DSM3 sync error:', err); });
     db.collection('config').doc('app').onSnapshot(function(doc){
       if(doc.exists && doc.data().editPin) editPin = doc.data().editPin;
+      db.collection('config').doc('admins').get().then(function(d){
+        if(d.exists && Array.isArray(d.data().list)) adminUsers = d.data().list;
+      }).catch(function(){});
     }, function(err){ console.error('Config sync error:', err); });
     db.collection('config').doc('companyPins').onSnapshot(function(doc){
       if(doc.exists && doc.data().pins) companyPins = doc.data().pins;
