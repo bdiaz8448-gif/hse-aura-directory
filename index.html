@@ -1003,9 +1003,17 @@
   firebase.initializeApp(firebaseConfig);
   var db = firebase.firestore();
   try{ db.enablePersistence({synchronizeTabs:true}).catch(function(e){ console.warn('Offline persistence unavailable:', e.message); }); }catch(e){}
-  // Register Service Worker for full offline support
+  /* Service worker REMOVED. It repeatedly served stale copies of this page,
+     which meant fixes appeared not to work when they had simply never been
+     delivered to the device. Any previously installed worker is torn down
+     here so no phone stays stuck on an old build. */
   if('serviceWorker' in navigator){
-    navigator.serviceWorker.register('./sw.js').catch(function(e){ console.warn('SW reg failed:', e); });
+    navigator.serviceWorker.getRegistrations().then(function(rs){
+      rs.forEach(function(r){ r.unregister(); });
+    }).catch(function(){});
+  }
+  if(window.caches){
+    caches.keys().then(function(ks){ ks.forEach(function(k){ caches.delete(k); }); }).catch(function(){});
   }
 
   var contacts = [];
@@ -3476,18 +3484,21 @@
   }
 
   /* ---------------------------------------------------------------
-     SAVE TO CONTACTS - verified on-device behaviour
+     SAVE TO CONTACTS
 
-     Field-tested on iPhone (see save-test.html results):
-       data: URL link      -> BLOCKED by WebKit (anti-phishing policy)
-       blob: navigation    -> BLOCKED / no-op on iOS
-       Web Share API files -> WORKS, opens the Contacts card
+     Measured on-device (Gmail in-app browser on iPhone, see log):
+       data: link       -> nothing happens
+       blob: navigation -> nothing happens
+       Web Share API    -> WORKS
 
-     So iOS gets Web Share as its PRIMARY path, not a fallback.
-     Android and desktop keep the plain blob download, which is
-     already proven working there.
+     In-app browsers (Gmail, Messages, LinkedIn, Teams, Outlook...)
+     block downloads and data:/blob: navigation outright. Web Share is
+     the only mechanism they allow, and it is also the nicest path in
+     real Safari and on Android. So: if the device can share a file,
+     that is what we use - everywhere. Plain download is kept only for
+     desktop, where it is already proven to work.
      --------------------------------------------------------------- */
-  var AURA_BUILD = 'v8-share';
+  var AURA_BUILD = 'v9-share-first';
   var _vcfUrls = [];
   function makeVcfUrl(text){
     try{
@@ -3500,9 +3511,9 @@
       return 'data:text/vcard;charset=utf-8,' + encodeURIComponent(text);
     }
   }
-  function isAppleMobile(){
-    return /iPad|iPhone|iPod/.test(navigator.userAgent)
-        || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  function isTouchDevice(){
+    return /iPad|iPhone|iPod|Android/i.test(navigator.userAgent)
+        || (navigator.maxTouchPoints > 1 && /Mac/.test(navigator.platform));
   }
 
   function saveToContactsBtnHtml(p){
@@ -3522,43 +3533,70 @@
     try{ text = decodeURIComponent(escape(atob(a.getAttribute('data-vcf')))); }
     catch(e){ return true; }
 
-    var label = a, original = a.textContent;
-    function flash(msg){
-      label.textContent = msg;
-      setTimeout(function(){ label.textContent = original; }, 2500);
+    var original = a.textContent;
+    function flash(msg, ms){
+      a.textContent = msg;
+      setTimeout(function(){ a.textContent = original; }, ms || 2500);
     }
 
     var file = null;
     try{ if(window.File) file = new File([text], fname, {type:'text/vcard'}); }catch(e){}
 
-    /* ---- iPhone / iPad: Web Share is the ONLY route that works ---- */
-    if(isAppleMobile()){
-      if(file && navigator.share){
-        /* canShare can be over-strict about text/vcard on some iOS builds,
-           so if it is unavailable we still attempt the share. */
-        var allowed = true;
-        try{ if(navigator.canShare) allowed = navigator.canShare({files:[file]}); }catch(e){ allowed = true; }
-        if(allowed){
-          ev.preventDefault();
+    /* ---- Share first. Works in Safari, Chrome, and critically inside
+            in-app browsers where downloads are blocked entirely. ---- */
+    if(file && navigator.share){
+      var allowed = true;
+      try{ if(navigator.canShare) allowed = navigator.canShare({files:[file]}); }
+      catch(e){ allowed = true; }
+      if(allowed){
+        ev.preventDefault();
+        try{
           navigator.share({files:[file]})
             .then(function(){ flash('✓ Saved'); })
             .catch(function(err){
-              if(err && err.name === 'AbortError') return;      // user closed the sheet
-              try{ window.location.href = makeVcfUrl(text); }catch(e2){ flash('Could not save'); }
+              if(err && err.name === 'AbortError') return;   // user closed the sheet
+              vcfLastResort(text, flash);
             });
-          return false;
-        }
+        }catch(e){ vcfLastResort(text, flash); }
+        return false;
       }
-      /* Very old iOS with no Web Share at all - blob nav is the last hope. */
+    }
+
+    /* ---- Touch device with no Web Share at all: downloads are very
+            likely blocked too, so show the card for manual saving. ---- */
+    if(isTouchDevice()){
       ev.preventDefault();
-      try{ window.location.href = makeVcfUrl(text); }
-      catch(e){ flash('Could not save'); }
+      vcfLastResort(text, flash);
       return false;
     }
 
-    /* ---- Android / desktop: the anchor already carries a blob +
-            download=, so let the browser save the .vcf natively. ---- */
+    /* ---- Desktop: anchor carries blob + download=, save natively. ---- */
     return true;
+  }
+
+  /* Nothing programmatic worked. Rather than fail silently - which is what
+     made this so hard to diagnose - show the contact card and tell the
+     person exactly how to get it saved. */
+  function vcfLastResort(text, flash){
+    try{
+      var w = window.open('', '_blank');
+      if(w && w.document){
+        w.document.write(
+          '<meta name="viewport" content="width=device-width,initial-scale=1">'
+          + '<body style="font-family:-apple-system,system-ui,sans-serif;background:#111;color:#eee;padding:20px;line-height:1.6">'
+          + '<h3 style="color:#C9A84C;margin:0 0 6px">Contact card</h3>'
+          + '<p style="color:#999;font-size:13px;margin:0 0 14px">This browser blocked the automatic save. '
+          + 'Open this page in Safari or Chrome (tap the &hellip; menu &rarr; Open in Browser) and tap Save to Contacts again, '
+          + 'or copy the details below.</p>'
+          + '<pre style="white-space:pre-wrap;background:#000;padding:14px;border-radius:10px;'
+          + 'font-size:13px;color:#9adb9a;user-select:text;-webkit-user-select:text">'
+          + text.replace(/[<>&]/g, function(c){ return {'<':'&lt;','>':'&gt;','&':'&amp;'}[c]; })
+          + '</pre></body>');
+        w.document.close();
+        return;
+      }
+    }catch(e){}
+    if(flash) flash('Open in Safari to save', 4000);
   }
   function openContactForm(existing){
     var p = existing || {id:'id_'+Date.now()+'_'+Math.random().toString(36).slice(2,7), name:'', role:'', company:'', cellPhone:'', officePhone:'', email:'', trailer:'', notifyDSM4:false, notifyDSM3:false};
