@@ -3498,7 +3498,7 @@
      Android hands it to Contacts, and desktop downloads it.
      Cards live in /c/<id>.vcf and are regenerated from Firestore.
      --------------------------------------------------------------- */
-  var AURA_BUILD = 'v13-safari-notice';
+  var AURA_BUILD = 'v14-safari-notice';
 
   /* ---------------------------------------------------------------
      IN-APP BROWSER NOTICE
@@ -3520,9 +3520,13 @@
     if(!iOS) return false;
     if(window.navigator.standalone === true) return false;   // home screen install
     // Known embedded browsers
+    // Chrome / Firefox / Edge / Opera on iOS are deliberate user choices,
+    // not in-app traps. Don't nag them.
+    if(/CriOS|FxiOS|EdgiOS|OPiOS/.test(ua)) return false;
+    // Known embedded browsers
     if(/(FBAN|FBAV|Instagram|Line\/|Twitter|LinkedInApp|MicroMessenger|Snapchat|GSA\/)/i.test(ua)) return true;
     // Real Safari reports BOTH Version/ and Safari/. Embedded WKWebViews usually don't.
-    var realSafari = /Version\//.test(ua) && /Safari\//.test(ua) && !/CriOS|FxiOS|EdgiOS|OPiOS/.test(ua);
+    var realSafari = /Version\//.test(ua) && /Safari\//.test(ua);
     return !realSafari;
   }
 
