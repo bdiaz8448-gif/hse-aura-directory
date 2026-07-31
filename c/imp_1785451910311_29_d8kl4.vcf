@@ -1,0 +1,8 @@
+BEGIN:VCARD
+VERSION:3.0
+N:Carlisle;Rich;;;
+FN:Rich Carlisle
+ORG:JACOBS
+TEL;TYPE=CELL,VOICE:919-337-7622
+EMAIL;TYPE=INTERNET,WORK:rich.carlisle@jacobs.com
+END:VCARD

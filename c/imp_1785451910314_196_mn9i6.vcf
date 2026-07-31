@@ -1,0 +1,8 @@
+BEGIN:VCARD
+VERSION:3.0
+N:Duncan;Jonathan;;;
+FN:Jonathan Duncan
+ORG:JACOBS
+TEL;TYPE=CELL,VOICE:409-300-2915
+EMAIL;TYPE=INTERNET,WORK:jonathan.duncan@jacobs.com
+END:VCARD

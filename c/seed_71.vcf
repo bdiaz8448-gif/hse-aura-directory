@@ -1,0 +1,9 @@
+BEGIN:VCARD
+VERSION:3.0
+N:Pattison;Matthew;;;
+FN:Matthew Pattison
+ORG:CAPITAL TELECOM
+TITLE:Safety
+TEL;TYPE=CELL,VOICE:(704)840-6276
+EMAIL;TYPE=INTERNET,WORK:mpattison@capitaltelecomusa.com
+END:VCARD

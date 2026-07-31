@@ -1,0 +1,9 @@
+BEGIN:VCARD
+VERSION:3.0
+N:Stringer;Joe;;;
+FN:Joe Stringer
+ORG:SIC
+TITLE:Safety Regional
+TEL;TYPE=CELL,VOICE:(919)632-0633
+EMAIL;TYPE=INTERNET,WORK:joe.stringer@southernindustrial.com
+END:VCARD

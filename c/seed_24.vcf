@@ -1,0 +1,10 @@
+BEGIN:VCARD
+VERSION:3.0
+N:Goings;Charles;;;
+FN:Charles Goings
+ORG:JACOBS
+TITLE:HSE
+TEL;TYPE=CELL,VOICE:(713)494-4361
+EMAIL;TYPE=INTERNET,WORK:charles.goings@jacobs.com
+NOTE:Trailer/office: Trailer 5
+END:VCARD

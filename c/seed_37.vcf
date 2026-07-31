@@ -1,0 +1,11 @@
+BEGIN:VCARD
+VERSION:3.0
+N:Kilburn;Stephanie;;Dr.;
+FN:Dr. Stephanie Kilburn
+ORG:INTERNATIONAL SOS
+TITLE:Clinic Medical Lead
+TEL;TYPE=CELL,VOICE:(984)284-7565
+TEL;TYPE=CELL,VOICE:(518)414-8325
+EMAIL;TYPE=INTERNET,WORK:stephanie.kilburn@ms.internationalsos.com
+NOTE:Trailer/office: Safety Office / Clinic
+END:VCARD

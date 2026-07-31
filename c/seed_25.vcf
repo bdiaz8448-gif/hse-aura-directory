@@ -1,0 +1,10 @@
+BEGIN:VCARD
+VERSION:3.0
+N:Lara;Cesar;;;
+FN:Cesar Lara
+ORG:JACOBS
+TITLE:HSE
+TEL;TYPE=CELL,VOICE:(919)478-2714
+EMAIL;TYPE=INTERNET,WORK:cesar.lara@jacobs.com
+NOTE:Trailer/office: LOTO Office Conex
+END:VCARD

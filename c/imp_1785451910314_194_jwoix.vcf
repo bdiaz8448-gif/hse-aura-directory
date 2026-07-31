@@ -1,0 +1,8 @@
+BEGIN:VCARD
+VERSION:3.0
+N:Shelton;Sandy;;;
+FN:Sandy Shelton
+ORG:JACOBS
+TEL;TYPE=CELL,VOICE:252-955-4321
+EMAIL;TYPE=INTERNET,WORK:sandy.shelton@jacobs.com
+END:VCARD

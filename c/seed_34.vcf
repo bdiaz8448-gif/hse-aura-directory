@@ -1,0 +1,9 @@
+BEGIN:VCARD
+VERSION:3.0
+N:Paine;Stephen;;;
+FN:Stephen Paine
+ORG:JACOBS
+TITLE:HSE Manager (Night Shift)
+TEL;TYPE=CELL,VOICE:(540)392-7407
+EMAIL;TYPE=INTERNET,WORK:stephen.paine@jacobs.com
+END:VCARD

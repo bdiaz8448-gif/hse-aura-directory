@@ -1,0 +1,9 @@
+BEGIN:VCARD
+VERSION:3.0
+N:Nostrand;Peter;Van;;
+FN:Peter Van Nostrand
+ORG:FPI
+TITLE:Safety Manager
+TEL;TYPE=CELL,VOICE:(838)291-5532
+EMAIL;TYPE=INTERNET,WORK:pvannostrand@fpimechanical.com
+END:VCARD

@@ -1,0 +1,10 @@
+BEGIN:VCARD
+VERSION:3.0
+N:Diaz;Baldemar;;;
+FN:Baldemar Diaz
+ORG:JACOBS
+TITLE:HSE
+TEL;TYPE=CELL,VOICE:(423)653-8448
+EMAIL;TYPE=INTERNET,WORK:baldemar.diaz@jacobs.com
+NOTE:Trailer/office: Trailer 5
+END:VCARD

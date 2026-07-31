@@ -1,0 +1,10 @@
+BEGIN:VCARD
+VERSION:3.0
+N:Simpson;Erick;;;
+FN:Erick Simpson
+ORG:JACOBS
+TITLE:HSE CUB Lead
+TEL;TYPE=CELL,VOICE:(865)603-5733
+EMAIL;TYPE=INTERNET,WORK:erick.simpson@jacobs.com
+NOTE:Trailer/office: Trailer 5
+END:VCARD

@@ -1,0 +1,10 @@
+BEGIN:VCARD
+VERSION:3.0
+N:Smith;Kyle;;;
+FN:Kyle Smith
+ORG:JACOBS
+TITLE:HSE
+TEL;TYPE=CELL,VOICE:(240)304-8109
+EMAIL;TYPE=INTERNET,WORK:kyle.smith@jacobs.com
+NOTE:Trailer/office: Trailer 5
+END:VCARD

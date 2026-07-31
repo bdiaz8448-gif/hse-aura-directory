@@ -1,0 +1,8 @@
+BEGIN:VCARD
+VERSION:3.0
+N:Becker;Jessica;;;
+FN:Jessica Becker
+ORG:JACOBS
+TEL;TYPE=CELL,VOICE:973-214-4918
+EMAIL;TYPE=INTERNET,WORK:jessica.becker@jacobs.com
+END:VCARD

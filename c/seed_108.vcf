@@ -1,0 +1,9 @@
+BEGIN:VCARD
+VERSION:3.0
+N:Martinez;Silvano;;;
+FN:Silvano Martinez
+ORG:INSERV
+TITLE:Coordinator
+TEL;TYPE=CELL,VOICE:(919)353-2582
+EMAIL;TYPE=INTERNET,WORK:Smartinez@inserv.org
+END:VCARD

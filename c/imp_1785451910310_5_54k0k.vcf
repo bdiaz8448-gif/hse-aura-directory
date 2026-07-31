@@ -1,0 +1,8 @@
+BEGIN:VCARD
+VERSION:3.0
+N:Gross;William;;;
+FN:William Gross
+ORG:JACOBS
+TEL;TYPE=CELL,VOICE:513-254-0990
+EMAIL;TYPE=INTERNET,WORK:william.gross@jacobs.com
+END:VCARD

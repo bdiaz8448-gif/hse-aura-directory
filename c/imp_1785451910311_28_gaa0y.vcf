@@ -1,0 +1,8 @@
+BEGIN:VCARD
+VERSION:3.0
+N:Cavenaugh;Thomas;;;
+FN:Thomas Cavenaugh
+ORG:JACOBS
+TEL;TYPE=CELL,VOICE:252-939-4978
+EMAIL;TYPE=INTERNET,WORK:thomas.cavenaugh@jacobs.com
+END:VCARD

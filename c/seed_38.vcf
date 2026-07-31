@@ -1,0 +1,11 @@
+BEGIN:VCARD
+VERSION:3.0
+N:Doughty;Josh;;;
+FN:Josh Doughty
+ORG:INTERNATIONAL SOS
+TITLE:Medical
+TEL;TYPE=CELL,VOICE:(984)284-7565
+TEL;TYPE=CELL,VOICE:(919)601-4799
+EMAIL;TYPE=INTERNET,WORK:Josh.doughty@ms.internationalsos.com
+NOTE:Trailer/office: Safety Office / Clinic
+END:VCARD

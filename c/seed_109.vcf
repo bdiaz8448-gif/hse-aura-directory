@@ -1,0 +1,9 @@
+BEGIN:VCARD
+VERSION:3.0
+N:Shelwood;Joshua;;;
+FN:Joshua Shelwood
+ORG:INSERV
+TITLE:Coordinator
+TEL;TYPE=CELL,VOICE:(919)935-7356
+EMAIL;TYPE=INTERNET,WORK:Jshelwood@inserv.org
+END:VCARD

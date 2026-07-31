@@ -1,0 +1,8 @@
+BEGIN:VCARD
+VERSION:3.0
+N:Laurie;Stephen;;;
+FN:Stephen Laurie
+ORG:JACOBS
+TEL;TYPE=CELL,VOICE:610-745-2719
+EMAIL;TYPE=INTERNET,WORK:stephen.laurie1@jacobs.com
+END:VCARD

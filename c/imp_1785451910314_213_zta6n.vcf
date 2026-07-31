@@ -1,0 +1,8 @@
+BEGIN:VCARD
+VERSION:3.0
+N:Sedlmeyer;Greg;;;
+FN:Greg Sedlmeyer
+ORG:JACOBS
+TEL;TYPE=CELL,VOICE:361-217-0316
+EMAIL;TYPE=INTERNET,WORK:greg.sedlmeyer@jacobs.com
+END:VCARD

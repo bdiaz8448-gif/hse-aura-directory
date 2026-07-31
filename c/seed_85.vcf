@@ -1,0 +1,9 @@
+BEGIN:VCARD
+VERSION:3.0
+N:Chapman;Russell;;;
+FN:Russell Chapman
+ORG:EXENTIAL
+TITLE:Manager
+TEL;TYPE=CELL,VOICE:(919)754-7328
+EMAIL;TYPE=INTERNET,WORK:russell.chapman@exential.net
+END:VCARD

@@ -1,0 +1,9 @@
+BEGIN:VCARD
+VERSION:3.0
+N:Roe;Ryan;;;
+FN:Ryan Roe
+ORG:SRE
+TITLE:Manager
+TEL;TYPE=CELL,VOICE:(919)422-1929
+EMAIL;TYPE=INTERNET,WORK:rroe@sirraleighelectric.com
+END:VCARD

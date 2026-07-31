@@ -1,0 +1,8 @@
+BEGIN:VCARD
+VERSION:3.0
+N:Anders;Christine;;;
+FN:Christine Anders
+ORG:JACOBS
+TEL;TYPE=CELL,VOICE:757-692-1576
+EMAIL;TYPE=INTERNET,WORK:christine.anders@jacobs.com
+END:VCARD

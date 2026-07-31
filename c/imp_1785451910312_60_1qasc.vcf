@@ -1,0 +1,8 @@
+BEGIN:VCARD
+VERSION:3.0
+N:Singletary;Joe;;;
+FN:Joe Singletary
+ORG:JACOBS
+TEL;TYPE=CELL,VOICE:843-621-2729
+EMAIL;TYPE=INTERNET,WORK:joe.singletary@jacobs.com
+END:VCARD

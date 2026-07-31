@@ -1,0 +1,8 @@
+BEGIN:VCARD
+VERSION:3.0
+N:Boorgula;Lisa;;;
+FN:Lisa Boorgula
+ORG:JACOBS
+TEL;TYPE=CELL,VOICE:630-803-0291
+EMAIL;TYPE=INTERNET,WORK:lisa.boorgula@jacobs.com
+END:VCARD

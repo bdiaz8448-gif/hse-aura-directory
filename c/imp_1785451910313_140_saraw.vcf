@@ -1,0 +1,8 @@
+BEGIN:VCARD
+VERSION:3.0
+N:Richmond;Nick;;;
+FN:Nick Richmond
+ORG:JACOBS
+TEL;TYPE=CELL,VOICE:513-595-7707
+EMAIL;TYPE=INTERNET,WORK:nick.richmond@jacobs.com
+END:VCARD

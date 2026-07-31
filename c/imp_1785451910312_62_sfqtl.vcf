@@ -1,0 +1,8 @@
+BEGIN:VCARD
+VERSION:3.0
+N:Clifton;Terry;;;
+FN:Terry Clifton
+ORG:JACOBS
+TEL;TYPE=CELL,VOICE:910-840-7884
+EMAIL;TYPE=INTERNET,WORK:terry.clifton@jacobs.com
+END:VCARD

@@ -1,0 +1,10 @@
+BEGIN:VCARD
+VERSION:3.0
+N:Wise;Brent;;;
+FN:Brent Wise
+ORG:JACOBS
+TITLE:Construction Manager
+TEL;TYPE=CELL,VOICE:(269)243-5461
+EMAIL;TYPE=INTERNET,WORK:brent.wise@jacobs.com
+NOTE:Trailer/office: Trailer 1
+END:VCARD

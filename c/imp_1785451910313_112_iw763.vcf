@@ -1,0 +1,8 @@
+BEGIN:VCARD
+VERSION:3.0
+N:Gudmon;Konstantin;;;
+FN:Konstantin Gudmon
+ORG:JACOBS
+TEL;TYPE=CELL,VOICE:843-729-9800
+EMAIL;TYPE=INTERNET,WORK:konstantin.gudmon@jacobs.com
+END:VCARD

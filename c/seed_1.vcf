@@ -1,0 +1,10 @@
+BEGIN:VCARD
+VERSION:3.0
+N:Evans;Cory;;;
+FN:Cory Evans
+ORG:JACOBS
+TITLE:HSE  Field Manager
+TEL;TYPE=CELL,VOICE:(618)380-6318
+EMAIL;TYPE=INTERNET,WORK:cory.evans@jacobs.com
+NOTE:Trailer/office: Safety Office
+END:VCARD

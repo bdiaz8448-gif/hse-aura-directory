@@ -1,0 +1,9 @@
+BEGIN:VCARD
+VERSION:3.0
+N:Lowe;Steven;;;
+FN:Steven Lowe
+ORG:FPI
+TITLE:Safety Manager
+TEL;TYPE=CELL,VOICE:(518)479-2540
+EMAIL;TYPE=INTERNET,WORK:Slowe@fpimechanical.com
+END:VCARD

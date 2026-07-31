@@ -1,0 +1,10 @@
+BEGIN:VCARD
+VERSION:3.0
+N:George;Ed;;;
+FN:Ed George
+ORG:FUJIFILM
+TITLE:FLBN Project Manager
+TEL;TYPE=CELL,VOICE:(919)859-9005
+EMAIL;TYPE=INTERNET,WORK:Charles.george.contractor@fujifilm.com
+NOTE:Trailer/office: Trailer 1
+END:VCARD

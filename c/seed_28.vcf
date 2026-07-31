@@ -1,0 +1,10 @@
+BEGIN:VCARD
+VERSION:3.0
+N:Kadari;Anand;;;
+FN:Anand Kadari
+ORG:JACOBS
+TITLE:HSE / LOTO
+TEL;TYPE=CELL,VOICE:(401)654-9908
+EMAIL;TYPE=INTERNET,WORK:anand.kadari@jacobs.com
+NOTE:Trailer/office: LOTO Conex
+END:VCARD

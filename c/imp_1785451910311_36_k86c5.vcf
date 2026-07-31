@@ -1,0 +1,8 @@
+BEGIN:VCARD
+VERSION:3.0
+N:Herndon;Shane;;;
+FN:Shane Herndon
+ORG:JACOBS
+TEL;TYPE=CELL,VOICE:910-785-3258
+EMAIL;TYPE=INTERNET,WORK:shane.herndon@jacobs.com
+END:VCARD

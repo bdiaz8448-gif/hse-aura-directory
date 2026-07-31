@@ -1,0 +1,10 @@
+BEGIN:VCARD
+VERSION:3.0
+N:Wagner;Ross;;;
+FN:Ross Wagner
+ORG:JACOBS
+TITLE:HSE Trainer
+TEL;TYPE=CELL,VOICE:(815)970-1136
+EMAIL;TYPE=INTERNET,WORK:ross.wagner@jacobs.com
+NOTE:Trailer/office: Safety office
+END:VCARD

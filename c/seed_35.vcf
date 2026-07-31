@@ -1,0 +1,9 @@
+BEGIN:VCARD
+VERSION:3.0
+N:Masek;Derrick;;;
+FN:Derrick Masek
+ORG:JACOBS
+TITLE:HSE (Night Shift)
+TEL;TYPE=CELL,VOICE:(945)269-5283
+EMAIL;TYPE=INTERNET,WORK:derrick.masek@jacobs.com
+END:VCARD

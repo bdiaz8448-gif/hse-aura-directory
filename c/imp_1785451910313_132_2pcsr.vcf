@@ -1,0 +1,8 @@
+BEGIN:VCARD
+VERSION:3.0
+N:Nuernberg;John;;;
+FN:John Nuernberg
+ORG:JACOBS
+TEL;TYPE=CELL,VOICE:734-341-8126
+EMAIL;TYPE=INTERNET,WORK:john.nuernberg@jacobs.com
+END:VCARD

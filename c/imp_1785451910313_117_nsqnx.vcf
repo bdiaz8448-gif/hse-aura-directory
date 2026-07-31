@@ -1,0 +1,8 @@
+BEGIN:VCARD
+VERSION:3.0
+N:Acevedo;David;;;
+FN:David Acevedo
+ORG:JACOBS
+TEL;TYPE=CELL,VOICE:787-546-9743
+EMAIL;TYPE=INTERNET,WORK:david.acevedo@jacobs.com
+END:VCARD

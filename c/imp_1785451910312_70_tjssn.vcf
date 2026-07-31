@@ -1,0 +1,8 @@
+BEGIN:VCARD
+VERSION:3.0
+N:Palafox;Kevin;;;
+FN:Kevin Palafox
+ORG:JACOBS
+TEL;TYPE=CELL,VOICE:936-776-2773
+EMAIL;TYPE=INTERNET,WORK:kevin.palafox@jacobs.com
+END:VCARD

@@ -1,0 +1,8 @@
+BEGIN:VCARD
+VERSION:3.0
+N:Mendoza;Sydney;;;
+FN:Sydney Mendoza
+ORG:JACOBS
+TEL;TYPE=CELL,VOICE:919-215-2643
+EMAIL;TYPE=INTERNET,WORK:sydney.mendoza@jacobs.com
+END:VCARD

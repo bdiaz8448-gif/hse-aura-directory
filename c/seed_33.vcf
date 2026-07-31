@@ -1,0 +1,9 @@
+BEGIN:VCARD
+VERSION:3.0
+N:Radford;Gerald;;;
+FN:Gerald Radford
+ORG:JACOBS
+TITLE:Superintendent (Night Shift)
+TEL;TYPE=CELL,VOICE:(910)515-0256
+EMAIL;TYPE=INTERNET,WORK:gerald.radford@jacobs.com
+END:VCARD

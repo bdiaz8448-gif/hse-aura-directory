@@ -1,0 +1,9 @@
+BEGIN:VCARD
+VERSION:3.0
+N:Smith;John;;;
+FN:John Smith
+ORG:EXENTIAL
+TITLE:Safety Superintendent
+TEL;TYPE=CELL,VOICE:518-232-1340
+EMAIL;TYPE=INTERNET,WORK:john.smith2@exential.net
+END:VCARD

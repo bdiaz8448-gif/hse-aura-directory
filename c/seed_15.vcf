@@ -1,0 +1,9 @@
+BEGIN:VCARD
+VERSION:3.0
+N:Cummings;Jimmy;;;
+FN:Jimmy Cummings
+ORG:JACOBS
+TITLE:Electrical Superintendent
+TEL;TYPE=CELL,VOICE:(910)384-3112
+EMAIL;TYPE=INTERNET,WORK:jimmy.cummings@jacobs.com
+END:VCARD

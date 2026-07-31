@@ -1,0 +1,8 @@
+BEGIN:VCARD
+VERSION:3.0
+N:Norris;Michael;;;
+FN:Michael Norris
+ORG:JACOBS
+TEL;TYPE=CELL,VOICE:814-761-4523
+EMAIL;TYPE=INTERNET,WORK:michael.tallinnorris@jacobs.com
+END:VCARD

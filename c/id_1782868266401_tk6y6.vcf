@@ -1,0 +1,10 @@
+BEGIN:VCARD
+VERSION:3.0
+N:Nichols;Nick;;;
+FN:Nick Nichols
+ORG:JACOBS
+TITLE:General Superintendent
+TEL;TYPE=CELL,VOICE:4026069051
+EMAIL;TYPE=INTERNET,WORK:nick.nichols@jacobs.com
+NOTE:Trailer/office: Trailer 1
+END:VCARD

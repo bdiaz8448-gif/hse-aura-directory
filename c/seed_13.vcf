@@ -1,0 +1,9 @@
+BEGIN:VCARD
+VERSION:3.0
+N:Simpson;Jeff;;;
+FN:Jeff Simpson
+ORG:JACOBS
+TITLE:Sitewide Rigging SME
+TEL;TYPE=CELL,VOICE:(678)430-2428
+EMAIL;TYPE=INTERNET,WORK:jeff.simpson@jacobs.com
+END:VCARD

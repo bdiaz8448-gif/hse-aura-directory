@@ -1,0 +1,10 @@
+BEGIN:VCARD
+VERSION:3.0
+N:Kuntz;Matt;;;
+FN:Matt Kuntz
+ORG:FUJIFILM
+TITLE:HSE Director
+TEL;TYPE=CELL,VOICE:(919)437-9691
+EMAIL;TYPE=INTERNET,WORK:matt.kuntz@fujifilm.com
+NOTE:Trailer/office: LabAdmin
+END:VCARD

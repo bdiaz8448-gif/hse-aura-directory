@@ -1,0 +1,9 @@
+BEGIN:VCARD
+VERSION:3.0
+N:Barillas;Ronald;;;
+FN:Ronald Barillas
+ORG:CODE ELECTRIC
+TITLE:Manager
+TEL;TYPE=CELL,VOICE:(336)524-7456
+EMAIL;TYPE=INTERNET,WORK:rbarillas@codeelec.com
+END:VCARD

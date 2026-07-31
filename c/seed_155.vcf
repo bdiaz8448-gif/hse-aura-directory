@@ -1,0 +1,8 @@
+BEGIN:VCARD
+VERSION:3.0
+N:Watson;Tiffany;;;
+FN:Tiffany Watson
+ORG:THE ROBERTS COMPANY
+TEL;TYPE=CELL,VOICE:(336)583-2669
+EMAIL;TYPE=INTERNET,WORK:tiffany.watson@robertscompany.com
+END:VCARD

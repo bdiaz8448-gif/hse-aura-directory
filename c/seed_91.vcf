@@ -1,0 +1,9 @@
+BEGIN:VCARD
+VERSION:3.0
+N:Wohlgemuth;Jason;;;
+FN:Jason Wohlgemuth
+ORG:GETINGE
+TITLE:Safety
+TEL;TYPE=CELL,VOICE:(620)507-8722
+EMAIL;TYPE=INTERNET,WORK:Jason.wohlgemuth@getinge.com
+END:VCARD

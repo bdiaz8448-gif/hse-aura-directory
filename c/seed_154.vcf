@@ -1,0 +1,9 @@
+BEGIN:VCARD
+VERSION:3.0
+N:Simmons;Richard;;;
+FN:Richard Simmons
+ORG:THE ROBERTS COMPANY
+TITLE:Manager
+TEL;TYPE=CELL,VOICE:(252)364-9238
+EMAIL;TYPE=INTERNET,WORK:richard.simmons@robertscompany.com
+END:VCARD

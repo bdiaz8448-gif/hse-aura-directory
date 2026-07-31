@@ -1,0 +1,9 @@
+BEGIN:VCARD
+VERSION:3.0
+N:Mulligan;Scott;;;
+FN:Scott Mulligan
+ORG:WOLVERINE
+TITLE:Manager
+TEL;TYPE=CELL,VOICE:(810)577-7585
+EMAIL;TYPE=INTERNET,WORK:SMulligan@wolverinefp.com
+END:VCARD

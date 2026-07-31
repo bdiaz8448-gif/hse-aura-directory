@@ -1,0 +1,8 @@
+BEGIN:VCARD
+VERSION:3.0
+N:Cummings;Jimmie;;;
+FN:Jimmie Cummings
+ORG:JACOBS
+TEL;TYPE=CELL,VOICE:910-384-3112
+EMAIL;TYPE=INTERNET,WORK:jimmie.cummings@jacobs.com
+END:VCARD

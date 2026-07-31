@@ -760,7 +760,6 @@
   }
   #incidentCompanyBar .cb-chip:hover { background: rgba(0,212,255,0.10); border-color: var(--cyan-border); color: var(--cyan); }
   #incidentCompanyBar .cb-chip .cb-n { color: var(--cyan); font-size: 11px; }</style>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
 </head>
@@ -1911,7 +1910,7 @@
       + row('Email', p.email)
       + row('Trailer / office', p.trailer)
       + '</table>'
-      + saveToContactsBtnHtml(p) + qrBtnHtml(p)
+      + saveToContactsBtnHtml(p)
       + '<div class="modal-btns">'
       + '<button id="editDsm4Btn">Edit</button>'
       + '<button class="danger" id="deleteDsm4Btn">Delete</button>'
@@ -2073,7 +2072,7 @@
       + row('Email', p.email)
       + row('Trailer / office', p.trailer)
       + '</table>'
-      + saveToContactsBtnHtml(p) + qrBtnHtml(p)
+      + saveToContactsBtnHtml(p)
       + '<div class="modal-btns">'
       + '<button id="editDsm3Btn">Edit</button>'
       + '<button class="danger" id="deleteDsm3Btn">Delete</button>'
@@ -2971,7 +2970,7 @@
       + row('Email', p.email)
       + row('Trailer / office', p.trailer)
       + '</table>'
-      + saveToContactsBtnHtml(p) + qrBtnHtml(p)
+      + saveToContactsBtnHtml(p)
       + '<div class="modal-btns">'
       + '<button id="editWeekendBtn">Edit</button>'
       + '<button class="danger" id="deleteWeekendBtn">Delete</button>'
@@ -3118,7 +3117,7 @@
       + row('Email', p.email)
       + row('Trailer / office', p.trailer)
       + '</table>'
-      + saveToContactsBtnHtml(p) + qrBtnHtml(p)
+      + saveToContactsBtnHtml(p)
       + '<div class="modal-btns">'
       + '<button id="editCQVBtn">Edit</button>'
       + '<button class="danger" id="deleteCQVBtn">Delete</button>'
@@ -3265,7 +3264,7 @@
       + row('Email', p.email)
       + row('Trailer / office', p.trailer)
       + '</table>'
-      + saveToContactsBtnHtml(p) + qrBtnHtml(p)
+      + saveToContactsBtnHtml(p)
       + '<div class="modal-btns">'
       + '<button id="editNightShiftBtn">Edit</button>'
       + '<button class="danger" id="deleteNightShiftBtn">Delete</button>'
@@ -3365,7 +3364,7 @@
       + row('Email', p.email)
       + row('Trailer / office', p.trailer)
       + '</table>'
-      + saveToContactsBtnHtml(p) + qrBtnHtml(p)
+      + saveToContactsBtnHtml(p)
       + '<div class="modal-btns">'
       + '<button id="editPersonBtn">Edit</button>'
       + '<button class="danger" id="deletePersonBtn">Delete</button>'
@@ -3485,193 +3484,29 @@
   }
 
   /* ---------------------------------------------------------------
-     SAVE TO CONTACTS
+     SAVE TO CONTACTS - one plain link, no JavaScript.
 
-     Measured on-device (Gmail in-app browser on iPhone, see log):
-       data: link       -> nothing happens
-       blob: navigation -> nothing happens
-       Web Share API    -> WORKS
+     Every scripted approach failed on phones:
+       data: URL      - blocked by WebKit
+       blob: URL      - blocked / no-op on iOS
+       Web Share      - opens a sheet with no "Add to Contacts" option
+       download attr  - blocked inside in-app browsers (Gmail, Messages)
 
-     In-app browsers (Gmail, Messages, LinkedIn, Teams, Outlook...)
-     block downloads and data:/blob: navigation outright. Web Share is
-     the only mechanism they allow, and it is also the nicest path in
-     real Safari and on Android. So: if the device can share a file,
-     that is what we use - everywhere. Plain download is kept only for
-     desktop, where it is already proven to work.
+     A real .vcf file at a real https address is the one thing every
+     platform handles natively. GitHub Pages serves these as
+     text/x-vcard, so iOS shows the contact card with Add to Contacts,
+     Android hands it to Contacts, and desktop downloads it.
+     Cards live in /c/<id>.vcf and are regenerated from Firestore.
      --------------------------------------------------------------- */
-  var AURA_BUILD = 'v11-scope-fix';
-  var _vcfUrls = [];
-  function makeVcfUrl(text){
-    try{
-      var b = new Blob([text], {type:'text/vcard;charset=utf-8'});
-      var u = URL.createObjectURL(b);
-      _vcfUrls.push(u);
-      if(_vcfUrls.length > 40){ try{ URL.revokeObjectURL(_vcfUrls.shift()); }catch(e){} }
-      return u;
-    }catch(e){
-      return 'data:text/vcard;charset=utf-8,' + encodeURIComponent(text);
-    }
-  }
-  function isTouchDevice(){
-    return /iPad|iPhone|iPod|Android/i.test(navigator.userAgent)
-        || (navigator.maxTouchPoints > 1 && /Mac/.test(navigator.platform));
-  }
+  var AURA_BUILD = 'v12-vcf';
 
   function saveToContactsBtnHtml(p){
-    var text  = vcardText(p);
-    var fname = escapeHtml((p.name||'contact').replace(/[^a-z0-9]+/gi,'_')) + '.vcf';
-    var href  = makeVcfUrl(text);
-    var b64   = btoa(unescape(encodeURIComponent(text)));
-    return '<a class="primary doc-link-btn" href="'+href+'" download="'+fname+'" '
-         + 'data-vcf="'+b64+'" data-vcname="'+fname+'" '
-         + 'onclick="return saveVcf(this,event)" '
+    var href = 'c/' + encodeURIComponent(p.id) + '.vcf';
+    return '<a class="primary doc-link-btn" href="'+href+'" '
          + 'style="user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;touch-action:manipulation;">'
          + 'Save to Contacts</a>';
   }
 
-  /* ---------------------------------------------------------------
-     QR fallback - the one path no browser can block.
-
-     Every save method so far depends on a browser API, and in-app
-     browsers (Gmail, Messages, Teams...) block all of them. A QR code
-     sidesteps the browser completely: the phone CAMERA reads the vCard
-     and the operating system itself offers "Add to Contacts".
-     Works on any iPhone or Android, in any browser, and also lets
-     someone scan the card straight off another person's screen.
-     --------------------------------------------------------------- */
-  function qrBtnHtml(p){
-    var b64 = btoa(unescape(encodeURIComponent(vcardText(p))));
-    var nm  = escapeHtml(p.name || 'Contact');
-    return '<button type="button" class="doc-link-btn" data-vcf="'+b64+'" data-nm="'+nm+'" '
-         + 'onclick="showVcfQr(this)" '
-         + 'style="width:100%;margin-top:8px;padding:13px;border-radius:10px;cursor:pointer;'
-         + 'background:rgba(79,195,232,0.12);border:1px solid rgba(79,195,232,0.40);color:#4FC3E8;'
-         + 'font-weight:700;font-size:14px;font-family:inherit;'
-         + 'user-select:none;-webkit-user-select:none;touch-action:manipulation;">'
-         + 'Scan to save on a phone</button>';
-  }
-
-  function showVcfQr(btn){
-    var text = decodeURIComponent(escape(atob(btn.getAttribute('data-vcf'))));
-    var nm   = btn.getAttribute('data-nm') || 'Contact';
-    var old  = document.getElementById('vcfQrOverlay');
-    if(old && old.parentNode) old.parentNode.removeChild(old);
-
-    var o = document.createElement('div');
-    o.id = 'vcfQrOverlay';
-    o.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.88);'
-      + 'display:flex;align-items:center;justify-content:center;padding:22px;'
-      + '-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);';
-    o.innerHTML =
-        '<div style="background:#fff;border-radius:16px;padding:22px;max-width:340px;width:100%;text-align:center">'
-      +   '<div style="font-size:17px;font-weight:800;color:#111;margin-bottom:2px">' + nm + '</div>'
-      +   '<div style="font-size:12px;color:#666;margin-bottom:14px">Point your camera here &rarr; tap Add to Contacts</div>'
-      +   '<div id="vcfQrBox" style="display:flex;justify-content:center;min-height:220px;align-items:center"></div>'
-      +   '<button type="button" onclick="var e=document.getElementById(\'vcfQrOverlay\');if(e)e.remove();" '
-      +     'style="margin-top:16px;width:100%;padding:13px;border-radius:10px;border:1px solid #ccc;'
-      +     'background:#f2f2f2;color:#111;font-weight:700;font-size:15px;font-family:inherit;cursor:pointer">Close</button>'
-      + '</div>';
-    document.body.appendChild(o);
-    o.addEventListener('click', function(ev){ if(ev.target === o) o.remove(); });
-
-    try{
-      new QRCode(document.getElementById('vcfQrBox'), {
-        text: text, width: 220, height: 220,
-        correctLevel: QRCode.CorrectLevel.L
-      });
-    }catch(e){
-      document.getElementById('vcfQrBox').innerHTML =
-        '<div style="color:#b00;font-size:13px">Could not draw the QR code.<br>Check your connection and try again.</div>';
-    }
-  }
-
-  /* --------------------------------------------------------------
-     Inline onclick="..." handlers are evaluated in GLOBAL scope.
-     These functions are declared inside this closure, so without an
-     explicit export every tap threw:
-         ReferenceError: saveVcf is not defined
-     ...the handler never ran, and the anchor fell through to its
-     blob:/data: href - which iOS and in-app browsers block outright.
-     That is why tapping Save to Contacts did nothing on phones while
-     the standalone test page (whose functions are global) worked.
-     -------------------------------------------------------------- */
-  window.saveVcf         = saveVcf;
-  window.showVcfQr       = showVcfQr;
-  window.vcardText       = vcardText;
-  window.makeVcfUrl      = makeVcfUrl;
-  window.vcfLastResort   = vcfLastResort;
-  window.isTouchDevice   = isTouchDevice;
-
-  function saveVcf(a, ev){
-    var text, fname = a.getAttribute('data-vcname') || 'contact.vcf';
-    try{ text = decodeURIComponent(escape(atob(a.getAttribute('data-vcf')))); }
-    catch(e){ return true; }
-
-    var original = a.textContent;
-    function flash(msg, ms){
-      a.textContent = msg;
-      setTimeout(function(){ a.textContent = original; }, ms || 2500);
-    }
-
-    var file = null;
-    try{ if(window.File) file = new File([text], fname, {type:'text/vcard'}); }catch(e){}
-
-    /* ---- Share first. Works in Safari, Chrome, and critically inside
-            in-app browsers where downloads are blocked entirely. ---- */
-    if(file && navigator.share){
-      var allowed = true;
-      try{ if(navigator.canShare) allowed = navigator.canShare({files:[file]}); }
-      catch(e){ allowed = true; }
-      if(allowed){
-        ev.preventDefault();
-        try{
-          navigator.share({files:[file]})
-            .then(function(){ flash('✓ Saved'); })
-            .catch(function(err){
-              if(err && err.name === 'AbortError') return;   // user closed the sheet
-              vcfLastResort(text, flash);
-            });
-        }catch(e){ vcfLastResort(text, flash); }
-        return false;
-      }
-    }
-
-    /* ---- Touch device with no Web Share at all: downloads are very
-            likely blocked too, so show the card for manual saving. ---- */
-    if(isTouchDevice()){
-      ev.preventDefault();
-      vcfLastResort(text, flash);
-      return false;
-    }
-
-    /* ---- Desktop: anchor carries blob + download=, save natively. ---- */
-    return true;
-  }
-
-  /* Nothing programmatic worked. Rather than fail silently - which is what
-     made this so hard to diagnose - show the contact card and tell the
-     person exactly how to get it saved. */
-  function vcfLastResort(text, flash){
-    try{
-      var w = window.open('', '_blank');
-      if(w && w.document){
-        w.document.write(
-          '<meta name="viewport" content="width=device-width,initial-scale=1">'
-          + '<body style="font-family:-apple-system,system-ui,sans-serif;background:#111;color:#eee;padding:20px;line-height:1.6">'
-          + '<h3 style="color:#C9A84C;margin:0 0 6px">Contact card</h3>'
-          + '<p style="color:#999;font-size:13px;margin:0 0 14px">This browser blocked the automatic save. '
-          + 'Open this page in Safari or Chrome (tap the &hellip; menu &rarr; Open in Browser) and tap Save to Contacts again, '
-          + 'or copy the details below.</p>'
-          + '<pre style="white-space:pre-wrap;background:#000;padding:14px;border-radius:10px;'
-          + 'font-size:13px;color:#9adb9a;user-select:text;-webkit-user-select:text">'
-          + text.replace(/[<>&]/g, function(c){ return {'<':'&lt;','>':'&gt;','&':'&amp;'}[c]; })
-          + '</pre></body>');
-        w.document.close();
-        return;
-      }
-    }catch(e){}
-    if(flash) flash('Open in Safari to save', 4000);
-  }
   function openContactForm(existing){
     var p = existing || {id:'id_'+Date.now()+'_'+Math.random().toString(36).slice(2,7), name:'', role:'', company:'', cellPhone:'', officePhone:'', email:'', trailer:'', notifyDSM4:false, notifyDSM3:false};
     var body = document.getElementById('modalBody');
