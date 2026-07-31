@@ -3498,7 +3498,7 @@
      Android hands it to Contacts, and desktop downloads it.
      Cards live in /c/<id>.vcf and are regenerated from Firestore.
      --------------------------------------------------------------- */
-  var AURA_BUILD = 'v15-universal';
+  var AURA_BUILD = 'v16-twilio-restored';
 
   function saveToContactsBtnHtml(p){
     var href = 'c/' + encodeURIComponent(p.id) + '.vcf';
@@ -3910,7 +3910,11 @@
   /* Endpoint that sends FROM the project's Twilio number.
      Empty string = not configured yet; the app then falls back to opening
      the reporter's own Messages app, exactly as it did before. */
-  var NOTIFY_ENDPOINT = '';
+  /* The worker that was ALREADY sending through Twilio in the beta
+     (bitter-moon-3327, deployed 34 days ago, Twilio vars configured).
+     The site consolidation dropped this call - restoring it. */
+  var NOTIFY_ENDPOINT = 'https://bitter-moon-3327.bdiaz8448.workers.dev/';
+  var NOTIFY_KEY      = '413ba4e45ce612d5cd6baf0e27ab986f';
 
   function sendNotifySms(building){
     var nums = gatherNotifyNumbers(building);
@@ -3952,14 +3956,19 @@
 
     fetch(NOTIFY_ENDPOINT, {
       method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({building: building})
+      headers:{'Content-Type':'application/json','X-Notify-Key':NOTIFY_KEY},
+      body: JSON.stringify({numbers: nums, message: msg})
     })
     .then(function(r){ return r.json().then(function(j){ return {ok:r.ok, body:j}; }); })
     .then(function(res){
       if(done) return; done = true; clearTimeout(bail);
-      if(res.ok && res.body && res.body.sentCount){
-        notifySentConfirmation(building, res.body);
+      var sentN = res.body && (res.body.sentCount || res.body.sent) || 0;
+      if(res.ok && sentN){
+        notifySentConfirmation(building, {
+          sentCount: sentN,
+          failedCount: (res.body.total || sentN) - sentN,
+          sentTo: res.body.sentTo || nums
+        });
       } else {
         fallbackToPhoneMessages((res.body && res.body.error) || 'send failed');
       }
