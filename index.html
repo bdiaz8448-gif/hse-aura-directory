@@ -811,7 +811,7 @@
     <div id="contactsFinePrint" style="margin:18px 4px 4px;padding:10px 14px 8px;font-size:11px;color:#999;border-top:1px solid rgba(255,255,255,0.09);line-height:1.6;">
       <p style="margin:0 0 7px;">&#128274; <em>Contact information in this directory (phone numbers, email addresses) may be viewed, saved, or used by other members of this safety network. By appearing here you acknowledge this.</em></p>
       <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
-        <a href="privacy.html" target="_blank" style="font-size:11px;color:#bbb;text-decoration:underline;margin-right:10px;">Privacy Policy</a><a href="terms.html" target="_blank" style="font-size:11px;color:#bbb;text-decoration:underline;margin-right:10px;">SMS Terms</a><a href="#" onclick="openRemovalRequestForm();return false;" style="font-size:11px;color:#bbb;text-decoration:underline;">Request to be removed</a>
+        <span id="buildStamp" style="font-size:10px;color:#666;margin-right:10px;"></span><a href="privacy.html" target="_blank" style="font-size:11px;color:#bbb;text-decoration:underline;margin-right:10px;">Privacy Policy</a><a href="terms.html" target="_blank" style="font-size:11px;color:#bbb;text-decoration:underline;margin-right:10px;">SMS Terms</a><a href="#" onclick="openRemovalRequestForm();return false;" style="font-size:11px;color:#bbb;text-decoration:underline;">Request to be removed</a>
       </div>
     </div>
   </div>
@@ -1393,6 +1393,7 @@
   }
   function saveContacts(){ /* no-op: writes now happen per-record via Firestore .set()/.delete() calls */ }
   function updateSyncStatus(fromCache){
+    try{ var _b=document.getElementById('buildStamp'); if(_b) _b.textContent = AURA_BUILD; }catch(e){}
     var el = document.getElementById('syncStatus');
     if(!el) return;
     if(fromCache){
@@ -3475,19 +3476,18 @@
   }
 
   /* ---------------------------------------------------------------
-     SAVE TO CONTACTS - cross platform
+     SAVE TO CONTACTS - verified on-device behaviour
 
-     The hard constraint: iOS Safari BLOCKS top level navigation to
-     data: URLs (WebKit anti phishing policy). A
-     <a href="data:text/vcard" download> link therefore downloads fine
-     on desktop and Android but does nothing at all on iPhone/iPad.
-     blob: URLs are NOT blocked, so the href is a blob and every
-     platform gets a path that its own rules permit:
+     Field-tested on iPhone (see save-test.html results):
+       data: URL link      -> BLOCKED by WebKit (anti-phishing policy)
+       blob: navigation    -> BLOCKED / no-op on iOS
+       Web Share API files -> WORKS, opens the Contacts card
 
-       iOS + share sheet   -> navigator.share({files}) -> Add to Contacts
-       iOS, no share sheet -> navigate to blob: URL    -> Contacts preview
-       Android / desktop   -> anchor download of blob  -> .vcf file
+     So iOS gets Web Share as its PRIMARY path, not a fallback.
+     Android and desktop keep the plain blob download, which is
+     already proven working there.
      --------------------------------------------------------------- */
+  var AURA_BUILD = 'v8-share';
   var _vcfUrls = [];
   function makeVcfUrl(text){
     try{
@@ -3517,40 +3517,47 @@
          + 'Save to Contacts</a>';
   }
 
-  /* true  -> let the anchor download proceed (desktop / Android)
-     false -> handled here (share sheet or blob navigation on iOS)
-     Stays synchronous up to share() so iOS keeps user activation. */
   function saveVcf(a, ev){
     var text, fname = a.getAttribute('data-vcname') || 'contact.vcf';
     try{ text = decodeURIComponent(escape(atob(a.getAttribute('data-vcf')))); }
     catch(e){ return true; }
 
-    /* 1. Native share sheet - offers "Add to Contacts" directly. */
-    try{
-      if(navigator.canShare && window.File){
-        var f = new File([text], fname, {type:'text/vcard'});
-        if(navigator.canShare({files:[f]})){
+    var label = a, original = a.textContent;
+    function flash(msg){
+      label.textContent = msg;
+      setTimeout(function(){ label.textContent = original; }, 2500);
+    }
+
+    var file = null;
+    try{ if(window.File) file = new File([text], fname, {type:'text/vcard'}); }catch(e){}
+
+    /* ---- iPhone / iPad: Web Share is the ONLY route that works ---- */
+    if(isAppleMobile()){
+      if(file && navigator.share){
+        /* canShare can be over-strict about text/vcard on some iOS builds,
+           so if it is unavailable we still attempt the share. */
+        var allowed = true;
+        try{ if(navigator.canShare) allowed = navigator.canShare({files:[file]}); }catch(e){ allowed = true; }
+        if(allowed){
           ev.preventDefault();
-          navigator.share({files:[f]}).catch(function(err){
-            if(err && err.name === 'AbortError') return;   // user dismissed
-            try{ window.location.href = makeVcfUrl(text); }catch(e2){}
-          });
+          navigator.share({files:[file]})
+            .then(function(){ flash('✓ Saved'); })
+            .catch(function(err){
+              if(err && err.name === 'AbortError') return;      // user closed the sheet
+              try{ window.location.href = makeVcfUrl(text); }catch(e2){ flash('Could not save'); }
+            });
           return false;
         }
       }
-    }catch(e){ /* fall through */ }
-
-    /* 2. iOS without file sharing: navigate to the blob so Safari shows
-          its vCard preview with Add to Contacts. download= is ignored
-          by iOS, and data: would be blocked outright, hence blob. */
-    if(isAppleMobile()){
+      /* Very old iOS with no Web Share at all - blob nav is the last hope. */
       ev.preventDefault();
-      window.location.href = makeVcfUrl(text);
+      try{ window.location.href = makeVcfUrl(text); }
+      catch(e){ flash('Could not save'); }
       return false;
     }
 
-    /* 3. Desktop / Android - the anchor already points at a blob and
-          carries download=, so the browser saves the .vcf natively. */
+    /* ---- Android / desktop: the anchor already carries a blob +
+            download=, so let the browser save the .vcf natively. ---- */
     return true;
   }
   function openContactForm(existing){
