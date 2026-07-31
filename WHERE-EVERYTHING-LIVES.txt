@@ -1,0 +1,43 @@
+FUJIFILM AURA PROJECT — HSE DIRECTORY
+=====================================
+
+LIVE SITE (what people actually use):
+  https://bdiaz8448-gif.github.io/hse-aura-directory/
+
+SOURCE OF TRUTH:
+  GitHub — github.com/bdiaz8448-gif/hse-aura-directory
+  The live site serves from GitHub, NOT from this folder.
+  Editing files here changes nothing until they are pushed.
+
+THIS FOLDER:
+  Desktop / Claude AI / HSE-AURA-Directory
+  Your local copy + backup. Working version tag: v15-universal
+
+WHAT IS HERE:
+  index.html                   the directory app
+  c/                           392 contact cards (.vcf) — one per person
+  privacy.html                 <-- TWILIO. Do not rename or delete.
+  terms.html                   <-- TWILIO. Do not rename or delete.
+  README.md                    full technical notes + everything we learned
+  tools/gen_vcf.py             regenerates the contact cards
+  DSM4-QR-Generator.html       room QR codes
+  Import-Contact-Roster.html   contact import tool
+  .nojekyll                    REQUIRED — without it the contact cards break
+
+DO NOT:
+  - Move this to a different web address (breaks the Twilio SMS approval)
+  - Rename privacy.html or terms.html (same reason)
+  - Delete .nojekyll or the c/ folder
+
+TO UPDATE THIS FOLDER FROM GITHUB:
+  Open Terminal, paste this, press Enter:
+  cd ~/Desktop/"Claude AI"/HSE-AURA-Directory && git pull
+
+PASSWORDS / PINs:
+  Not stored here on purpose — the GitHub repo is public.
+  Admin and company PINs live inside the app (lock icon) / Firestore.
+
+IF SOMETHING BREAKS:
+  Look at the bottom of the live page for the version marker.
+  It should say: v15-universal
+  A different value means the browser is showing a cached old copy.
