@@ -3499,7 +3499,7 @@
      that is what we use - everywhere. Plain download is kept only for
      desktop, where it is already proven to work.
      --------------------------------------------------------------- */
-  var AURA_BUILD = 'v10-qr';
+  var AURA_BUILD = 'v11-scope-fix';
   var _vcfUrls = [];
   function makeVcfUrl(text){
     try{
@@ -3584,6 +3584,23 @@
         '<div style="color:#b00;font-size:13px">Could not draw the QR code.<br>Check your connection and try again.</div>';
     }
   }
+
+  /* --------------------------------------------------------------
+     Inline onclick="..." handlers are evaluated in GLOBAL scope.
+     These functions are declared inside this closure, so without an
+     explicit export every tap threw:
+         ReferenceError: saveVcf is not defined
+     ...the handler never ran, and the anchor fell through to its
+     blob:/data: href - which iOS and in-app browsers block outright.
+     That is why tapping Save to Contacts did nothing on phones while
+     the standalone test page (whose functions are global) worked.
+     -------------------------------------------------------------- */
+  window.saveVcf         = saveVcf;
+  window.showVcfQr       = showVcfQr;
+  window.vcardText       = vcardText;
+  window.makeVcfUrl      = makeVcfUrl;
+  window.vcfLastResort   = vcfLastResort;
+  window.isTouchDevice   = isTouchDevice;
 
   function saveVcf(a, ev){
     var text, fname = a.getAttribute('data-vcname') || 'contact.vcf';
