@@ -3907,37 +3907,86 @@
     });
   }
 
+  /* Endpoint that sends FROM the project's Twilio number.
+     Empty string = not configured yet; the app then falls back to opening
+     the reporter's own Messages app, exactly as it did before. */
+  var NOTIFY_ENDPOINT = '';
+
   function sendNotifySms(building){
     var nums = gatherNotifyNumbers(building);
-    var msg = emergencyMessageText(building);
+    var msg  = emergencyMessageText(building);
     if(!nums.length) return;
+
+    /* Copy the text either way, so it can be pasted if anything goes wrong. */
     try {
       if(navigator.clipboard && navigator.clipboard.writeText){
-        navigator.clipboard.writeText(msg);
+        navigator.clipboard.writeText(msg).catch(function(){});
       } else {
         var ta = document.createElement('textarea');
-        ta.value = msg;
-        ta.style.position = 'fixed';
-        ta.style.opacity = '0';
-        document.body.appendChild(ta);
-        ta.select();
-        document.execCommand('copy');
-        document.body.removeChild(ta);
+        ta.value = msg; ta.style.position='fixed'; ta.style.opacity='0';
+        document.body.appendChild(ta); ta.select();
+        document.execCommand('copy'); document.body.removeChild(ta);
       }
-    } catch(e){ console.error('Clipboard copy failed:', e); }
-    // iPhones cap a web sms: link to one recipient no matter how it's
-    // formatted, so we don't waste the attempt there -- just open to the
-    // first number. Android and most other phones generally do honor a
-    // comma-separated recipient list, so we try the full group there.
-    var recipients = isIosDevice() ? nums[0] : nums.join(',');
-    var href = 'sms:' + recipients + '?&body=' + encodeURIComponent(msg);
-    // ── Activate emergency state before we navigate away to Messages ─────────
-    // Stored in localStorage so state survives the page reload when returning.
+    } catch(e){}
+
+    /* Mark the emergency active before doing anything that navigates away. */
     emergencyActive = true;
-    localStorage.setItem('aura_emergency_active', 'true');
-    try { db.collection('config').doc('emergencyState').set({ active: true, building: building, activatedAt: new Date() }); } catch(e){}
-    window.location.href = href;
+    localStorage.setItem('aura_emergency_active','true');
+    try { db.collection('config').doc('emergencyState')
+            .set({active:true, building:building, activatedAt:new Date()}); } catch(e){}
+
+    /* iPhones cap a web sms: link to ONE recipient regardless of formatting,
+       so the manual path cannot reach the whole team on iOS. */
+    var href = 'sms:' + (isIosDevice() ? nums[0] : nums.join(',')) + '?&body=' + encodeURIComponent(msg);
+
+    function fallbackToPhoneMessages(reason){
+      if(reason) console.warn('Twilio send unavailable, using phone Messages:', reason);
+      window.location.href = href;
+    }
+
+    if(!NOTIFY_ENDPOINT){ fallbackToPhoneMessages(); return; }
+
+    /* Send from the Twilio number. Never let this hang during an emergency. */
+    var done = false;
+    var bail = setTimeout(function(){ if(!done){ done = true; fallbackToPhoneMessages('timeout'); } }, 6000);
+
+    fetch(NOTIFY_ENDPOINT, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({building: building})
+    })
+    .then(function(r){ return r.json().then(function(j){ return {ok:r.ok, body:j}; }); })
+    .then(function(res){
+      if(done) return; done = true; clearTimeout(bail);
+      if(res.ok && res.body && res.body.sentCount){
+        notifySentConfirmation(building, res.body);
+      } else {
+        fallbackToPhoneMessages((res.body && res.body.error) || 'send failed');
+      }
+    })
+    .catch(function(err){
+      if(done) return; done = true; clearTimeout(bail);
+      fallbackToPhoneMessages(err && err.message);
+    });
   }
+
+  /* Shown once the Twilio send succeeds, so the reporter has proof it went. */
+  function notifySentConfirmation(building, info){
+    var body = document.getElementById('modalBody');
+    if(!body) return;
+    var list = (info.sentTo||[]).map(function(n){
+      return '<li style="margin:2px 0">'+n+'</li>';
+    }).join('');
+    body.innerHTML =
+        '<p class="topname" style="color:#8FD08F">&#10003; Notification sent</p>'
+      + '<p style="font-size:13px;color:#bbb;line-height:1.55">Sent from the project number to '
+      +   '<b>'+info.sentCount+'</b> contact'+(info.sentCount===1?'':'s')+' for <b>'+building+'</b>.</p>'
+      + '<ul style="font-size:12px;color:#999;margin:6px 0 12px;padding-left:20px">'+list+'</ul>'
+      + (info.failedCount ? '<p style="font-size:12px;color:#E8C04F">'+info.failedCount
+          +' could not be reached. Call them directly.</p>' : '')
+      + '<button class="primary doc-link-btn" onclick="closeModal()">Close</button>';
+  }
+
 
   // ── EMERGENCY STATE MANAGEMENT ─────────────────────────────────────────────
   function updateEmergencyActiveUI(){
