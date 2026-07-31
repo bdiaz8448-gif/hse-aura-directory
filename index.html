@@ -760,6 +760,7 @@
   }
   #incidentCompanyBar .cb-chip:hover { background: rgba(0,212,255,0.10); border-color: var(--cyan-border); color: var(--cyan); }
   #incidentCompanyBar .cb-chip .cb-n { color: var(--cyan); font-size: 11px; }</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
 </head>
@@ -1910,7 +1911,7 @@
       + row('Email', p.email)
       + row('Trailer / office', p.trailer)
       + '</table>'
-      + saveToContactsBtnHtml(p)
+      + saveToContactsBtnHtml(p) + qrBtnHtml(p)
       + '<div class="modal-btns">'
       + '<button id="editDsm4Btn">Edit</button>'
       + '<button class="danger" id="deleteDsm4Btn">Delete</button>'
@@ -2072,7 +2073,7 @@
       + row('Email', p.email)
       + row('Trailer / office', p.trailer)
       + '</table>'
-      + saveToContactsBtnHtml(p)
+      + saveToContactsBtnHtml(p) + qrBtnHtml(p)
       + '<div class="modal-btns">'
       + '<button id="editDsm3Btn">Edit</button>'
       + '<button class="danger" id="deleteDsm3Btn">Delete</button>'
@@ -2970,7 +2971,7 @@
       + row('Email', p.email)
       + row('Trailer / office', p.trailer)
       + '</table>'
-      + saveToContactsBtnHtml(p)
+      + saveToContactsBtnHtml(p) + qrBtnHtml(p)
       + '<div class="modal-btns">'
       + '<button id="editWeekendBtn">Edit</button>'
       + '<button class="danger" id="deleteWeekendBtn">Delete</button>'
@@ -3117,7 +3118,7 @@
       + row('Email', p.email)
       + row('Trailer / office', p.trailer)
       + '</table>'
-      + saveToContactsBtnHtml(p)
+      + saveToContactsBtnHtml(p) + qrBtnHtml(p)
       + '<div class="modal-btns">'
       + '<button id="editCQVBtn">Edit</button>'
       + '<button class="danger" id="deleteCQVBtn">Delete</button>'
@@ -3264,7 +3265,7 @@
       + row('Email', p.email)
       + row('Trailer / office', p.trailer)
       + '</table>'
-      + saveToContactsBtnHtml(p)
+      + saveToContactsBtnHtml(p) + qrBtnHtml(p)
       + '<div class="modal-btns">'
       + '<button id="editNightShiftBtn">Edit</button>'
       + '<button class="danger" id="deleteNightShiftBtn">Delete</button>'
@@ -3364,7 +3365,7 @@
       + row('Email', p.email)
       + row('Trailer / office', p.trailer)
       + '</table>'
-      + saveToContactsBtnHtml(p)
+      + saveToContactsBtnHtml(p) + qrBtnHtml(p)
       + '<div class="modal-btns">'
       + '<button id="editPersonBtn">Edit</button>'
       + '<button class="danger" id="deletePersonBtn">Delete</button>'
@@ -3498,7 +3499,7 @@
      that is what we use - everywhere. Plain download is kept only for
      desktop, where it is already proven to work.
      --------------------------------------------------------------- */
-  var AURA_BUILD = 'v9-share-first';
+  var AURA_BUILD = 'v10-qr';
   var _vcfUrls = [];
   function makeVcfUrl(text){
     try{
@@ -3526,6 +3527,62 @@
          + 'onclick="return saveVcf(this,event)" '
          + 'style="user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;touch-action:manipulation;">'
          + 'Save to Contacts</a>';
+  }
+
+  /* ---------------------------------------------------------------
+     QR fallback - the one path no browser can block.
+
+     Every save method so far depends on a browser API, and in-app
+     browsers (Gmail, Messages, Teams...) block all of them. A QR code
+     sidesteps the browser completely: the phone CAMERA reads the vCard
+     and the operating system itself offers "Add to Contacts".
+     Works on any iPhone or Android, in any browser, and also lets
+     someone scan the card straight off another person's screen.
+     --------------------------------------------------------------- */
+  function qrBtnHtml(p){
+    var b64 = btoa(unescape(encodeURIComponent(vcardText(p))));
+    var nm  = escapeHtml(p.name || 'Contact');
+    return '<button type="button" class="doc-link-btn" data-vcf="'+b64+'" data-nm="'+nm+'" '
+         + 'onclick="showVcfQr(this)" '
+         + 'style="width:100%;margin-top:8px;padding:13px;border-radius:10px;cursor:pointer;'
+         + 'background:rgba(79,195,232,0.12);border:1px solid rgba(79,195,232,0.40);color:#4FC3E8;'
+         + 'font-weight:700;font-size:14px;font-family:inherit;'
+         + 'user-select:none;-webkit-user-select:none;touch-action:manipulation;">'
+         + 'Scan to save on a phone</button>';
+  }
+
+  function showVcfQr(btn){
+    var text = decodeURIComponent(escape(atob(btn.getAttribute('data-vcf'))));
+    var nm   = btn.getAttribute('data-nm') || 'Contact';
+    var old  = document.getElementById('vcfQrOverlay');
+    if(old && old.parentNode) old.parentNode.removeChild(old);
+
+    var o = document.createElement('div');
+    o.id = 'vcfQrOverlay';
+    o.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.88);'
+      + 'display:flex;align-items:center;justify-content:center;padding:22px;'
+      + '-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);';
+    o.innerHTML =
+        '<div style="background:#fff;border-radius:16px;padding:22px;max-width:340px;width:100%;text-align:center">'
+      +   '<div style="font-size:17px;font-weight:800;color:#111;margin-bottom:2px">' + nm + '</div>'
+      +   '<div style="font-size:12px;color:#666;margin-bottom:14px">Point your camera here &rarr; tap Add to Contacts</div>'
+      +   '<div id="vcfQrBox" style="display:flex;justify-content:center;min-height:220px;align-items:center"></div>'
+      +   '<button type="button" onclick="var e=document.getElementById(\'vcfQrOverlay\');if(e)e.remove();" '
+      +     'style="margin-top:16px;width:100%;padding:13px;border-radius:10px;border:1px solid #ccc;'
+      +     'background:#f2f2f2;color:#111;font-weight:700;font-size:15px;font-family:inherit;cursor:pointer">Close</button>'
+      + '</div>';
+    document.body.appendChild(o);
+    o.addEventListener('click', function(ev){ if(ev.target === o) o.remove(); });
+
+    try{
+      new QRCode(document.getElementById('vcfQrBox'), {
+        text: text, width: 220, height: 220,
+        correctLevel: QRCode.CorrectLevel.L
+      });
+    }catch(e){
+      document.getElementById('vcfQrBox').innerHTML =
+        '<div style="color:#b00;font-size:13px">Could not draw the QR code.<br>Check your connection and try again.</div>';
+    }
   }
 
   function saveVcf(a, ev){
