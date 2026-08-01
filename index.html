@@ -249,9 +249,15 @@
     box-shadow: var(--shadow-sm), inset 0 1px 0 rgba(255,255,255,0.07);
   }
   .card:hover {
-    border-color: rgba(0,212,255,0.22);
-    box-shadow: 0 0 22px rgba(0,212,255,0.09), var(--shadow-sm), inset 0 1px 0 rgba(0,212,255,0.12);
-    background: linear-gradient(135deg, rgba(255,255,255,0.085), rgba(255,255,255,0.040));
+    border-color: rgba(0,212,255,0.85);
+    box-shadow: 0 0 0 1px rgba(0,212,255,0.55), 0 0 26px rgba(0,212,255,0.30), var(--shadow-sm);
+    background: linear-gradient(135deg, rgba(0,212,255,0.16), rgba(0,212,255,0.07));
+    transform: translateY(-1px);
+  }
+  .card:hover .card-name, .card:hover strong { color: #7fe3ff; }
+  /* Touch devices have no hover - don't leave a card stuck highlighted */
+  @media (hover: none){
+    .card:hover { transform: none; }
   }
   .card:active { background: rgba(201,168,76,0.09); border-color: var(--gold-border); }
 
@@ -426,6 +432,16 @@
   .hotline-tel { color: #fff; text-decoration: underline; }
 
   /* ── Sync row ── */
+  .tab-btn:not(.active):hover {
+    border-color: rgba(0,212,255,0.60);
+    color: #7fe3ff;
+    background: rgba(0,212,255,0.10);
+  }
+  .sync-row button:hover {
+    border-color: rgba(0,212,255,0.55);
+    color: #7fe3ff;
+  }
+  .ctx-item:hover { background: rgba(0,212,255,0.14); color: #0a3a4a; }
   .sync-row { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 8px; }
   .sync-row button { flex: 1 1 auto; min-width: 92px; max-width: 100%; white-space: nowrap;
     height: 42px; font-size: 13.5px; padding: 0 10px; }
@@ -2155,12 +2171,21 @@
     var _collArrays = { dsm4:dsm4, dsm3:dsm3, weekend:weekend, cqv:cqv, nightshift:nightshift };
     function _inRoster(arr, pid){ return (arr||[]).some(function(d){ return d.linkedContactId === pid; }); }
     var rosters = [
-      { key:'dsm4',       label: esLang ? 'Gestión DSM4'        : 'DSM4 Management',     linked: !!p.linkedDsm4Id       || _inRoster(_collArrays.dsm4,       p.id) },
-      { key:'dsm3',       label: esLang ? 'Gestión DSM3'        : 'DSM3 Management',     linked: !!p.linkedDsm3Id       || _inRoster(_collArrays.dsm3,       p.id) },
-      { key:'weekend',    label: esLang ? 'Jacobs Fin de Semana': 'Weekend Jacobs',       linked: !!p.linkedWeekendId    || _inRoster(_collArrays.weekend,    p.id) },
-      { key:'cqv',        label: esLang ? 'Contactos CQV'       : 'CQV Contacts',        linked: !!p.linkedCqvId        || _inRoster(_collArrays.cqv,        p.id) },
-      { key:'nightshift', label: esLang ? 'Jacobs Turno Noche'  : 'Night Shift Jacobs',  linked: !!p.linkedNightShiftId || _inRoster(_collArrays.nightshift, p.id) }
+      { key:'dsm4',       label: bl('DSM4') + (esLang ? '' : ' Management'), linked: !!p.linkedDsm4Id       || _inRoster(_collArrays.dsm4,       p.id) },
+      { key:'dsm3',       label: bl('DSM3') + (esLang ? '' : ' Management'), linked: !!p.linkedDsm3Id       || _inRoster(_collArrays.dsm3,       p.id) },
+      { key:'weekend',    label: bl('WEEKEND'), linked: !!p.linkedWeekendId    || _inRoster(_collArrays.weekend,    p.id) },
+      { key:'cqv',        label: bl('CQV'),     linked: !!p.linkedCqvId        || _inRoster(_collArrays.cqv,        p.id) },
+      { key:'nightshift', label: bl('NIGHT'),   linked: !!p.linkedNightShiftId || _inRoster(_collArrays.nightshift, p.id) }
     ];
+    /* Owner-added buildings live as a map on the contact, so they belong in
+       this menu too - it is the fast path people actually use. */
+    (typeof customRosters !== 'undefined' ? customRosters : []).forEach(function(cr){
+      rosters.push({
+        key: 'custom:' + cr.id,
+        label: cr.name,
+        linked: !!(p.customRosters && p.customRosters[cr.id])
+      });
+    });
     var notify = [
       { key:'notifyDSM4', label: esLang ? 'Emergencia DSM4' : 'DSM4 Emergency', linked: !!p.notifyDSM4 },
       { key:'notifyDSM3', label: esLang ? 'Emergencia DSM3' : 'DSM3 Emergency', linked: !!p.notifyDSM3 }
@@ -2184,10 +2209,13 @@
     });
     m.innerHTML = html;
     // position
-    var mw = 240, mh = 320;
+    var mw = 250;
+    var mh = 96 + (rosters.length + notify.length) * 34;   /* grows with custom buildings */
     var vw = window.innerWidth, vh = window.innerHeight;
     m.style.left = (x + mw > vw ? Math.max(4, x - mw) : x + 4) + 'px';
-    m.style.top  = (y + mh > vh ? Math.max(4, y - mh) : y + 4) + 'px';
+    m.style.top  = Math.max(4, (y + mh > vh ? Math.min(y - mh, vh - mh - 8) : y + 4)) + 'px';
+    m.style.maxHeight = (vh - 16) + 'px';
+    m.style.overflowY = 'auto';
     m.style.display = 'block';
     // wire item clicks
     Array.prototype.forEach.call(m.querySelectorAll('.ctx-item'), function(el){
@@ -2244,6 +2272,17 @@
       var newVal = !p[key];
       var upd = {}; upd[key] = newVal;
       db.collection('contacts').doc(p.id).update(upd).catch(function(err){ alert('Error: '+err.message); });
+      return;
+    }
+    /* Owner-added buildings are a map on the contact document. */
+    if(key.indexOf('custom:') === 0){
+      var crId = key.slice(7);
+      var map = {};
+      Object.keys(p.customRosters || {}).forEach(function(k){ if(p.customRosters[k]) map[k] = true; });
+      if(map[crId]) delete map[crId]; else map[crId] = true;
+      db.collection('contacts').doc(p.id).update({customRosters: map})
+        .then(function(){ if(typeof currentCustomTab !== 'undefined' && currentCustomTab) renderCustomRoster(); })
+        .catch(function(err){ alert('Error: '+err.message); });
       return;
     }
     var collMap = { dsm4:{field:'linkedDsm4Id',pre:'dsm4_'}, dsm3:{field:'linkedDsm3Id',pre:'dsm3_'}, weekend:{field:'linkedWeekendId',pre:'weekend_'}, cqv:{field:'linkedCqvId',pre:'cqv_'}, nightshift:{field:'linkedNightShiftId',pre:'nightshift_'} };
@@ -4125,7 +4164,7 @@
      Android hands it to Contacts, and desktop downloads it.
      Cards live in /c/<id>.vcf and are regenerated from Firestore.
      --------------------------------------------------------------- */
-  var AURA_BUILD = 'v24-privacy-notice';
+  var AURA_BUILD = 'v25-ctx-hover';
 
   function saveToContactsBtnHtml(p){
     var href = 'c/' + encodeURIComponent(p.id) + '.vcf';
