@@ -3147,51 +3147,90 @@
     document.getElementById('overlay').classList.remove('doc-viewer-open');
     body.className = '';
 
+    /* Renders "Label  value" with a clear marker when the person left it blank,
+       so an empty field never looks like real data. */
+    function fieldRow(label, val){
+      var v = (val||'').trim();
+      var cell = v
+        ? '<span style="color:#111;font-weight:600;">'+escapeHtml(v)+'</span>'
+        : '<span style="color:#b06a00;font-style:italic;">not provided</span>';
+      return '<tr><td style="padding:3px 8px 3px 0;color:#666;white-space:nowrap;">'+label+'</td>'
+           + '<td style="padding:3px 0;">'+cell+'</td></tr>';
+    }
+    /* Roster tick boxes. Uses the owner's current building names and includes
+       any custom rosters that have been added. */
+    function rosterChoices(reqId){
+      var opts = [
+        {col:'contacts',   label:'Contacts', locked:true},
+        {col:'dsm4',       label:bl('DSM4')},
+        {col:'dsm3',       label:bl('DSM3')},
+        {col:'weekend',    label:bl('WEEKEND')},
+        {col:'cqv',        label:bl('CQV')},
+        {col:'nightshift', label:bl('NIGHT')}
+      ];
+      (typeof customRosters !== 'undefined' ? customRosters : []).forEach(function(cr){
+        opts.push({col:'custom:'+cr.id, label:cr.name});
+      });
+      return opts.map(function(o){
+        var locked = o.locked ? ' checked disabled' : '';
+        var style  = o.locked
+          ? 'background:#dbe7fb;border-color:#9db8e6;color:#12408f;'
+          : 'background:#fff;border-color:#b9c6da;color:#111;';
+        return '<label style="display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;'
+             + 'padding:7px 11px;border:1px solid;border-radius:7px;cursor:'+(o.locked?'default':'pointer')+';'+style+'">'
+             + '<input type="checkbox" data-col="'+o.col+'" data-reqid="'+reqId+'"'+locked
+             + ' style="width:16px;height:16px;margin:0;">'+escapeHtml(o.label)+'</label>';
+      }).join('');
+    }
+
     function buildPanel(){
-      var html2 = '<p class="topname" style="margin:0 0 12px;font-size:17px;">&#128276; Pending Requests</p>';
+      var html2 = '<p class="topname" style="margin:0 0 4px;font-size:18px;color:#fff;">&#128276; Pending Requests</p>'+'<p style="margin:0 0 14px;font-size:12.5px;color:#c9c9c9;line-height:1.5;">People who used &ldquo;Join Directory&rdquo; or asked to be removed. Approving adds them to the directory for everyone.</p>';
 
       // ── Join Requests ──
       if(pendingJoinRequests.length === 0){
-        html2 += '<p class="sync-hint">No pending join requests.</p>';
+        html2 += '<p style="color:#bbb;font-size:13px;margin:0 0 6px;">No pending join requests.</p>';
       } else {
-        html2 += '<p class="sync-hint" style="font-weight:700;margin-bottom:6px;">Join Requests (' + pendingJoinRequests.length + ')</p>';
+        html2 += '<p style="font-weight:800;margin:0 0 8px;font-size:14px;color:#fff;">Join Requests (' + pendingJoinRequests.length + ')</p>';
         pendingJoinRequests.forEach(function(req){
           var ts = req.submittedAt ? new Date(req.submittedAt.toMillis()).toLocaleDateString() : '?';
           html2 +=
-            '<div style="border:1px solid #e0e0e0;border-radius:6px;padding:10px 12px;margin-bottom:10px;background:#fafafa;">'
-            + '<strong>' + escapeHtml(req.name) + '</strong>'
-            + ' &mdash; ' + escapeHtml(req.title || '') + ' @ ' + escapeHtml(req.company || '')
-            + (req.phone ? ' &bull; ' + escapeHtml(req.phone) : '')
-            + (req.email ? ' &bull; ' + escapeHtml(req.email) : '')
-            + '<br><small style="color:#aaa;">Submitted ' + ts + '</small>'
-            + '<div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;">'
-            + '<strong style="font-size:11px;color:#555;">Add to:</strong>'
-            + ['contacts','dsm4','dsm3','weekend','cqv','nightshift'].map(function(col){
-                var label = {contacts:'Contacts',dsm4:'DSM4',dsm3:'DSM3',weekend:'Weekend',cqv:'CQV',nightshift:'Night Shift'}[col];
-                var chk = col === 'contacts' ? ' checked disabled' : '';
-                return '<label style="font-size:12px;cursor:pointer;"><input type="checkbox" data-col="'+col+'" data-reqid="'+req.id+'"'+chk+' style="margin-right:3px;">'+label+'</label>';
-              }).join('')
+            '<div style="border:1px solid #d0d0d0;border-radius:10px;padding:14px;margin-bottom:12px;background:#ffffff;color:#111;">'
+            + '<div style="font-size:17px;font-weight:800;color:#000;margin-bottom:8px;">' + escapeHtml(req.name || '(no name given)') + '</div>'
+            + '<table style="width:100%;border-collapse:collapse;font-size:13px;color:#111;margin-bottom:10px;">'
+            +   fieldRow('Job title', req.title)
+            +   fieldRow('Company',   req.company)
+            +   fieldRow('Phone',     req.phone)
+            +   fieldRow('Email',     req.email)
+            +   '<tr><td style="padding:3px 8px 3px 0;color:#666;white-space:nowrap;">Submitted</td>'
+            +   '<td style="padding:3px 0;color:#111;">' + ts + '</td></tr>'
+            + '</table>'
+            + '<div style="background:#eef4ff;border:1px solid #c7d8f5;border-radius:8px;padding:10px;">'
+            +   '<div style="font-size:12px;font-weight:800;color:#12408f;margin-bottom:2px;">Where should this person appear?</div>'
+            +   '<div style="font-size:11.5px;color:#33507f;margin-bottom:8px;">Approving always adds them to <b>Contacts</b>. Tick any roster they also belong to &mdash; you can change this later by editing their contact.</div>'
+            +   '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">'
+            +   rosterChoices(req.id)
+            +   '</div>'
             + '</div>'
-            + '<div style="margin-top:8px;display:flex;gap:6px;">'
-            + '<button class="primary" data-approve="'+req.id+'" style="font-size:12px;padding:5px 12px;">&#10003; Approve</button>'
-            + '<button data-decline-join="'+req.id+'" style="font-size:12px;padding:5px 12px;background:#fff;border:1px solid #ccc;color:#555;border-radius:5px;cursor:pointer;">&#10007; Decline</button>'
+            + '<div style="margin-top:12px;display:flex;gap:8px;">'
+            + '<button data-approve="'+req.id+'" style="font-size:14px;font-weight:800;padding:10px 20px;background:#2e7d32;color:#fff;border:none;border-radius:8px;cursor:pointer;">&#10003; Approve</button>'
+            + '<button data-decline-join="'+req.id+'" style="font-size:14px;font-weight:700;padding:10px 20px;background:#fff;border:1px solid #c62828;color:#c62828;border-radius:8px;cursor:pointer;">&#10007; Decline</button>'
             + '</div></div>';
         });
       }
 
       // ── Removal Requests ──
-      html2 += '<p class="sync-hint" style="font-weight:700;margin:14px 0 6px;">Removal Requests (' + pendingRemovalRequests.length + ')</p>';
+      html2 += '<p style="font-weight:800;margin:18px 0 8px;font-size:14px;color:#fff;">Removal Requests (' + pendingRemovalRequests.length + ')</p>';
       if(pendingRemovalRequests.length === 0){
-        html2 += '<p class="sync-hint">No pending removal requests.</p>';
+        html2 += '<p style="color:#bbb;font-size:13px;margin:0;">No pending removal requests.</p>';
       } else {
         pendingRemovalRequests.forEach(function(req){
           var ts = req.submittedAt ? new Date(req.submittedAt.toMillis()).toLocaleDateString() : '?';
           html2 +=
-            '<div style="border:1px solid #ffcdd2;border-radius:6px;padding:10px 12px;margin-bottom:10px;background:#fff8f8;">'
-            + '<strong>' + escapeHtml(req.name) + '</strong>'
-            + (req.company ? ' &mdash; ' + escapeHtml(req.company) : '')
-            + (req.reason  ? '<br><em style="font-size:12px;color:#888;">Reason: ' + escapeHtml(req.reason) + '</em>' : '')
-            + '<br><small style="color:#aaa;">Submitted ' + ts + '</small>'
+            '<div style="border:1px solid #e0a0a0;border-radius:10px;padding:14px;margin-bottom:12px;background:#fff;color:#111;">'
+            + '<div style="font-size:17px;font-weight:800;color:#000;margin-bottom:4px;">' + escapeHtml(req.name) + '</div>'
+            + (req.company ? '<div style="font-size:13px;color:#333;font-weight:600;">' + escapeHtml(req.company) + '</div>' : '')
+            + (req.reason  ? '<div style="font-size:13px;color:#111;margin-top:6px;"><b>Reason:</b> ' + escapeHtml(req.reason) + '</div>' : '')
+            + '<br><small style="color:#555;">Submitted ' + ts + '</small>'
             + '<div style="margin-top:8px;display:flex;gap:6px;">'
             + '<button data-remove-id="'+req.id+'" style="font-size:12px;padding:5px 12px;background:#c62828;color:#fff;border:none;border-radius:5px;cursor:pointer;">&#10003; Mark Processed</button>'
             + '<button data-decline-remove="'+req.id+'" style="font-size:12px;padding:5px 12px;background:#fff;border:1px solid #ccc;color:#555;border-radius:5px;cursor:pointer;">&#10007; Dismiss</button>'
@@ -3252,31 +3291,54 @@
   }
 
   function approveJoinRequest(req, tabs){
-    // Build new contact object
+    /* The contact document is the source of truth. Field names must match the
+       rest of the app exactly - an earlier version wrote `cell` instead of
+       `cellPhone`, which silently dropped every approved person's number. */
+    var contactId = 'id_' + Date.now() + '_' + Math.random().toString(36).slice(2,7);
     var newContact = {
-      name:    req.name    || '',
-      company: req.company || '',
-      role:    req.title   || '',
-      cell:    req.phone   || '',
-      email:   req.email   || ''
+      id:          contactId,
+      name:        req.name    || '',
+      role:        req.title   || '',
+      company:     req.company || '',
+      cellPhone:   req.phone   || '',
+      officePhone: '',
+      email:       req.email   || '',
+      trailer:     '',
+      notifyDSM4:  false,
+      notifyDSM3:  false
     };
-    var writes = [];
-    // Always add to each selected tab (contacts is default-checked)
+
+    /* Custom rosters live as a map on the contact itself. */
+    var crMap = {};
     tabs.forEach(function(col){
-      writes.push(db.collection(col).add(Object.assign({}, newContact)));
+      if(col.indexOf('custom:') === 0) crMap[col.slice(7)] = true;
     });
-    // If contacts not in tabs explicitly, still add it
-    if(tabs.indexOf('contacts') === -1){
-      writes.push(db.collection('contacts').add(Object.assign({}, newContact)));
-    }
-    // Mark request as approved
+    if(Object.keys(crMap).length) newContact.customRosters = crMap;
+
+    var writes = [ db.collection('contacts').doc(contactId).set(newContact) ];
+
+    /* Built-in rosters are their own collections, linked back to the contact. */
+    var legacy = {dsm4:'dsm4', dsm3:'dsm3', weekend:'weekend', cqv:'cqv', nightshift:'nightshift'};
+    tabs.forEach(function(col){
+      if(col === 'contacts' || col.indexOf('custom:') === 0) return;
+      if(!legacy[col]) return;
+      var rosterId = 'id_' + Date.now() + '_' + Math.random().toString(36).slice(2,7);
+      writes.push(db.collection(legacy[col]).doc(rosterId).set({
+        id: rosterId,
+        name: newContact.name, role: newContact.role, company: newContact.company,
+        cellPhone: newContact.cellPhone, officePhone: '', email: newContact.email,
+        trailer: '', linkedContactId: contactId
+      }));
+    });
+
     writes.push(db.collection('joinRequests').doc(req.id).update({status:'approved'}));
+
     Promise.all(writes).then(function(){
+      auditEvent('contact', 'approved join request: ' + (newContact.name || req.id));
       sendRequestEmail(
         'Join Request Approved: ' + req.name,
         req.name + ' has been approved and added to the HSE directory.'
       );
-      // Refresh panel
       openPendingRequestsPanel();
     }).catch(function(err){ alert('Error approving request: ' + err.message); });
   }
@@ -4007,7 +4069,7 @@
      Android hands it to Contacts, and desktop downloads it.
      Cards live in /c/<id>.vcf and are regenerated from Firestore.
      --------------------------------------------------------------- */
-  var AURA_BUILD = 'v21-owner';
+  var AURA_BUILD = 'v22-pending-clear';
 
   function saveToContactsBtnHtml(p){
     var href = 'c/' + encodeURIComponent(p.id) + '.vcf';
