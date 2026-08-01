@@ -426,8 +426,9 @@
   .hotline-tel { color: #fff; text-decoration: underline; }
 
   /* ── Sync row ── */
-  .sync-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
-  .sync-row button { flex: 1 1 auto; min-width: 110px; max-width: 100%; white-space: nowrap; }
+  .sync-row { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 8px; }
+  .sync-row button { flex: 1 1 auto; min-width: 92px; max-width: 100%; white-space: nowrap;
+    height: 42px; font-size: 13.5px; padding: 0 10px; }
   #lockStatusBtn { flex: 1 1 100%; }
   @media (min-width: 700px){
     #lockStatusBtn { flex: 1 1 auto; }
@@ -1528,6 +1529,7 @@
       sessionStorage.removeItem(EDIT_UNLOCK_KEY);
       sessionStorage.removeItem(COMPANY_ACCESS_KEY); // clear company view on admin lock
       sessionStorage.removeItem('aura_who');
+      sessionStorage.removeItem('aura_is_owner');
     }
     updateLockUI();
   }
@@ -1712,9 +1714,12 @@
     };
   }
 
-    var adminUsers = [];
+    var ownerName = 'Owner';
+  var adminUsers = [];
   function whoAmI(){ return sessionStorage.getItem('aura_who') || ''; }
-  function isOwner(){ return whoAmI() === 'Owner'; }
+  /* Owner status is a session flag set at unlock - never inferred from the
+     display name, which the owner can change. */
+  function isOwner(){ return sessionStorage.getItem('aura_is_owner') === '1'; }
   function auditEvent(kind, detail){
     try{
       db.collection('auditLog').add({
@@ -1748,7 +1753,7 @@
         mad.onclick = manageAdmins;
         pinBtn.parentNode.insertBefore(mad, pinBtn.nextSibling);
       }
-      mad.style.display = isOwner() ? 'inline-block' : 'none';
+      mad.style.display = 'inline-block';   /* admins manage admins; the owner block inside is owner-only */
       var bld = document.getElementById('manageBuildingsBtn');
       if(!bld){
         var pb2 = document.getElementById('changePinBtn');
@@ -1802,29 +1807,40 @@
   }
 
   function manageAdmins(){
-    /* Owner only - and re-verify the owner PIN even if already unlocked. */
-    var entered = prompt('Owner PIN required to manage admins:');
-    if(entered === null) return;
-    if(entered !== editPin){ alert('Incorrect owner PIN.'); return; }
-    sessionStorage.setItem('aura_who','Owner');
+    if(!isUnlocked()){ requireUnlock(function(){ manageAdmins(); }); return; }
+    var owner = isOwner();
     var ov=document.createElement('div');
     ov.id='adminMgrOverlay';
     ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;';
     function rowsHtml(){
-      var r = adminUsers.map(function(a,idx){
-        return '<div class="admRow" style="display:flex;gap:8px;margin-bottom:8px;align-items:center;">'
-          +'<input class="admName" data-i="'+idx+'" value="'+escapeHtml(a.name||'')+'" placeholder="Name" style="flex:1;padding:8px 10px;border:1px solid #999;border-radius:6px;font-size:13px;color:#111;background:#fff;">'
-          +'<input class="admPin" data-i="'+idx+'" value="'+escapeHtml(a.pin||'')+'" placeholder="PIN" style="width:90px;padding:8px 10px;border:1px solid #999;border-radius:6px;font-size:14px;font-weight:700;color:#111;background:#fff;">'
+      var r = adminUsers.map(function(a2,idx){
+        return '<div style="display:flex;gap:8px;margin-bottom:8px;align-items:center;">'
+          +'<input class="admName" data-i="'+idx+'" value="'+escapeHtml(a2.name||'')+'" placeholder="Name" style="flex:1;padding:8px 10px;border:1px solid #999;border-radius:6px;font-size:13px;color:#111;background:#fff;">'
+          +'<input class="admPin" data-i="'+idx+'" value="'+escapeHtml(a2.pin||'')+'" placeholder="PIN" style="width:90px;padding:8px 10px;border:1px solid #999;border-radius:6px;font-size:14px;font-weight:700;color:#111;background:#fff;">'
           +'<button class="admDel" data-i="'+idx+'" style="padding:7px 10px;border:1px solid #e57373;border-radius:6px;background:#fff;color:#c62828;font-weight:700;cursor:pointer;">×</button>'
           +'</div>';
       }).join('');
       return r || '<div style="color:#777;font-size:13px;margin-bottom:8px;">No admins yet — add the first one below.</div>';
     }
-    ov.innerHTML='<div style="background:#fff;border-radius:14px;max-width:520px;width:100%;max-height:82vh;display:flex;flex-direction:column;overflow:hidden;">'
+    var ownerBlock = owner
+      ? '<div style="margin:2px 0 16px;padding:12px;border:1.5px solid #b8860b;border-radius:10px;background:#fdf6e3;">'
+        +'<div style="font-size:11px;font-weight:800;color:#8a6d00;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px;">👑 Owner — visible only to you</div>'
+        +'<div style="display:flex;gap:8px;align-items:center;">'
+        +'<input id="ownerNameInp" value="'+escapeHtml(ownerName)+'" placeholder="Owner name" style="flex:1;padding:8px 10px;border:1px solid #b8860b;border-radius:6px;font-size:13px;color:#111;background:#fff;">'
+        +'<input id="ownerPinInp" value="'+escapeHtml(editPin)+'" placeholder="Owner PIN" style="width:90px;padding:8px 10px;border:1px solid #b8860b;border-radius:6px;font-size:14px;font-weight:800;color:#111;background:#fff;">'
+        +'</div>'
+        +'<div style="font-size:11px;color:#8a6d00;margin-top:6px;">Change the name and PIN here to transfer ownership. Only the Owner sees this box or the Buildings panel.</div>'
+        +'</div>'
+      : '';
+    ov.innerHTML='<div style="background:#fff;border-radius:14px;max-width:540px;width:100%;max-height:84vh;display:flex;flex-direction:column;overflow:hidden;">'
       +'<div style="padding:16px 18px 6px;"><b style="font-size:17px;color:#111;">👥 Admin Personnel</b>'
-      +'<div style="font-size:12px;color:#555;margin-top:2px;">Each admin gets their own PIN with full edit access. Only the Owner PIN can open this panel.</div></div>'
-      +'<div id="admList" style="overflow-y:auto;padding:12px 18px 4px;">'+rowsHtml()+'</div>'
-      +'<div style="padding:6px 18px 4px;"><button id="admAdd" style="padding:8px 14px;border:1px dashed #1565c0;border-radius:8px;background:#eff6ff;color:#1565c0;font-weight:700;cursor:pointer;">+ Add admin</button></div>'
+      +'<div style="font-size:12px;color:#555;margin-top:2px;">Each admin unlocks with their own PIN'+(owner?'':' — signed in as '+escapeHtml(whoAmI()))+'.</div></div>'
+      +'<div style="overflow-y:auto;padding:12px 18px 4px;">'
+      + ownerBlock
+      +'<div style="font-size:11px;font-weight:800;color:#1565c0;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:8px;">Admins</div>'
+      +'<div id="admList">'+rowsHtml()+'</div>'
+      +'<button id="admAdd" style="padding:8px 14px;border:1px dashed #1565c0;border-radius:8px;background:#eff6ff;color:#1565c0;font-weight:700;cursor:pointer;margin-bottom:8px;">+ Add admin</button>'
+      +'</div>'
       +'<div style="padding:12px 18px 14px;text-align:right;border-top:1px solid #eee;display:flex;gap:8px;justify-content:flex-end;">'
       +'<button id="admSave" style="padding:9px 18px;border-radius:8px;border:none;background:#2e7d32;color:#fff;font-weight:800;cursor:pointer;">✓ Save All</button>'
       +'<button id="admClose" style="padding:9px 18px;border-radius:8px;border:1px solid #ccc;background:#f5f5f5;color:#111;font-weight:700;cursor:pointer;">Close</button></div></div>';
@@ -1838,8 +1854,8 @@
       }
     }
     function rewire(){
-      ov.querySelectorAll('.admDel').forEach(function(b){
-        b.onclick=function(){ syncFromInputs(); adminUsers.splice(parseInt(b.getAttribute('data-i'),10),1);
+      ov.querySelectorAll('.admDel').forEach(function(b2){
+        b2.onclick=function(){ syncFromInputs(); adminUsers.splice(parseInt(b2.getAttribute('data-i'),10),1);
           document.getElementById('admList').innerHTML=rowsHtml(); rewire(); };
       });
     }
@@ -1852,13 +1868,31 @@
     ov.addEventListener('click',function(e){ if(e.target===ov) ov.remove(); });
     document.getElementById('admSave').onclick=function(){
       syncFromInputs();
-      var bad = adminUsers.some(function(a){ return a.pin === editPin; });
-      if(bad){ alert('An admin PIN cannot be the same as the Owner PIN.'); return; }
-      db.collection('config').doc('admins').set({list: adminUsers}).then(function(){
+      var newOwnerName = ownerName, newOwnerPin = editPin, ownershipChanged = false;
+      if(owner){
+        newOwnerName = (document.getElementById('ownerNameInp').value||'').trim() || 'Owner';
+        newOwnerPin  = (document.getElementById('ownerPinInp').value||'').trim();
+        if(!newOwnerPin){ alert('Owner PIN cannot be empty.'); return; }
+        ownershipChanged = (newOwnerName !== ownerName || newOwnerPin !== editPin);
+      }
+      var clash = adminUsers.some(function(a2){ return a2.pin === newOwnerPin; });
+      if(clash){ alert('An admin PIN cannot be the same as the Owner PIN.'); return; }
+      var writes = [ db.collection('config').doc('admins').set({list: adminUsers}) ];
+      if(owner && ownershipChanged){
+        writes.push(db.collection('config').doc('app').set({editPin:newOwnerPin, ownerName:newOwnerName},{merge:true}));
+      }
+      Promise.all(writes).then(function(){
+        if(owner && ownershipChanged){
+          var transferred = (newOwnerName !== ownerName);
+          editPin = newOwnerPin; ownerName = newOwnerName;
+          sessionStorage.setItem('aura_who', ownerName);
+          auditEvent('admin', transferred ? ('ownership transferred to '+ownerName) : 'owner PIN updated');
+        }
         auditEvent('admin','admin list updated ('+adminUsers.length+' admins)');
-        alert('✓ Saved. '+adminUsers.length+' admin'+(adminUsers.length===1?'':'s')+' can now unlock with their own PIN.');
+        alert('✓ Saved.');
         ov.remove();
-      }).catch(function(e){ alert('Could not save: '+e.message); });
+        updateLockUI();
+      }).catch(function(e2){ alert('Could not save: '+e2.message); });
     };
   }
 
@@ -1866,8 +1900,8 @@
     if(isUnlocked()){ action(); return; }
     var entered = prompt('Enter edit PIN to add, edit, or delete:');
     if(entered === null) return;
-    var who = null;
-    if(entered === editPin){ who = 'Owner'; }
+    var who = null, asOwner = false;
+    if(entered === editPin){ who = ownerName; asOwner = true; }
     else {
       for(var ai=0; ai<adminUsers.length; ai++){
         if(adminUsers[ai].pin && adminUsers[ai].pin === entered){ who = adminUsers[ai].name || 'Admin'; break; }
@@ -1875,6 +1909,8 @@
     }
     if(who){
       sessionStorage.setItem('aura_who', who);
+      if(asOwner) sessionStorage.setItem('aura_is_owner','1');
+      else sessionStorage.removeItem('aura_is_owner');
       setUnlocked(true);
       auditEvent('unlock', who + ' unlocked editing');
       action();
@@ -3012,9 +3048,16 @@
     var rb = document.getElementById('pendingRequestsBtn');
     var badge = document.getElementById('pendingBadge');
     if(!rb) return;
-    if(isUnlocked() && total > 0){
+    /* Always visible while unlocked - admins asked to see it even at zero.
+       Orange when something is waiting, muted when the queue is clear. */
+    if(isUnlocked()){
       rb.style.display = 'inline-block';
       if(badge) badge.textContent = String(total);
+      if(total > 0){
+        rb.style.background = '#e65100'; rb.style.color = '#fff'; rb.style.opacity = '1';
+      } else {
+        rb.style.background = 'rgba(230,81,0,0.16)'; rb.style.color = '#f0a875'; rb.style.opacity = '0.9';
+      }
     } else {
       rb.style.display = 'none';
     }
@@ -3964,7 +4007,7 @@
      Android hands it to Contacts, and desktop downloads it.
      Cards live in /c/<id>.vcf and are regenerated from Firestore.
      --------------------------------------------------------------- */
-  var AURA_BUILD = 'v20-wrap';
+  var AURA_BUILD = 'v21-owner';
 
   function saveToContactsBtnHtml(p){
     var href = 'c/' + encodeURIComponent(p.id) + '.vcf';
@@ -4858,6 +4901,7 @@
     }, function(err){ console.error('DSM3 sync error:', err); });
     db.collection('config').doc('app').onSnapshot(function(doc){
       if(doc.exists && doc.data().editPin) editPin = doc.data().editPin;
+      if(doc.exists && doc.data().ownerName) ownerName = doc.data().ownerName;
       db.collection('config').doc('admins').get().then(function(d){
         if(d.exists && Array.isArray(d.data().list)) adminUsers = d.data().list;
       }).catch(function(){});
