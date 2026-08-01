@@ -275,6 +275,30 @@
     border: 1.5px solid var(--olive-border);
     box-shadow: 0 0 16px rgba(126,143,60,0.14), var(--shadow-sm), inset 0 1px 0 rgba(255,255,255,0.07);
   }
+  /* ---- HOVER: identical on EVERY card, whatever the company ----
+     .card.jacobs-card sits after .card:hover and carries the same CSS
+     specificity, so it was winning the border/box-shadow and leaving Jacobs
+     cards olive on hover. This rule is more specific than both, so Jacobs,
+     Fujifilm, contractors and anyone added later all get the same blue frame.
+     Border width is stated explicitly so the 1px vs 1.5px difference between
+     card types cannot show through. box-sizing is border-box globally, so
+     equalising the width causes no layout shift. */
+  .card:hover,
+  .card.jacobs-card:hover {
+    border: 1.5px solid #00d4ff;
+    box-shadow: 0 0 0 2px rgba(0,212,255,0.70), 0 0 30px rgba(0,212,255,0.32), var(--shadow-sm);
+    background: linear-gradient(135deg, rgba(0,212,255,0.17), rgba(0,212,255,0.075));
+  }
+  .card:hover .card-name,
+  .card.jacobs-card:hover .card-name { color: #7fe3ff; }
+  @media (hover: none){
+    .card.jacobs-card:hover {
+      border: 1.5px solid var(--olive-border);
+      box-shadow: 0 0 16px rgba(126,143,60,0.14), var(--shadow-sm), inset 0 1px 0 rgba(255,255,255,0.07);
+      background: linear-gradient(135deg, rgba(255,255,255,0.060), rgba(255,255,255,0.028));
+    }
+    .card.jacobs-card:hover .card-name { color: inherit; }
+  }
 
   /* ── Vacation badge ── */
   .vac-badge {
@@ -4173,7 +4197,7 @@
      Android hands it to Contacts, and desktop downloads it.
      Cards live in /c/<id>.vcf and are regenerated from Firestore.
      --------------------------------------------------------------- */
-  var AURA_BUILD = 'v26-hover-uniform';
+  var AURA_BUILD = 'v27-hover-all-companies';
 
   function saveToContactsBtnHtml(p){
     var href = 'c/' + encodeURIComponent(p.id) + '.vcf';
