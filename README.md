@@ -130,6 +130,23 @@ under the lock icon. Do not commit them here.
 | v25 | Right-click menu includes owner-added buildings; clear cyan hover everywhere |
 | v26–v27 | Uniform blue hover frame on every card regardless of company |
 
+### ✅ Emergency SMS — CONFIRMED WORKING (2026-07-31)
+End-to-end test passed: tapping Notify sent a real SMS **from the Twilio
+number (661) 560-4579**, not from the reporter's personal phone.
+
+The full chain is proven: app -> Cloudflare worker `bitter-moon-3327` ->
+Twilio API -> tagged contacts.
+
+**Do not change any of these without re-testing a live send:**
+- `NOTIFY_ENDPOINT` in index.html -> `bitter-moon-3327.bdiaz8448.workers.dev`
+- the `X-Notify-Key` header value
+- the payload shape `{numbers, message}` (the worker rejects anything else)
+- the Cloudflare secrets `TWILIO_ACCOUNT_SID` / `TWILIO_AUTH_TOKEN` / `TWILIO_FROM_NUMBER`
+- the site domain (Twilio A2P registration points at privacy.html / terms.html here)
+
+If a send ever fails, the app falls back to opening the phone's own Messages
+app rather than dead-ending — so the emergency path degrades, never breaks.
+
 ### Access tiers
 - **Owner** — the `config/app.editPin`. Sees the Owner box (name/PIN/transfer) and the Buildings panel. Owner status is a session flag set at unlock, never inferred from the display name.
 - **Admin** — named entries in `config/admins`. Own PIN, full edit rights, can manage the admin list. Never sees the Owner box or Buildings.
