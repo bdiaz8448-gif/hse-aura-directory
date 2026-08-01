@@ -3343,6 +3343,62 @@
     }).catch(function(err){ alert('Error approving request: ' + err.message); });
   }
 
+  /* ---------------------------------------------------------------
+     Delete a person from EVERYWHERE.
+
+     Roster tabs (dsm4/dsm3/weekend/cqv/nightshift) each hold their own
+     copy of the person, linked back by linkedContactId. The old delete
+     only *unlinked* the DSM4 copy and ignored the other four, so the
+     person kept appearing in those tabs as an orphan record with their
+     name still attached. Deleting must remove every copy.
+
+     Two passes, because links can go stale:
+       1. delete the doc named by p.linked<Roster>Id
+       2. sweep each roster for any doc pointing at this contact id
+     --------------------------------------------------------------- */
+  var ROSTER_COLLECTIONS = [
+    {col:'dsm4',       link:'linkedDsm4Id'},
+    {col:'dsm3',       link:'linkedDsm3Id'},
+    {col:'weekend',    link:'linkedWeekendId'},
+    {col:'cqv',        link:'linkedCqvId'},
+    {col:'nightshift', link:'linkedNightShiftId'}
+  ];
+
+  function deleteContactEverywhere(p){
+    var jobs = [];
+    ROSTER_COLLECTIONS.forEach(function(r){
+      /* pass 1 - the explicitly linked roster document */
+      if(p[r.link]){
+        jobs.push(db.collection(r.col).doc(p[r.link]).delete().catch(function(){}));
+      }
+      /* pass 2 - anything else still pointing at this contact */
+      jobs.push(
+        db.collection(r.col).where('linkedContactId','==',p.id).get()
+          .then(function(snap){
+            var dels = [];
+            snap.forEach(function(doc){ dels.push(doc.ref.delete().catch(function(){})); });
+            return Promise.all(dels);
+          }).catch(function(){})
+      );
+    });
+
+    /* The contact document itself - custom roster membership lives on it,
+       so removing it clears those tabs automatically. */
+    jobs.push(db.collection('contacts').doc(p.id).delete());
+
+    return Promise.all(jobs).then(function(){
+      auditEvent('contact', 'deleted ' + (p.name || p.id) + ' from all tabs');
+      try{
+        renderContacts(); renderDSM4(); renderDSM3();
+        renderWeekend(); renderCQV(); renderNightShift();
+        if(typeof currentCustomTab !== 'undefined' && currentCustomTab) renderCustomRoster();
+      }catch(e){}
+    }).catch(function(err){
+      alert('Could not fully delete: ' + err.message);
+    });
+  }
+  window.deleteContactEverywhere = deleteContactEverywhere;
+
   function wireVacationBtn(p, collectionName, reopenFn){
     var btn = document.getElementById('vacationBtn');
     if(!btn) return;
@@ -3947,11 +4003,8 @@
     document.getElementById('editPersonBtn').addEventListener('click', function(){ requireUnlock(function(){ openContactForm(p); }); });
     document.getElementById('deletePersonBtn').addEventListener('click', function(){
       requireUnlock(function(){
-        if(confirm('Remove ' + p.name + ' from the directory?')){
-          if(p.linkedDsm4Id){
-            db.collection('dsm4').doc(p.linkedDsm4Id).update({linkedContactId: firebase.firestore.FieldValue.delete()}).catch(function(){});
-          }
-          db.collection('contacts').doc(p.id).delete().catch(function(err){ alert('Could not delete: ' + err.message); });
+        if(confirm('Remove ' + p.name + ' from the directory?\n\nThis removes them from EVERY tab and roster.')){
+          deleteContactEverywhere(p);
           closeModal();
         }
       });
@@ -4069,7 +4122,7 @@
      Android hands it to Contacts, and desktop downloads it.
      Cards live in /c/<id>.vcf and are regenerated from Firestore.
      --------------------------------------------------------------- */
-  var AURA_BUILD = 'v22-pending-clear';
+  var AURA_BUILD = 'v23-cascade-delete';
 
   function saveToContactsBtnHtml(p){
     var href = 'c/' + encodeURIComponent(p.id) + '.vcf';
