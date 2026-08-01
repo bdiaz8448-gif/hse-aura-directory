@@ -111,3 +111,44 @@ Current: `v15-universal`
 No credentials, PINs, or tokens belong in this repo — it is **public**.
 The admin PIN and company PINs live in Firestore, editable in the app
 under the lock icon. Do not commit them here.
+
+---
+
+## Feature log (added after v15)
+
+| Build | What changed |
+|---|---|
+| v16 | Twilio sending restored — reconnected the `bitter-moon-3327` Cloudflare worker the site consolidation had dropped |
+| v17 | Incident log paginated (10/page, every tab); multi-admin system with named PINs + site Activity log; dark-mode label + PIN-modal contrast fixes |
+| v18 | Owner can rename buildings/rosters — updates tabs, emergency screens, checkboxes AND the SMS text |
+| v19 | Owner can ADD buildings/rosters — each gets a live tab, membership via contact checkboxes |
+| v20 | Admin button row wraps on phones — nothing runs off-screen |
+| v21 | Pending always visible while unlocked; Owner name + PIN + ownership transfer, owner-eyes only |
+| v22 | Pending Requests panel made readable; fixed approved contacts losing their phone (`cell` -> `cellPhone`) |
+| v23 | Delete now removes a person from EVERY roster (was only unlinking DSM4, leaving orphans) |
+| v24 | Privacy acknowledgement shown inside the Join / Add person forms |
+| v25 | Right-click menu includes owner-added buildings; clear cyan hover everywhere |
+| v26–v27 | Uniform blue hover frame on every card regardless of company |
+
+### Access tiers
+- **Owner** — the `config/app.editPin`. Sees the Owner box (name/PIN/transfer) and the Buildings panel. Owner status is a session flag set at unlock, never inferred from the display name.
+- **Admin** — named entries in `config/admins`. Own PIN, full edit rights, can manage the admin list. Never sees the Owner box or Buildings.
+- **Company** — company PINs, read-only view of their own incidents.
+
+### Where things live in Firestore
+```
+config/app             editPin, ownerName
+config/admins          {list:[{name,pin}]}
+config/labels          renamed built-in buildings
+config/customRosters   {list:[{id,name}]}  owner-added buildings
+config/emergencyState  active emergency banner
+auditLog               who unlocked / visits / edits  (Activity panel)
+contacts               people; customRosters map = custom building membership
+dsm4 dsm3 weekend cqv nightshift   roster copies, linkedContactId -> contacts
+incidents, joinRequests, removalRequests
+```
+
+### Gotchas worth remembering
+- `.card.jacobs-card` sits after `.card:hover` at equal specificity — any new hover styling needs the `.card.jacobs-card:hover` twin or Jacobs cards silently keep their olive border.
+- Roster tabs hold their **own copy** of a person. Anything that deletes or renames must handle all five collections plus the `customRosters` map.
+- Avoid `transform` on card hover: sub-pixel shifts make borders render inconsistently across the grid.
