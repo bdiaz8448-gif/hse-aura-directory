@@ -248,16 +248,25 @@
     transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
     box-shadow: var(--shadow-sm), inset 0 1px 0 rgba(255,255,255,0.07);
   }
+  /* Identical bright cyan frame on every card, in every tab.
+     No transform: shifting the card by a fraction of a pixel made the border
+     antialias differently depending on where it sat in the grid, so some
+     cards looked crisp and others looked soft. */
   .card:hover {
-    border-color: rgba(0,212,255,0.85);
-    box-shadow: 0 0 0 1px rgba(0,212,255,0.55), 0 0 26px rgba(0,212,255,0.30), var(--shadow-sm);
-    background: linear-gradient(135deg, rgba(0,212,255,0.16), rgba(0,212,255,0.07));
-    transform: translateY(-1px);
+    border-color: #00d4ff;
+    box-shadow: 0 0 0 2px rgba(0,212,255,0.70), 0 0 30px rgba(0,212,255,0.32), var(--shadow-sm);
+    background: linear-gradient(135deg, rgba(0,212,255,0.17), rgba(0,212,255,0.075));
   }
-  .card:hover .card-name, .card:hover strong { color: #7fe3ff; }
-  /* Touch devices have no hover - don't leave a card stuck highlighted */
+  .card:hover .card-name,
+  .card:hover strong { color: #7fe3ff; }
+  /* Touch devices: no lingering highlight after a tap */
   @media (hover: none){
-    .card:hover { transform: none; }
+    .card:hover {
+      border-color: var(--border-dim);
+      box-shadow: var(--shadow-sm);
+      background: linear-gradient(135deg, rgba(255,255,255,0.060), rgba(255,255,255,0.028));
+    }
+    .card:hover .card-name, .card:hover strong { color: inherit; }
   }
   .card:active { background: rgba(201,168,76,0.09); border-color: var(--gold-border); }
 
@@ -4164,7 +4173,7 @@
      Android hands it to Contacts, and desktop downloads it.
      Cards live in /c/<id>.vcf and are regenerated from Firestore.
      --------------------------------------------------------------- */
-  var AURA_BUILD = 'v25-ctx-hover';
+  var AURA_BUILD = 'v26-hover-uniform';
 
   function saveToContactsBtnHtml(p){
     var href = 'c/' + encodeURIComponent(p.id) + '.vcf';
