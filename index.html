@@ -1122,6 +1122,37 @@
   }
 
   var contacts = [];
+
+  /* ─── OFFLINE-FIRST EMERGENCY ROSTER ────────────────────────────────────
+     The emergency roster MUST be available with no network, on first paint.
+     Firestore's own cache lives in IndexedDB, which iOS Safari evicts after
+     roughly 7 idle days — a phone that has not opened the app in a week has
+     nothing at all. localStorage is synchronous and far more durable, so we
+     keep our own copy of the roster, seed from it before Firestore answers,
+     and let a real Firestore snapshot overwrite it the moment one arrives. */
+  var AURA_ROSTER_KEY = 'aura_roster_cache_v1';
+  var rosterFromLocalCache = false;
+
+  function cacheRosterLocally(list){
+    // Never let an empty or errored snapshot wipe a good cache.
+    if(!list || !list.length) return;
+    try{
+      localStorage.setItem(AURA_ROSTER_KEY, JSON.stringify({ savedAt: Date.now(), contacts: list }));
+    }catch(e){ /* quota exceeded — Firestore's own cache still applies */ }
+  }
+  function loadCachedRoster(){
+    try{
+      var raw = localStorage.getItem(AURA_ROSTER_KEY);
+      if(!raw) return null;
+      var o = JSON.parse(raw);
+      return (o && Array.isArray(o.contacts) && o.contacts.length) ? o : null;
+    }catch(e){ return null; }
+  }
+  (function seedRosterFromLocalCache(){
+    var c = loadCachedRoster();
+    if(c){ contacts = c.contacts; rosterFromLocalCache = true;
+           console.log('Roster seeded from local cache:', c.contacts.length, 'contacts, saved', new Date(c.savedAt).toISOString()); }
+  })();
   var editPin = '1234';
   var EDIT_UNLOCK_KEY = 'hseEditUnlocked';
   var COMPANY_ACCESS_KEY = 'hseCompanyAccess'; // sessionStorage key for company read-only access
@@ -1586,6 +1617,10 @@
   function seedContactsIfEmpty(){
     return db.collection('contacts').limit(1).get().then(function(snap){
       if(!snap.empty) return;
+      // Never seed from an offline guess: an empty *cached* read does not
+      // mean the database is empty. Seeding here would queue starter data
+      // that overwrites the real roster on reconnect.
+      if(snap.metadata && snap.metadata.fromCache) return;
       var batch = db.batch();
       starterContacts().forEach(function(c){
         var data = {name:c.name, role:c.role, company:c.company, cellPhone:c.cellPhone, officePhone:c.officePhone, email:c.email, trailer:c.trailer};
@@ -2167,6 +2202,9 @@
   function seedConfigIfEmpty(){
     return db.collection('config').doc('app').get().then(function(doc){
       if(doc.exists) return;
+      // Never reset the admin PIN from an offline read - a cached miss is
+      // not proof the config document is absent.
+      if(doc.metadata && doc.metadata.fromCache) return;
       return db.collection('config').doc('app').set({editPin: '1234'});
     }).catch(function(err){ console.error('Seeding config failed:', err); });
   }
@@ -2407,6 +2445,10 @@
   function seedDsm4IfEmpty(){
     return db.collection('dsm4').limit(1).get().then(function(snap){
       if(!snap.empty) return;
+      // Never seed from an offline guess: an empty *cached* read does not
+      // mean the database is empty. Seeding here would queue starter data
+      // that overwrites the real roster on reconnect.
+      if(snap.metadata && snap.metadata.fromCache) return;
       var batch = db.batch();
       starterDsm4().forEach(function(c){
         var data = {name:c.name, role:c.role, company:c.company, cellPhone:c.cellPhone, officePhone:c.officePhone, email:c.email, trailer:c.trailer};
@@ -2558,6 +2600,10 @@
   function seedDsm3IfEmpty(){
     return db.collection('dsm3').limit(1).get().then(function(snap){
       if(!snap.empty) return;
+      // Never seed from an offline guess: an empty *cached* read does not
+      // mean the database is empty. Seeding here would queue starter data
+      // that overwrites the real roster on reconnect.
+      if(snap.metadata && snap.metadata.fromCache) return;
       if(!starterDsm3().length) return;
       var batch = db.batch();
       starterDsm3().forEach(function(c){
@@ -4240,7 +4286,7 @@
      Android hands it to Contacts, and desktop downloads it.
      Cards live in /c/<id>.vcf and are regenerated from Firestore.
      --------------------------------------------------------------- */
-  var AURA_BUILD = 'v30c-send-alert';
+  var AURA_BUILD = 'v31b-offline-emergency';
 
   function saveToContactsBtnHtml(p){
     var href = 'c/' + encodeURIComponent(p.id) + '.vcf';
@@ -4792,6 +4838,10 @@
   function seedDocsIfEmpty(){
     return db.collection('permitDocs').limit(1).get().then(function(snap){
       if(!snap.empty) return;
+      // Never seed from an offline guess: an empty *cached* read does not
+      // mean the database is empty. Seeding here would queue starter data
+      // that overwrites the real roster on reconnect.
+      if(snap.metadata && snap.metadata.fromCache) return;
       if(typeof DOCS_STARTER === 'undefined' || !DOCS_STARTER.length) return;
       var batch = db.batch();
       DOCS_STARTER.forEach(function(d){
@@ -5121,11 +5171,30 @@
     }).catch(function(err){ console.error('Linking pass failed:', err); });
   }
 
-  Promise.all([seedContactsIfEmpty(), seedDsm4IfEmpty(), seedDsm3IfEmpty(), seedConfigIfEmpty(), seedWeekendIfEmpty(), seedCQVIfEmpty(), seedNightShiftIfEmpty()]).then(function(){
-    return linkDatasetsOnce();
-  }).then(function(){
+  /* ─── BOOT ORDER IS EMERGENCY-CRITICAL ───────────────────────────────────
+     These listeners used to be attached inside
+        Promise.all([...seeders]).then(linkDatasetsOnce).then(attach)
+     Offline, a seeder's batch.commit() NEVER resolves (Firestore holds the
+     write until it reaches the server), so that chain never settled and the
+     listeners were never attached — contacts stayed empty and the Emergency
+     tab reported "0 contacts tagged". Attach them first, unconditionally.
+     Seeding and linking are maintenance chores; they must never gate the
+     emergency roster. */
+  function attachLiveListeners(){
     db.collection('contacts').onSnapshot({includeMetadataChanges:true}, function(snapshot){
-      contacts = snapshot.docs.map(function(doc){ var d = doc.data(); d.id = doc.id; return d; });
+      var incoming = snapshot.docs.map(function(doc){ var d = doc.data(); d.id = doc.id; return d; });
+      /* An empty snapshot must NEVER replace a known-good emergency roster.
+         Firestore can deliver zero docs on a transient permission error, a
+         cold cache, or a project/rules hiccup. Losing the roster in that
+         moment means the emergency text goes to nobody. Keep what we have. */
+      if(!incoming.length && contacts.length){
+        console.warn('Ignoring empty contacts snapshot - keeping last known roster of ' + contacts.length);
+        updateSyncStatus(true);
+        return;
+      }
+      contacts = incoming;
+      cacheRosterLocally(contacts);   // keep the offline copy fresh
+      if(contacts.length) rosterFromLocalCache = false;
       // Auto-clear expired vacation entries so Out badges don't linger after the return date
       contacts.forEach(function(c){
         if(isVacExpired(c)){
@@ -5190,6 +5259,21 @@
       allIncidents = snapshot.docs.map(function(doc){ var d = doc.data(); d.id = doc.id; return d; });
       if(document.getElementById('sectionIncidents').classList.contains('active')) renderIncidentLog();
     }, function(err){ console.error('incidents sync error:', err); });
+  }
+  attachLiveListeners();
+
+  /* If we booted from the local roster cache and Firestore has not answered
+     within a few seconds, say so plainly instead of showing "Connecting..."
+     forever. The emergency roster is already usable at this point. */
+  setTimeout(function(){
+    if(rosterFromLocalCache && contacts.length){ updateSyncStatus(true); }
+  }, 4000);
+
+  /* Seeding/linking run detached. If they stall offline, nothing else cares. */
+  Promise.all([seedContactsIfEmpty(), seedDsm4IfEmpty(), seedDsm3IfEmpty(), seedConfigIfEmpty(), seedWeekendIfEmpty(), seedCQVIfEmpty(), seedNightShiftIfEmpty()]).then(function(){
+    return linkDatasetsOnce();
+  }).catch(function(e){
+    console.warn('Seed/link deferred (offline or blocked):', e && e.message);
   });
   updateLockUI();
   applyLang();
