@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DSM-4 Room QR Code Generator</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Arial, sans-serif; background: #0d1117; color: #e6edf3; min-height: 100vh; }
+
+  .header {
+    background: linear-gradient(135deg, #0a1628 0%, #0d2137 100%);
+    border-bottom: 2px solid #00bcd4;
+    padding: 20px 28px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .header-icon { font-size: 32px; }
+  .header h1 { font-size: 20px; color: #00bcd4; font-weight: 700; letter-spacing: 1px; }
+  .header p { font-size: 12px; color: #8b949e; margin-top: 2px; }
+
+  .controls {
+    background: #161b22;
+    border-bottom: 1px solid #30363d;
+    padding: 18px 28px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    align-items: flex-end;
+  }
+  .ctrl-group { display: flex; flex-direction: column; gap: 5px; }
+  .ctrl-group label { font-size: 11px; color: #8b949e; text-transform: uppercase; letter-spacing: 0.5px; }
+  .ctrl-group input, .ctrl-group select {
+    background: #0d1117;
+    border: 1px solid #30363d;
+    color: #e6edf3;
+    border-radius: 6px;
+    padding: 7px 12px;
+    font-size: 13px;
+    min-width: 200px;
+  }
+  .ctrl-group input:focus, .ctrl-group select:focus {
+    outline: none;
+    border-color: #00bcd4;
+  }
+  .url-input { min-width: 380px !important; }
+
+  .btn {
+    padding: 8px 18px;
+    border: none;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn-primary { background: #00bcd4; color: #0d1117; }
+  .btn-primary:hover { background: #00e5ff; }
+  .btn-success { background: #238636; color: #fff; }
+  .btn-success:hover { background: #2ea043; }
+  .btn-danger { background: #7b0000; color: #fff; }
+  .btn-danger:hover { background: #c62828; }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .stats-bar {
+    background: #0d2137;
+    border-bottom: 1px solid #30363d;
+    padding: 10px 28px;
+    display: flex;
+    gap: 24px;
+    font-size: 12px;
+    color: #8b949e;
+  }
+  .stats-bar span { color: #00bcd4; font-weight: 700; }
+
+  .filter-bar {
+    background: #161b22;
+    border-bottom: 1px solid #30363d;
+    padding: 10px 28px;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .filter-bar label { font-size: 12px; color: #8b949e; }
+  .filter-chip {
+    padding: 4px 12px;
+    border-radius: 20px;
+    border: 1px solid #30363d;
+    background: transparent;
+    color: #8b949e;
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .filter-chip.active { background: #00bcd4; border-color: #00bcd4; color: #0d1117; font-weight: 700; }
+  .filter-chip:hover:not(.active) { border-color: #00bcd4; color: #00bcd4; }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 16px;
+    padding: 20px 28px;
+  }
+
+  .room-card {
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 10px;
+    overflow: hidden;
+    transition: border-color 0.15s;
+  }
+  .room-card:hover { border-color: #00bcd4; }
+  .room-card.hidden { display: none; }
+
+  .card-header {
+    background: #0a1628;
+    padding: 10px 14px;
+    border-bottom: 1px solid #30363d;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+  .card-floor { font-size: 10px; color: #00bcd4; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
+  .card-type {
+    font-size: 9px;
+    padding: 2px 7px;
+    border-radius: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+  .type-production { background: #1a472a; color: #56d364; }
+  .type-lab       { background: #1a3a5c; color: #58a6ff; }
+  .type-utility   { background: #2d1b00; color: #e3b341; }
+  .type-storage   { background: #2d2d00; color: #f0e68c; }
+  .type-anteroom  { background: #2d0a2d; color: #d2a8ff; }
+  .type-corridor  { background: #1c1c1c; color: #8b949e; }
+  .type-stair     { background: #1c1c1c; color: #8b949e; }
+  .type-interstitial { background: #1c2020; color: #7ee7b4; }
+
+  .card-body { padding: 12px 14px; }
+  .card-room-name { font-size: 14px; font-weight: 700; color: #e6edf3; line-height: 1.3; margin-bottom: 4px; }
+  .card-room-no { font-size: 12px; color: #00bcd4; font-family: monospace; margin-bottom: 8px; }
+  .card-sector { font-size: 11px; color: #8b949e; margin-bottom: 10px; }
+
+  .qr-area {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #fff;
+    border-radius: 6px;
+    padding: 10px;
+    margin-bottom: 10px;
+    min-height: 140px;
+  }
+  .qr-area canvas { display: block; }
+  .qr-placeholder {
+    color: #8b949e;
+    font-size: 12px;
+    text-align: center;
+  }
+
+  .card-url {
+    font-size: 9px;
+    color: #30363d;
+    word-break: break-all;
+    line-height: 1.4;
+    margin-bottom: 10px;
+    font-family: monospace;
+  }
+
+  .card-actions { display: flex; gap: 6px; }
+  .btn-sm {
+    flex: 1;
+    padding: 6px 10px;
+    font-size: 11px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.15s;
+  }
+  .btn-dl { background: #238636; color: #fff; }
+  .btn-dl:hover { background: #2ea043; }
+  .btn-copy { background: #1f6feb; color: #fff; }
+  .btn-copy:hover { background: #388bfd; }
+
+  .progress-bar {
+    display: none;
+    background: #161b22;
+    border-bottom: 1px solid #30363d;
+    padding: 10px 28px;
+    align-items: center;
+    gap: 12px;
+  }
+  .progress-bar.visible { display: flex; }
+  .progress-track {
+    flex: 1;
+    height: 6px;
+    background: #30363d;
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .progress-fill { height: 100%; background: #00bcd4; border-radius: 3px; transition: width 0.2s; }
+  .progress-text { font-size: 12px; color: #8b949e; white-space: nowrap; }
+
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #8b949e;
+    display: none;
+  }
+  .empty-state.visible { display: block; }
+
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: #238636;
+    color: #fff;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    display: none;
+    z-index: 9999;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+  }
+  .toast.visible { display: block; }
+  .toast.err { background: #7b0000; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-icon">🏭</div>
+  <div>
+    <h1>DSM-4 ROOM QR CODE GENERATOR</h1>
+    <p>Fujifilm Diosynth Biotechnologies · Aura HSE Directory · Jacobs Project 22JAAE03</p>
+  </div>
+</div>
+
+<div class="controls">
+  <div class="ctrl-group" style="flex:1; min-width:300px;">
+    <label>App URL (paste your Aura HSE Directory link here)</label>
+    <input type="url" id="appUrl" class="url-input"
+      placeholder="https://bdiaz8448-gif.github.io/hse-aura-directory/"
+      value="https://bdiaz8448-gif.github.io/hse-aura-directory/">
+  </div>
+  <div class="ctrl-group">
+    <label>QR Size (px)</label>
+    <select id="qrSize">
+      <option value="128">128 × 128</option>
+      <option value="200" selected>200 × 200</option>
+      <option value="256">256 × 256</option>
+      <option value="300">300 × 300</option>
+    </select>
+  </div>
+  <div class="ctrl-group">
+    <label>Filter by Floor</label>
+    <select id="floorFilter">
+      <option value="">All Floors</option>
+      <option value="Ground Floor">Ground Floor</option>
+      <option value="Ground Floor (Interstitial">Ground Floor Interstitial</option>
+      <option value="First Floor">First Floor</option>
+      <option value="First Floor (Interstitial">First Floor Interstitial</option>
+      <option value="Second Floor">Second Floor</option>
+      <option value="Second Floor (Interstitial">Second Floor Interstitial</option>
+    </select>
+  </div>
+  <button class="btn btn-primary" onclick="generateAll()">⚡ Generate All QR Codes</button>
+  <button class="btn btn-success" id="dlZipBtn" onclick="downloadZip()" disabled>📦 Download All as ZIP</button>
+</div>
+
+<div class="filter-bar">
+  <label>Room Type:</label>
+  <button class="filter-chip active" onclick="filterType('all',this)">All</button>
+  <button class="filter-chip" onclick="filterType('Production',this)">Production</button>
+  <button class="filter-chip" onclick="filterType('Lab',this)">Lab</button>
+  <button class="filter-chip" onclick="filterType('Utility',this)">Utility</button>
+  <button class="filter-chip" onclick="filterType('Storage',this)">Storage</button>
+  <button class="filter-chip" onclick="filterType('Anteroom',this)">Anteroom</button>
+  <button class="filter-chip" onclick="filterType('Corridor',this)">Corridor</button>
+  <button class="filter-chip" onclick="filterType('Stair',this)">Stair</button>
+  <button class="filter-chip" onclick="filterType('Interstitial',this)">Interstitial</button>
+</div>
+
+<div class="stats-bar" id="statsBar">
+  <div>Total rooms: <span id="totalCount">0</span></div>
+  <div>Showing: <span id="visibleCount">0</span></div>
+  <div>QR codes generated: <span id="genCount">0</span></div>
+</div>
+
+<div class="progress-bar" id="progressBar">
+  <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+  <div class="progress-text" id="progressText">Generating...</div>
+</div>
+
+<div class="grid" id="roomGrid"></div>
+<div class="empty-state" id="emptyState">
+  <div style="font-size:48px;margin-bottom:12px;">🔍</div>
+  <div style="font-size:16px;margin-bottom:6px;">No rooms match this filter</div>
+  <div style="font-size:13px;">Try selecting a different type or floor</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- QR Code library (client-side, no API needed) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<!-- JSZip for bulk download -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+<script>
+// ─── ROOM DATA (from DSM-4 floor plans, Nov 2024 IFC drawings) ───────────────
+var ROOMS = [
+  // ── GROUND FLOOR ──────────────────────────────────────────────────────
+  {building:'DSM-4', floor:'Ground Floor', sector:'Sector 1', room:'Cold Pass Through',              no:'537-01613', type:'Production'},
+  {building:'DSM-4', floor:'Ground Floor', sector:'Sector 2', room:'Cold Room',                      no:'537-01622', type:'Production'},
+  {building:'DSM-4', floor:'Ground Floor', sector:'Sector 1', room:'Final Purification',             no:'537-01600', type:'Production'},
+  {building:'DSM-4', floor:'Ground Floor', sector:'Sector 2', room:'Initial Purification',           no:'537-01620', type:'Production'},
+  {building:'DSM-4', floor:'Ground Floor', sector:'Sector 2', room:'PAL OUT',   no:'537-01621', type:'Production'},
+  {building:'DSM-4', floor:'Ground Floor', sector:'Sector 2', room:'Column Packing',                 no:'537-01630', type:'Production'},
+  {building:'DSM-4', floor:'Ground Floor', sector:'Sector 2', room:'MAL',                            no:'537-01631', type:'Anteroom'},
+  {building:'DSM-4', floor:'Ground Floor', sector:'Sector 4', room:'PAL',                            no:'537-01632', type:'Anteroom'},
+  {building:'DSM-4', floor:'Ground Floor', sector:'Sector 1', room:'Clean Staging',                  no:'537-01603', type:'Production'},
+  {building:'DSM-4', floor:'Ground Floor', sector:'Sector 1', room:'Bulk Fill',                      no:'537-01610', type:'Production'},
+  {building:'DSM-4', floor:'Ground Floor', sector:'Sector 1', room:'Product Hold',                   no:'537-01605', type:'Production'},
+  {building:'DSM-4', floor:'Ground Floor', sector:'Sector 1', room:'Initial Purification Product Hold', no:'537-01625', type:'Production'},
+  {building:'DSM-4', floor:'Ground Floor', sector:'Sector 4', room:'Lower Production Cell Culture',  no:'537-01660', type:'Production'},
+  {building:'DSM-4', floor:'Ground Floor', sector:'Sector 4', room:'Harvest',                        no:'537-01680', type:'Production'},
+  {building:'DSM-4', floor:'Ground Floor', sector:'Sector 4', room:'Open',                           no:'537-01662', type:'Production'},
+  {building:'DSM-4', floor:'Ground Floor', sector:'Sector 2', room:'Filter Assembly Room',           no:'537-01623', type:'Production'},
+  {building:'DSM-4', floor:'Ground Floor', sector:'Sector 4', room:'WIP Lab',                        no:'537-01661', type:'Lab'},
+  {building:'DSM-4', floor:'Ground Floor', sector:'Sector 1', room:'CNC Storage',                   no:'537-01200', type:'Storage'},
+  {building:'DSM-4', floor:'Ground Floor', sector:'Sector 4', room:'Campaign Equipment Storage',     no:'537-01204', type:'Storage'},
+  {building:'DSM-4', floor:'Ground Floor', sector:'Sector 2', room:'Ceiling Access Column Maint',   no:'537-01633', type:'Utility'},
+  {building:'DSM-4', floor:'Ground Floor', sector:'Sector 3', room:'Water Systems',                  no:'537-01201', type:'Utility'},
+  {building:'DSM-4', floor:'Ground Floor', sector:'Sector 4', room:'Waste Systems',                  no:'537-01206', type:'Utility'},
+  {building:'DSM-4', floor:'Ground Floor', sector:'Sector 3', room:'HVAC Mechanical',               no:'537-01202', type:'Utility'},
+  {building:'DSM-4', floor:'Ground Floor', sector:'Sector 4', room:'Mechanical',                     no:'537-01205', type:'Utility'},
+  {building:'DSM-4', floor:'Ground Floor', sector:'Sector 3', room:'Mechanical Equipment',           no:'537-01209', type:'Utility'},
+  {building:'DSM-4', floor:'Ground Floor', sector:'Sector 3', room:'WFI Stills',                    no:'537-01208', type:'Utility'},
+  {building:'DSM-4', floor:'Ground Floor', sector:'Sector 3', room:'Shaft',                          no:'537-01210', type:'Utility'},
+  {building:'DSM-4', floor:'Ground Floor', sector:'Sector 1', room:'Electrical Closet',              no:'537-01230', type:'Utility'},
+  {building:'DSM-4', floor:'Ground Floor', sector:'Sector 4', room:'Electrical Closet',              no:'537-01231', type:'Utility'},
+  {building:'DSM-4', floor:'Ground Floor', sector:'Sector 3', room:'Janitor',                        no:'537-01203', type:'Utility'},
+  {building:'DSM-4', floor:'Ground Floor', sector:'Sector 3', room:'IDF',                            no:'537-01251', type:'Utility'},
+  {building:'DSM-4', floor:'Ground Floor', sector:'Sector 3', room:'Telecom',                        no:'537-01250', type:'Utility'},
+  {building:'DSM-4', floor:'Ground Floor', sector:'Sector 4', room:'Sprinkler Riser Room',          no:'537-01260', type:'Utility'},
+  {building:'DSM-4', floor:'Ground Floor', sector:'Sector 1', room:'PAL',                            no:'537-01611', type:'Anteroom'},
+  {building:'DSM-4', floor:'Ground Floor', sector:'Sector 1', room:'MAL',                            no:'537-01602', type:'Anteroom'},
+  {building:'DSM-4', floor:'Ground Floor', sector:'Sector 4', room:'JC',                            no:'537-01683', type:'Anteroom'},
+  {building:'DSM-4', floor:'Ground Floor', sector:'Sector 4', room:'MAL',                            no:'537-01681', type:'Anteroom'},
+  {building:'DSM-4', floor:'Ground Floor', sector:'Sector 1', room:'MAL',                            no:'537-01612', type:'Anteroom'},
+  {building:'DSM-4', floor:'Ground Floor', sector:'Sector 4', room:'PAL',                            no:'537-01682', type:'Anteroom'},
+  {building:'DSM-4', floor:'Ground Floor', sector:'Sector 1', room:'JC',                         no:'537-01604', type:'Anteroom'},
+  {building:'DSM-4', floor:'Ground Floor', sector:'Sector 1', room:'PAL IN',                             no:'537-01601', type:'Anteroom'},
+  {building:'DSM-4', floor:'Ground Floor', sector:'Sector 4', room:'Process Corridor',                      no:'537-01041', type:'Corridor'},
+  {building:'DSM-4', floor:'Ground Floor', sector:'Sector 2', room:'Process Corridor',               no:'537-01040', type:'Corridor'},
+  {building:'DSM-4', floor:'Ground Floor', sector:'Sector 3', room:'Process Corridor',               no:'537-01042', type:'Corridor'},
+  {building:'DSM-4', floor:'Ground Floor', sector:'Sector 4', room:'Process Corridor',               no:'537-01043', type:'Corridor'},
+  {building:'DSM-4', floor:'Ground Floor', sector:'Sector 4', room:'Work Room',               no:'537-01684', type:'Support'},
+  {building:'DSM-4', floor:'Ground Floor', sector:'Sector 2', room:'Stair 1',                        no:'537-01001', type:'Stair'},
+  {building:'DSM-4', floor:'Ground Floor', sector:'Sector 3', room:'Stair 2',                        no:'537-01002', type:'Stair'},
+  {building:'DSM-4', floor:'Ground Floor', sector:'Sector 1', room:'Dirty VRC',                      no:'537-10012-GF', type:'Utility'},
+  {building:'DSM-4', floor:'Ground Floor', sector:'Sector 1', room:'Clean VRC',                      no:'537-10011-GF', type:'Utility'},
+  {building:'DSM-4', floor:'Ground Floor', sector:'Sector 1', room:'Sector 1',                       no:'DSM4-GF-S1', type:'Sector'},
+  {building:'DSM-4', floor:'Ground Floor', sector:'Sector 2', room:'Sector 2',                       no:'DSM4-GF-S2', type:'Sector'},
+  {building:'DSM-4', floor:'Ground Floor', sector:'Sector 3', room:'Sector 3',                       no:'DSM4-GF-S3', type:'Sector'},
+  {building:'DSM-4', floor:'Ground Floor', sector:'Sector 4', room:'Sector 4',                       no:'DSM4-GF-S4', type:'Sector'},
+  {building:'DSM-4', floor:'Ground Floor (Interstitial / Walkable Ceiling)', sector:'Building Wide', room:'Ground Floor Interstitial Walk-On Ceiling', no:'537-05960', type:'Interstitial'},
+  {building:'DSM-4', floor:'Ground Floor (Interstitial / Walkable Ceiling)', sector:'Sector 3', room:'Sprinkler Riser Room',                      no:'537-05961', type:'Utility'},
+  // ── FIRST FLOOR ───────────────────────────────────────────────────────
+  {building:'DSM-4', floor:'First Floor', sector:'Sector 4', room:'Upper Production Cell Culture',   no:'537-10660', type:'Production'},
+  {building:'DSM-4', floor:'First Floor', sector:'Sector 3', room:'Seed Cell Culture',               no:'537-10640', type:'Production'},
+  {building:'DSM-4', floor:'First Floor', sector:'Sector 3', room:'Inoculum Lab',                    no:'537-10630', type:'Lab'},
+  {building:'DSM-4', floor:'First Floor', sector:'Sector 4', room:'WIP Lab',                         no:'537-10644', type:'Lab'},
+  {building:'DSM-4', floor:'First Floor', sector:'Sector 4', room:'Upstream Post-Autoclave Staging', no:'537-10654', type:'Production'},
+  {building:'DSM-4', floor:'First Floor', sector:'Sector 4', room:'Upstream Dirty Staging',          no:'537-10650', type:'Production'},
+  {building:'DSM-4', floor:'First Floor', sector:'Sector 4', room:'Upstream Clean Staging',          no:'537-10652', type:'Production'},
+  {building:'DSM-4', floor:'First Floor', sector:'Sector 2', room:'Buffer Hold',                     no:'537-10620', type:'Production'},
+  {building:'DSM-4', floor:'First Floor', sector:'Sector 1', room:'Central CIP',                     no:'537-10202', type:'Utility'},
+  {building:'DSM-4', floor:'First Floor', sector:'Sector 4', room:'Upstream CIP',                    no:'537-10203', type:'Utility'},
+  {building:'DSM-4', floor:'First Floor', sector:'Sector 3', room:'Mechanical / Utility Process',    no:'537-10201', type:'Utility'},
+  {building:'DSM-4', floor:'First Floor', sector:'Sector 1', room:'HVAC Mechanical',                 no:'537-10200', type:'Utility'},
+  {building:'DSM-4', floor:'First Floor', sector:'Sector 4', room:'HVAC Mechanical',                 no:'537-10204', type:'Utility'},
+  {building:'DSM-4', floor:'First Floor', sector:'Sector 3', room:'Mechanical',                      no:'537-10645', type:'Utility'},
+  {building:'DSM-4', floor:'First Floor', sector:'Sector 4', room:'Process Mechanical',              no:'537-10651', type:'Utility'},
+  {building:'DSM-4', floor:'First Floor', sector:'Sector 4', room:'Process Mechanical',              no:'537-10653', type:'Utility'},
+  {building:'DSM-4', floor:'First Floor', sector:'Sector 3', room:'CNC Storage',                     no:'537-10631', type:'Storage'},
+  {building:'DSM-4', floor:'First Floor', sector:'Sector 4', room:'Electrical Room',                 no:'537-10230', type:'Utility'},
+  {building:'DSM-4', floor:'First Floor', sector:'Sector 1', room:'IDF',                             no:'537-10251', type:'Utility'},
+  {building:'DSM-4', floor:'First Floor', sector:'Sector 1', room:'Telecom Room',                    no:'537-10250', type:'Utility'},
+  {building:'DSM-4', floor:'First Floor', sector:'Sector 3', room:'Janitor',                         no:'537-10205', type:'Utility'},
+  {building:'DSM-4', floor:'First Floor', sector:'Sector 3', room:'Shaft',                           no:'537-10210', type:'Utility'},
+  {building:'DSM-4', floor:'First Floor', sector:'Sector 1', room:'Dirty VRC',                       no:'537-10012-1F', type:'Utility'},
+  {building:'DSM-4', floor:'First Floor', sector:'Sector 1', room:'Clean VRC',                       no:'537-10011-1F', type:'Utility'},
+  {building:'DSM-4', floor:'First Floor', sector:'Sector 3', room:'MAL/PAL',                         no:'537-10632', type:'Anteroom'},
+  {building:'DSM-4', floor:'First Floor', sector:'Sector 3', room:'PAL',                             no:'537-10641', type:'Anteroom'},
+  {building:'DSM-4', floor:'First Floor', sector:'Sector 3', room:'JC',                              no:'537-10643', type:'Anteroom'},
+  {building:'DSM-4', floor:'First Floor', sector:'Sector 3', room:'MAL',                             no:'537-10642', type:'Anteroom'},
+  {building:'DSM-4', floor:'First Floor', sector:'Sector 4', room:'JC',                              no:'537-10661', type:'Anteroom'},
+  {building:'DSM-4', floor:'First Floor', sector:'Sector 4', room:'Process Corridor',                no:'537-10040', type:'Corridor'},
+  {building:'DSM-4', floor:'First Floor', sector:'Sector 4', room:'Process Corridor',                no:'537-10043', type:'Corridor'},
+  {building:'DSM-4', floor:'First Floor', sector:'Sector 2', room:'Corridor',                        no:'537-10042', type:'Corridor'},
+  {building:'DSM-4', floor:'First Floor', sector:'Sector 2', room:'Stair 1',                         no:'537-10001', type:'Stair'},
+  {building:'DSM-4', floor:'First Floor', sector:'Sector 3', room:'Stair 2',                         no:'537-10002', type:'Stair'},
+  {building:'DSM-4', floor:'First Floor', sector:'Sector 1', room:'Sector 1',                        no:'DSM4-1F-S1', type:'Sector'},
+  {building:'DSM-4', floor:'First Floor', sector:'Sector 2', room:'Sector 2',                        no:'DSM4-1F-S2', type:'Sector'},
+  {building:'DSM-4', floor:'First Floor', sector:'Sector 3', room:'Sector 3',                        no:'DSM4-1F-S3', type:'Sector'},
+  {building:'DSM-4', floor:'First Floor', sector:'Sector 4', room:'Sector 4',                        no:'DSM4-1F-S4', type:'Sector'},
+  {building:'DSM-4', floor:'First Floor (Interstitial / Walkable Ceiling)', sector:'Building Wide', room:'First Floor Interstitial Walk-On Ceiling', no:'537-15960', type:'Interstitial'},
+  // ── SECOND FLOOR ──────────────────────────────────────────────────────
+  {building:'DSM-4', floor:'Second Floor', sector:'Sector 3', room:'Media Hold / Perfusion',         no:'537-20660', type:'Production'},
+  {building:'DSM-4', floor:'Second Floor', sector:'Sector 3', room:'Media Prep',                     no:'537-20640', type:'Production'},
+  {building:'DSM-4', floor:'Second Floor', sector:'Sector 3', room:'Cold Room',                      no:'537-20647', type:'Production'},
+  {building:'DSM-4', floor:'Second Floor', sector:'Sector 3', room:'FTS Room',                       no:'537-20645', type:'Production'},
+  {building:'DSM-4', floor:'Second Floor', sector:'Sector 1', room:'Buffer Prep',                    no:'537-20600', type:'Production'},
+  {building:'DSM-4', floor:'Second Floor', sector:'Sector 1', room:'Clean Wash Staging',             no:'537-20624', type:'Production'},
+  {building:'DSM-4', floor:'Second Floor', sector:'Sector 1', room:'Dirty Wash Staging',             no:'537-20626', type:'Production'},
+  {building:'DSM-4', floor:'Second Floor', sector:'Sector 1', room:'Post Autoclave Staging',         no:'537-20620', type:'Production'},
+  {building:'DSM-4', floor:'Second Floor', sector:'Sector 3', room:'WIP Lab',                        no:'537-20648', type:'Lab'},
+  {building:'DSM-4', floor:'Second Floor', sector:'Sector 3', room:'Media Tech Space',               no:'537-20649', type:'Lab'},
+  {building:'DSM-4', floor:'Second Floor', sector:'Sector 4', room:'HVAC Mechanical',                no:'537-20200', type:'Utility'},
+  {building:'DSM-4', floor:'Second Floor', sector:'Sector 1', room:'Process Mechanical',             no:'537-20623', type:'Utility'},
+  {building:'DSM-4', floor:'Second Floor', sector:'Sector 3', room:'Process Mechanical',             no:'537-20625', type:'Utility'},
+  {building:'DSM-4', floor:'Second Floor', sector:'Sector 4', room:'Louver Plenum',                  no:'537-20202', type:'Utility'},
+  {building:'DSM-4', floor:'Second Floor', sector:'Sector 4', room:'Louver Plenum',                  no:'537-20203', type:'Utility'},
+  {building:'DSM-4', floor:'Second Floor', sector:'Sector 3', room:'Electrical Room',                no:'537-20231', type:'Utility'},
+  {building:'DSM-4', floor:'Second Floor', sector:'Sector 4', room:'Electrical Room',                no:'537-20232', type:'Utility'},
+  {building:'DSM-4', floor:'Second Floor', sector:'Sector 4', room:'Electrical Substation',          no:'537-20233', type:'Utility'},
+  {building:'DSM-4', floor:'Second Floor', sector:'Sector 3', room:'Electrical Closet',              no:'537-20230', type:'Utility'},
+  {building:'DSM-4', floor:'Second Floor', sector:'Sector 3', room:'IDF',                            no:'537-20251', type:'Utility'},
+  {building:'DSM-4', floor:'Second Floor', sector:'Sector 3', room:'Telecom Room',                   no:'537-20250', type:'Utility'},
+  {building:'DSM-4', floor:'Second Floor', sector:'Sector 3', room:'Janitor',                        no:'537-20650', type:'Utility'},
+  {building:'DSM-4', floor:'Second Floor', sector:'Sector 3', room:'Shaft',                          no:'537-20210', type:'Utility'},
+  {building:'DSM-4', floor:'Second Floor', sector:'Sector 3', room:'Cold MAL',                       no:'537-20641', type:'Anteroom'},
+  {building:'DSM-4', floor:'Second Floor', sector:'Sector 3', room:'MAL Out',                        no:'537-20642', type:'Anteroom'},
+  {building:'DSM-4', floor:'Second Floor', sector:'Sector 1', room:'MAL Out',                        no:'537-20603', type:'Anteroom'},
+  {building:'DSM-4', floor:'Second Floor', sector:'Sector 3', room:'MAL In',                         no:'537-20643', type:'Anteroom'},
+  {building:'DSM-4', floor:'Second Floor', sector:'Sector 1', room:'MAL In',                         no:'537-20602', type:'Anteroom'},
+  {building:'DSM-4', floor:'Second Floor', sector:'Sector 1', room:'MAL',                            no:'537-20627', type:'Anteroom'},
+  {building:'DSM-4', floor:'Second Floor', sector:'Sector 1', room:'PAL',                            no:'537-20621', type:'Anteroom'},
+  {building:'DSM-4', floor:'Second Floor', sector:'Sector 1', room:'PAL',                            no:'537-20601', type:'Anteroom'},
+  {building:'DSM-4', floor:'Second Floor', sector:'Sector 3', room:'PAL',                            no:'537-20644', type:'Anteroom'},
+  {building:'DSM-4', floor:'Second Floor', sector:'Sector 1', room:'JC',                             no:'537-20604', type:'Anteroom'},
+  {building:'DSM-4', floor:'Second Floor', sector:'Sector 3', room:'JC',                             no:'537-20622', type:'Anteroom'},
+  {building:'DSM-4', floor:'Second Floor', sector:'Sector 3', room:'JC',                             no:'537-20646', type:'Anteroom'},
+  {building:'DSM-4', floor:'Second Floor', sector:'Sector 3', room:'Process Corridor',               no:'537-20041', type:'Corridor'},
+  {building:'DSM-4', floor:'Second Floor', sector:'Sector 1', room:'Stair 1',                        no:'537-20001', type:'Stair'},
+  {building:'DSM-4', floor:'Second Floor', sector:'Sector 4', room:'Stair 2',                        no:'537-20002', type:'Stair'},
+  {building:'DSM-4', floor:'Second Floor', sector:'Sector 1', room:'Dirty VRC',                      no:'537-10012-2F', type:'Utility'},
+  {building:'DSM-4', floor:'Second Floor', sector:'Sector 1', room:'Clean VRC',                      no:'537-10011-2F', type:'Utility'},
+  {building:'DSM-4', floor:'Second Floor', sector:'Sector 1', room:'Sector 1',                       no:'DSM4-2F-S1', type:'Sector'},
+  {building:'DSM-4', floor:'Second Floor', sector:'Sector 2', room:'Sector 2',                       no:'DSM4-2F-S2', type:'Sector'},
+  {building:'DSM-4', floor:'Second Floor', sector:'Sector 3', room:'Sector 3',                       no:'DSM4-2F-S3', type:'Sector'},
+  {building:'DSM-4', floor:'Second Floor', sector:'Sector 4', room:'Sector 4',                       no:'DSM4-2F-S4', type:'Sector'},
+  {building:'DSM-4', floor:'Second Floor (Interstitial / Walkable Ceiling)', sector:'Building Wide', room:'Second Floor Interstitial Walk-On Ceiling', no:'537-25960', type:'Interstitial'}
+];
+
+// ─── STATE ────────────────────────────────────────────────────────────────────
+var activeTypeFilter = 'all';
+var activeFloorFilter = '';
+var generatedCount = 0;
+var qrInstances = {};
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+(function init(){
+  renderCards();
+  updateStats();
+  document.getElementById('floorFilter').addEventListener('change', function(){
+    activeFloorFilter = this.value;
+    applyFilters();
+    updateStats();
+  });
+})();
+
+var LIVE_APP_URL = 'https://bdiaz8448-gif.github.io/hse-aura-directory/';
+var RETIRED_HOSTS = ['FujiFilm-HSE-Directory-Guide','Aura-HSE-Directory-Safety-Reference'];
+
+/* The retired address only serves a redirect stub, and a meta-refresh DROPS
+   the query string - so a QR pointing there would land on the directory with
+   NO room context and the emergency SMS would not name the room. Never build
+   a QR against it. */
+function normaliseBase(base){
+  base = (base || '').trim();
+  if(!base) return LIVE_APP_URL;
+  for(var i=0;i<RETIRED_HOSTS.length;i++){
+    if(base.indexOf(RETIRED_HOSTS[i]) !== -1) return LIVE_APP_URL;
+  }
+  return base.split('?')[0].split('#')[0];
+}
+
+function buildUrl(r){
+  var base = normaliseBase(document.getElementById('appUrl').value);
+  var params = new URLSearchParams({
+    building: r.building,
+    floor:    r.floor,
+    sector:   r.sector,
+    room:     r.room,
+    roomNo:   r.no
+  });
+  return base + '?' + params.toString();
+}
+
+function typeClass(t){
+  var map = {
+    'Production':'type-production','Lab':'type-lab','Utility':'type-utility',
+    'Storage':'type-storage','Anteroom':'type-anteroom','Corridor':'type-corridor',
+    'Stair':'type-stair','Interstitial':'type-interstitial','Support':'type-utility'
+  };
+  return map[t] || 'type-corridor';
+}
+
+function safeId(no){ return 'room_' + no.replace(/[^a-z0-9]/gi,'_'); }
+
+function renderCards(){
+  var grid = document.getElementById('roomGrid');
+  grid.innerHTML = '';
+  ROOMS.forEach(function(r){
+    var id = safeId(r.no);
+    var card = document.createElement('div');
+    card.className = 'room-card';
+    card.id = 'card_' + id;
+    card.dataset.type = r.type;
+    card.dataset.floor = r.floor;
+    card.innerHTML =
+      '<div class="card-header">' +
+        '<div>' +
+          '<div class="card-floor">' + r.building + ' &middot; ' + r.floor + '</div>' +
+        '</div>' +
+        '<span class="card-type ' + typeClass(r.type) + '">' + r.type + '</span>' +
+      '</div>' +
+      '<div class="card-body">' +
+        '<div class="card-room-name">' + r.room + '</div>' +
+        '<div class="card-room-no">' + r.no + '</div>' +
+        '<div class="card-sector">Sector: ' + r.sector + ' &nbsp;|&nbsp; <em style="font-size:10px;color:#444;">Edit sector in CSV then re-import</em></div>' +
+        '<div class="qr-area" id="qra_' + id + '">' +
+          '<div class="qr-placeholder">Click "Generate All QR Codes"<br>to create this QR</div>' +
+        '</div>' +
+        '<div class="card-url" id="url_' + id + '">URL will appear here after generation</div>' +
+        '<div class="card-actions">' +
+          '<button class="btn-sm btn-dl" id="dl_' + id + '" onclick="downloadSingle(\'' + r.no + '\')" disabled>⬇ Download PNG</button>' +
+          '<button class="btn-sm btn-copy" onclick="copyUrl(\'' + r.no + '\')" id="cp_' + id + '" disabled>📋 Copy URL</button>' +
+        '</div>' +
+      '</div>';
+    grid.appendChild(card);
+  });
+  updateStats();
+}
+
+async function generateAll(){
+  var appUrl = normaliseBase(document.getElementById('appUrl').value);
+  if(appUrl !== document.getElementById('appUrl').value.trim()){
+    document.getElementById('appUrl').value = appUrl;
+    showToast('URL corrected to the live directory address');
+  }
+  if(!appUrl){
+    showToast('⚠️ Please enter your App URL first', true);
+    return;
+  }
+
+  var size = parseInt(document.getElementById('qrSize').value);
+  var pb = document.getElementById('progressBar');
+  pb.classList.add('visible');
+  generatedCount = 0;
+  document.getElementById('dlZipBtn').disabled = true;
+
+  for(var i = 0; i < ROOMS.length; i++){
+    var r = ROOMS[i];
+    var id = safeId(r.no);
+    var url = buildUrl(r);
+
+    // Update progress
+    var pct = Math.round((i / ROOMS.length) * 100);
+    document.getElementById('progressFill').style.width = pct + '%';
+    document.getElementById('progressText').textContent = 'Generating ' + (i+1) + ' / ' + ROOMS.length + ' — ' + r.room + ' (' + r.no + ')';
+
+    // Clear previous QR
+    var qrArea = document.getElementById('qra_' + id);
+    qrArea.innerHTML = '';
+
+    // Generate QR using QRCode.js
+    try {
+      var qrDiv = document.createElement('div');
+      qrArea.appendChild(qrDiv);
+      var qrObj = new QRCode(qrDiv, {
+        text: url,
+        width: size,
+        height: size,
+        colorDark: '#000000',
+        colorLight: '#ffffff',
+        correctLevel: QRCode.CorrectLevel.M
+      });
+      qrInstances[r.no] = { obj: qrObj, el: qrDiv, url: url };
+    } catch(e) {
+      qrArea.innerHTML = '<div style="color:#f00;font-size:11px;">Error: ' + e.message + '</div>';
+    }
+
+    // Update URL display
+    var urlEl = document.getElementById('url_' + id);
+    if(urlEl) urlEl.textContent = url;
+
+    // Enable buttons
+    var dlBtn = document.getElementById('dl_' + id);
+    var cpBtn = document.getElementById('cp_' + id);
+    if(dlBtn) dlBtn.disabled = false;
+    if(cpBtn) cpBtn.disabled = false;
+
+    generatedCount++;
+    updateStats();
+
+    // Yield to browser to render
+    if(i % 5 === 0) await new Promise(function(r){ setTimeout(r, 10); });
+  }
+
+  document.getElementById('progressFill').style.width = '100%';
+  document.getElementById('progressText').textContent = '✅ Done! ' + generatedCount + ' QR codes generated.';
+  document.getElementById('dlZipBtn').disabled = false;
+  setTimeout(function(){ pb.classList.remove('visible'); }, 3000);
+  showToast('✅ All ' + generatedCount + ' QR codes generated!');
+}
+
+function getCanvas(roomNo){
+  var id = safeId(roomNo);
+  var qrArea = document.getElementById('qra_' + id);
+  if(!qrArea) return null;
+  return qrArea.querySelector('canvas');
+}
+
+function downloadSingle(roomNo){
+  var canvas = getCanvas(roomNo);
+  if(!canvas){ showToast('Generate QR codes first', true); return; }
+  var r = ROOMS.find(function(x){ return x.no === roomNo; });
+  var link = document.createElement('a');
+  link.download = 'QR_' + roomNo.replace(/[^a-z0-9]/gi,'-') + '_' + (r ? r.room.replace(/[^a-z0-9]/gi,'-') : '') + '.png';
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+}
+
+function copyUrl(roomNo){
+  var inst = qrInstances[roomNo];
+  if(!inst){ showToast('Generate QR codes first', true); return; }
+  navigator.clipboard.writeText(inst.url).then(function(){
+    showToast('URL copied to clipboard!');
+  }).catch(function(){
+    showToast('Copy failed — try manually', true);
+  });
+}
+
+async function downloadZip(){
+  if(typeof JSZip === 'undefined'){ showToast('JSZip not loaded', true); return; }
+  var zip = new JSZip();
+  var count = 0;
+  var pb = document.getElementById('progressBar');
+  pb.classList.add('visible');
+
+  for(var i = 0; i < ROOMS.length; i++){
+    var r = ROOMS[i];
+    var canvas = getCanvas(r.no);
+    if(!canvas) continue;
+    var dataUrl = canvas.toDataURL('image/png');
+    var base64 = dataUrl.replace(/^data:image\/png;base64,/, '');
+    var fname = r.floor.replace(/[^a-z0-9]/gi,'-').replace(/-+/g,'-') + '/' +
+                'QR_' + r.no.replace(/[^a-z0-9]/gi,'-') + '_' +
+                r.room.replace(/[^a-z0-9]/gi,'-').replace(/-+/g,'-').slice(0,30) + '.png';
+    zip.file(fname, base64, {base64: true});
+    count++;
+    document.getElementById('progressFill').style.width = Math.round((i/ROOMS.length)*100) + '%';
+    document.getElementById('progressText').textContent = 'Packing ' + (i+1) + ' / ' + ROOMS.length;
+    if(i % 10 === 0) await new Promise(function(res){ setTimeout(res, 5); });
+  }
+
+  document.getElementById('progressText').textContent = 'Creating ZIP file...';
+  var blob = await zip.generateAsync({type:'blob'});
+  var link = document.createElement('a');
+  link.download = 'DSM4-QR-Codes.zip';
+  link.href = URL.createObjectURL(blob);
+  link.click();
+  pb.classList.remove('visible');
+  showToast('✅ ZIP downloaded — ' + count + ' QR codes, organized by floor');
+}
+
+function filterType(type, btn){
+  activeTypeFilter = type;
+  document.querySelectorAll('.filter-chip').forEach(function(c){ c.classList.remove('active'); });
+  btn.classList.add('active');
+  applyFilters();
+  updateStats();
+}
+
+function applyFilters(){
+  var visible = 0;
+  document.querySelectorAll('.room-card').forEach(function(card){
+    var typeOk = activeTypeFilter === 'all' || card.dataset.type === activeTypeFilter;
+    var floorOk = !activeFloorFilter || card.dataset.floor.indexOf(activeFloorFilter) !== -1;
+    if(typeOk && floorOk){
+      card.classList.remove('hidden');
+      visible++;
+    } else {
+      card.classList.add('hidden');
+    }
+  });
+  document.getElementById('emptyState').classList.toggle('visible', visible === 0);
+}
+
+function updateStats(){
+  var visible = document.querySelectorAll('.room-card:not(.hidden)').length;
+  document.getElementById('totalCount').textContent = ROOMS.length;
+  document.getElementById('visibleCount').textContent = visible;
+  document.getElementById('genCount').textContent = generatedCount;
+}
+
+function showToast(msg, err){
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast visible' + (err ? ' err' : '');
+  setTimeout(function(){ t.classList.remove('visible'); }, 3000);
+}
+</script>
+</body>
+</html>
