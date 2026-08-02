@@ -4240,7 +4240,7 @@
      Android hands it to Contacts, and desktop downloads it.
      Cards live in /c/<id>.vcf and are regenerated from Firestore.
      --------------------------------------------------------------- */
-  var AURA_BUILD = 'v29b-confirm-modal';
+  var AURA_BUILD = 'v30-send-alert';
 
   function saveToContactsBtnHtml(p){
     var href = 'c/' + encodeURIComponent(p.id) + '.vcf';
@@ -4639,12 +4639,23 @@
     var nums = gatherNotifyNumbers(building);
     var ios = isIosDevice();
     var explainEn, explainEs;
+    /* The alert is SENT server-side through the project's Twilio number to every
+       tagged contact at once. Opening the phone's Messages app is only the
+       fallback if that send fails or times out - the wording must not promise
+       the fallback as if it were the normal path. */
+    var nOne  = (nums.length === 1);
+    var enN   = nums.length + ' tagged contact'  + (nOne ? '' : 's');
+    var esN   = nums.length + ' contacto'        + (nOne ? '' : 's') + ' marcado' + (nOne ? '' : 's');
+    var enLead = 'This will send the emergency alert by text to ' + (nOne ? 'the ' : 'all ') + enN
+               + ' at once, from the project number (661) 560-4579. You do not need to type anything. ';
+    var esLead = 'Esto enviar&aacute; la alerta de emergencia por mensaje de texto a ' + (nOne ? 'el ' : 'los ') + esN
+               + ' a la vez, desde el n&uacute;mero del proyecto (661) 560-4579. No necesita escribir nada. ';
     if(ios){
-      explainEn = 'iPhones only let a webpage address one person at a time. This will open Messages addressed to the first tagged number, with the text already filled in. The other numbers are listed below &mdash; add them to the &ldquo;To&rdquo; field yourself to include everyone.';
-      explainEs = 'Los iPhone solo permiten que una p&aacute;gina web dirija a una persona a la vez. Esto abrir&aacute; Mensajes dirigido al primer n&uacute;mero marcado, con el texto ya completado. Los dem&aacute;s n&uacute;meros aparecen abajo &mdash; agr&eacute;guelos usted mismo al campo &ldquo;Para&rdquo; para incluir a todos.';
+      explainEn = enLead + 'If the network fails, your phone&rsquo;s Messages app opens as a backup with the text already filled in &mdash; iPhones can only address one person that way, so add the rest from the list below.';
+      explainEs = esLead + 'Si la red falla, se abrir&aacute; la aplicaci&oacute;n Mensajes de su tel&eacute;fono como respaldo con el texto ya completado &mdash; los iPhone solo pueden dirigirse a una persona de esa forma, agregue a los dem&aacute;s desde la lista de abajo.';
     } else {
-      explainEn = 'This will try to open Messages addressed to all '+nums.length+' tagged numbers as a group, with the text already filled in. If your phone only shows one person, add the rest from the list below.';
-      explainEs = 'Esto intentar&aacute; abrir Mensajes dirigido a los '+nums.length+' n&uacute;meros marcados como grupo, con el texto ya completado. Si su tel&eacute;fono solo muestra una persona, agregue al resto desde la lista de abajo.';
+      explainEn = enLead + 'If the network fails, your phone&rsquo;s Messages app opens as a backup with the text already filled in.';
+      explainEs = esLead + 'Si la red falla, se abrir&aacute; la aplicaci&oacute;n Mensajes de su tel&eacute;fono como respaldo con el texto ya completado.';
     }
     body.innerHTML =
       '<p class="topname" style="color:#ffffff;">Are you sure? <span style="color:#2a5dab; font-size:14px;">/ &iquest;Est&aacute; seguro?</span></p>'
@@ -4653,7 +4664,7 @@
       + '<div class="notify-msg-box">'+escapeHtml(msg)+'</div>'
       + '<p style="font-size:13px; color:#ffffff; margin:8px 0 0; line-height:1.45;">The message text has also been copied to your clipboard as a backup, in case your phone doesn&rsquo;t fill it in automatically.<br><span style="color:#2a5dab;">El texto tambi&eacute;n se ha copiado como respaldo, en caso de que su tel&eacute;fono no lo complete autom&aacute;ticamente.</span></p>'
       + '<div class="modal-btns">'
-      + '<button class="danger btn-bilingual" id="notifyConfirmBtn"><span class="en">Confirm &amp; Open Messages</span><span class="es">Confirmar y Abrir Mensajes</span></button>'
+      + '<button class="danger btn-bilingual" id="notifyConfirmBtn"><span class="en">Confirm &amp; Send Alert</span><span class="es">Confirmar y Enviar Alerta</span></button>'
       + '<button class="btn-bilingual" id="notifyFinalCancelBtn"><span class="en">Cancel</span><span class="es">Cancelar</span></button>'
       + '</div>';
     document.getElementById('notifyFinalCancelBtn').addEventListener('click', closeModal);
