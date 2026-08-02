@@ -4240,7 +4240,7 @@
      Android hands it to Contacts, and desktop downloads it.
      Cards live in /c/<id>.vcf and are regenerated from Firestore.
      --------------------------------------------------------------- */
-  var AURA_BUILD = 'v30-send-alert';
+  var AURA_BUILD = 'v30b-send-alert';
 
   function saveToContactsBtnHtml(p){
     var href = 'c/' + encodeURIComponent(p.id) + '.vcf';
@@ -4646,10 +4646,12 @@
     var nOne  = (nums.length === 1);
     var enN   = nums.length + ' tagged contact'  + (nOne ? '' : 's');
     var esN   = nums.length + ' contacto'        + (nOne ? '' : 's') + ' marcado' + (nOne ? '' : 's');
-    var enLead = 'This will send the emergency alert by text to ' + (nOne ? 'the ' : 'all ') + enN
-               + ' at once, from the project number (661) 560-4579. You do not need to type anything. ';
-    var esLead = 'Esto enviar&aacute; la alerta de emergencia por mensaje de texto a ' + (nOne ? 'el ' : 'los ') + esN
-               + ' a la vez, desde el n&uacute;mero del proyecto (661) 560-4579. No necesita escribir nada. ';
+    var enLead = 'This will send the emergency alert by text to '
+               + (nOne ? 'the ' + enN : 'all ' + enN + ' at once')
+               + ', from the project number (661) 560-4579. You do not need to type anything. ';
+    var esLead = 'Esto enviar&aacute; la alerta de emergencia por mensaje de texto a '
+               + (nOne ? 'el ' + esN : 'los ' + esN + ' a la vez')
+               + ', desde el n&uacute;mero del proyecto (661) 560-4579. No necesita escribir nada. ';
     if(ios){
       explainEn = enLead + 'If the network fails, your phone&rsquo;s Messages app opens as a backup with the text already filled in &mdash; iPhones can only address one person that way, so add the rest from the list below.';
       explainEs = esLead + 'Si la red falla, se abrir&aacute; la aplicaci&oacute;n Mensajes de su tel&eacute;fono como respaldo con el texto ya completado &mdash; los iPhone solo pueden dirigirse a una persona de esa forma, agregue a los dem&aacute;s desde la lista de abajo.';
