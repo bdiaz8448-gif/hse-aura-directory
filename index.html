@@ -559,7 +559,16 @@
     border-radius: 12px; padding: 16px; margin-bottom: 14px;
     box-shadow: var(--shadow-sm);
   }
-  .emergency-section h3 { margin: 0 0 10px; font-size: 16px; color: var(--text-primary); }
+  /* English copy in the Emergency tab is pure white for field readability.
+     Spanish spans carry their own inline blue and are deliberately excluded. */
+  #sectionEmergency .emergency-section,
+  #sectionEmergency .emergency-section p,
+  #sectionEmergency .emergency-section li,
+  #sectionEmergency .emergency-section b,
+  #sectionEmergency .emergency-section h3 { color: #ffffff; }
+  #sectionEmergency .emergency-section span[style*="2a5dab"],
+  #sectionEmergency .emergency-section span[style*="9ec7ff"] { color: inherit; }
+  .emergency-section h3 { margin: 0 0 10px; font-size: 16.5px; color: #ffffff; font-weight: 700; }
   .emergency-step { display: flex; gap: 12px; margin-bottom: 12px; align-items: flex-start; }
   .emergency-step-num {
     width: 30px; height: 30px; min-width: 30px; border-radius: 50%;
@@ -569,9 +578,9 @@
     border: 1px solid var(--ruby-border);
     box-shadow: 0 0 10px rgba(192,57,43,0.3);
   }
-  .emergency-step-text   { font-size: 14px; line-height: 1.4; color: var(--text-secondary); }
-  .emergency-step-text b { display: block; margin-bottom: 2px; color: var(--text-primary); }
-  .emergency-list  { margin: 0; padding-left: 20px; font-size: 14px; line-height: 1.6; color: var(--text-secondary); }
+  .emergency-step-text   { font-size: 14.5px; line-height: 1.5; color: #ffffff; }
+  .emergency-step-text b { display: block; margin-bottom: 3px; color: #ffffff; font-weight: 700; }
+  .emergency-list  { margin: 0; padding-left: 20px; font-size: 14.5px; line-height: 1.7; color: #ffffff; }
   .notify-btn {
     display: block; width: 100%; height: 58px; border-radius: 10px;
     background: rgba(255,255,255,0.06); color: var(--text-primary);
@@ -4197,7 +4206,7 @@
      Android hands it to Contacts, and desktop downloads it.
      Cards live in /c/<id>.vcf and are regenerated from Firestore.
      --------------------------------------------------------------- */
-  var AURA_BUILD = 'v27-hover-all-companies';
+  var AURA_BUILD = 'v28-emergency-legible';
 
   function saveToContactsBtnHtml(p){
     var href = 'c/' + encodeURIComponent(p.id) + '.vcf';
@@ -4536,7 +4545,7 @@
       + '</div>'
       + '<div class="emergency-section">'
       + '<h3>For All Other Incidents <span '+ES+'>/ Para Todos los Dem&aacute;s Incidentes</span></h3>'
-      + '<p style="margin:0; font-size:14px; color:#222; line-height:1.4;">Call your Building Safety Lead and Jacobs CM for that building.<br><span '+ES+'>Llame a su L&iacute;der de Seguridad del Edificio y al CM de Jacobs de ese edificio.</span></p>'
+      + '<p style="margin:0; font-size:15px; color:#ffffff; line-height:1.5; font-weight:500;">Call your Building Safety Lead and Jacobs CM for that building.<br><span '+ES+'>Llame a su L&iacute;der de Seguridad del Edificio y al CM de Jacobs de ese edificio.</span></p>'
       + '</div>'
       + '<div class="emergency-section">'
       + '<h3>All Incidents Must Be Reported <span '+ES+'>/ Todos los Incidentes Deben Reportarse</span></h3>'
@@ -4548,11 +4557,11 @@
       + '<li>Property damage <span '+ES+'>/ Da&ntilde;os a la propiedad</span></li>'
       + '<li>Chemical spills <span '+ES+'>/ Derrames qu&iacute;micos</span></li>'
       + '</ul>'
-      + '<p style="margin:10px 0 0; font-size:13px; color:#555;">Report immediately to your direct Supervisor and Jacobs Management.<br><span '+ES+'>Reporte de inmediato a su Supervisor directo y a la Gerencia de Jacobs.</span></p>'
+      + '<p style="margin:10px 0 0; font-size:13.5px; color:#ffffff; font-weight:500;">Report immediately to your direct Supervisor and Jacobs Management.<br><span '+ES+'>Reporte de inmediato a su Supervisor directo y a la Gerencia de Jacobs.</span></p>'
       + '</div>'
       + '<div class="emergency-section">'
       + '<h3>Notify Building Management &ndash; '+building+' <span '+ES+'>/ Notificar a la Gerencia del Edificio</span></h3>'
-      + '<p style="margin:0 0 8px; font-size:13px; color:#555;">'+recipientCount+' contact'+(recipientCount===1?'':'s')+' currently tagged to receive this text.<br><span '+ES+'>'+recipientCount+' contacto'+(recipientCount===1?'':'s')+' marcado'+(recipientCount===1?'':'s')+' actualmente para recibir este mensaje.</span></p>'
+      + '<p style="margin:0 0 8px; font-size:13.5px; color:#ffffff; font-weight:500;">'+recipientCount+' contact'+(recipientCount===1?'':'s')+' currently tagged to receive this text.<br><span '+ES+'>'+recipientCount+' contacto'+(recipientCount===1?'':'s')+' marcado'+(recipientCount===1?'':'s')+' actualmente para recibir este mensaje.</span></p>'
       + '<button class="notify-btn" id="notifyBtn">Notify Building Management <span style="color:#9ec7ff;">/ Notificar a la Gerencia</span></button>'
       + '</div>';
     document.getElementById('emergencyContent').innerHTML = html;
