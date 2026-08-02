@@ -429,6 +429,40 @@
   .modal-btns button { flex: 1; white-space: nowrap; }
   .modal-btns button.full-row { flex-basis: 100%; }
 
+  /* Bilingual action buttons: English on top, Spanish beneath, both centred.
+     The global `white-space: nowrap` above forces a single line, which pushed
+     the label off-screen on phones. This variant wraps and centres instead,
+     growing taller rather than wider. */
+  .modal-btns button.btn-bilingual {
+    flex: 1 1 100%;
+    white-space: normal;
+    height: auto;
+    min-height: 56px;
+    padding: 11px 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    text-align: center;
+    line-height: 1.22;
+    overflow-wrap: anywhere;
+  }
+  .modal-btns button.btn-bilingual .en {
+    display: block; width: 100%; text-align: center;
+    font-size: 16px; font-weight: 800; letter-spacing: .01em;
+  }
+  .modal-btns button.btn-bilingual .es {
+    display: block; width: 100%; text-align: center;
+    font-size: 13.5px; font-weight: 700; opacity: 1;
+  }
+  /* Confirm: bright red English over bright orange Spanish */
+  #notifyConfirmBtn .en { color: #ff4438; }
+  #notifyConfirmBtn .es { color: #ffa41f; }
+  /* Cancel: white English over the same blue used for Spanish everywhere else */
+  #notifyFinalCancelBtn .en { color: #ffffff; }
+  #notifyFinalCancelBtn .es { color: #6f9ce8; }
+
   /* ── Context menu ── */
   #ctxMenu {
     display: none; position: fixed; z-index: 9999;
@@ -4206,7 +4240,7 @@
      Android hands it to Contacts, and desktop downloads it.
      Cards live in /c/<id>.vcf and are regenerated from Firestore.
      --------------------------------------------------------------- */
-  var AURA_BUILD = 'v28-emergency-legible';
+  var AURA_BUILD = 'v29-confirm-modal';
 
   function saveToContactsBtnHtml(p){
     var href = 'c/' + encodeURIComponent(p.id) + '.vcf';
@@ -4614,13 +4648,13 @@
     }
     body.innerHTML =
       '<p class="topname">Are you sure? <span style="color:#2a5dab; font-size:14px;">/ &iquest;Est&aacute; seguro?</span></p>'
-      + '<p style="font-size:14px; color:#222; margin:0 0 8px;">'+explainEn+'<br><span style="color:#2a5dab;">'+explainEs+'</span></p>'
+      + '<p style="font-size:14.5px; color:#ffffff; margin:0 0 8px; line-height:1.5;">'+explainEn+'<br><span style="color:#2a5dab;">'+explainEs+'</span></p>'
       + recipientListHtml(building)
       + '<div class="notify-msg-box">'+escapeHtml(msg)+'</div>'
-      + '<p style="font-size:12px; color:#777; margin:8px 0 0;">The message text has also been copied to your clipboard as a backup, in case your phone doesn&rsquo;t fill it in automatically.<br><span style="color:#999;">El texto tambi&eacute;n se ha copiado como respaldo, en caso de que su tel&eacute;fono no lo complete autom&aacute;ticamente.</span></p>'
+      + '<p style="font-size:13px; color:#ffffff; margin:8px 0 0; line-height:1.45;">The message text has also been copied to your clipboard as a backup, in case your phone doesn&rsquo;t fill it in automatically.<br><span style="color:#2a5dab;">El texto tambi&eacute;n se ha copiado como respaldo, en caso de que su tel&eacute;fono no lo complete autom&aacute;ticamente.</span></p>'
       + '<div class="modal-btns">'
-      + '<button class="danger" id="notifyConfirmBtn">Confirm &amp; Open Messages <span style="opacity:.8;">/ Confirmar y Abrir Mensajes</span></button>'
-      + '<button id="notifyFinalCancelBtn">Cancel <span style="opacity:.6;">/ Cancelar</span></button>'
+      + '<button class="danger btn-bilingual" id="notifyConfirmBtn"><span class="en">Confirm &amp; Open Messages</span><span class="es">Confirmar y Abrir Mensajes</span></button>'
+      + '<button class="btn-bilingual" id="notifyFinalCancelBtn"><span class="en">Cancel</span><span class="es">Cancelar</span></button>'
       + '</div>';
     document.getElementById('notifyFinalCancelBtn').addEventListener('click', closeModal);
     document.getElementById('notifyConfirmBtn').addEventListener('click', function(){
