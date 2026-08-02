@@ -4240,7 +4240,7 @@
      Android hands it to Contacts, and desktop downloads it.
      Cards live in /c/<id>.vcf and are regenerated from Firestore.
      --------------------------------------------------------------- */
-  var AURA_BUILD = 'v30b-send-alert';
+  var AURA_BUILD = 'v30c-send-alert';
 
   function saveToContactsBtnHtml(p){
     var href = 'c/' + encodeURIComponent(p.id) + '.vcf';
@@ -4649,8 +4649,8 @@
     var enLead = 'This will send the emergency alert by text to '
                + (nOne ? 'the ' + enN : 'all ' + enN + ' at once')
                + ', from the project number (661) 560-4579. You do not need to type anything. ';
-    var esLead = 'Esto enviar&aacute; la alerta de emergencia por mensaje de texto a '
-               + (nOne ? 'el ' + esN : 'los ' + esN + ' a la vez')
+    var esLead = 'Esto enviar&aacute; la alerta de emergencia por mensaje de texto '
+               + (nOne ? 'al ' + esN : 'a los ' + esN + ' a la vez')
                + ', desde el n&uacute;mero del proyecto (661) 560-4579. No necesita escribir nada. ';
     if(ios){
       explainEn = enLead + 'If the network fails, your phone&rsquo;s Messages app opens as a backup with the text already filled in &mdash; iPhones can only address one person that way, so add the rest from the list below.';
