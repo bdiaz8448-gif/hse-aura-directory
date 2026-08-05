@@ -859,6 +859,7 @@
   #incidentCompanyBar .cb-chip:hover { background: rgba(0,212,255,0.10); border-color: var(--cyan-border); color: var(--cyan); }
   #incidentCompanyBar .cb-chip .cb-n { color: var(--cyan); font-size: 11px; }</style>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
@@ -1100,6 +1101,59 @@
   };
   firebase.initializeApp(firebaseConfig);
   var db = firebase.firestore();
+
+  /* ═══ SERVER-ENFORCED ACCESS ══════════════════════════════════════════════
+     The PIN used to be a string in a world-readable Firestore document, checked
+     only in the browser. Anyone with the public API key could read it, and
+     could write to the database without it. Now the PIN is a Firebase Auth
+     password: hashed, rate-limited, never readable, and Firestore rules decide
+     what a signed-in account may do. The PIN box in the UI is unchanged - what
+     changed is who checks it. */
+  var auth = firebase.auth();
+  auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(function(){});
+
+  function pinToPassword(pin){ return 'aura!' + pin; }
+
+  /* Public list of who may unlock. Names only - no PIN, password or hash is
+     stored here. Readable so the app can try the right accounts. */
+  var authAdminList = [];
+  db.collection('authAdmins').onSnapshot(function(s){
+    authAdminList = s.docs.map(function(d){ var o = d.data() || {}; o.uid = d.id; return o; });
+  }, function(e){ console.warn('authAdmins read:', e.message); });
+
+  function emailForAuthAdmin(a){
+    if(a.email) return a.email;
+    if(a.role === 'owner') return 'owner@aura-hse.local';
+    return 'admin-' + a.uid.slice(0,10).toLowerCase() + '@aura-hse.local';
+  }
+
+  /* Try the PIN against each account that is allowed to unlock, owner first.
+     Firebase rate-limits failed attempts, so this cannot be brute-forced the
+     way a client-side string compare could. */
+  function signInWithPin(pin){
+    var list = authAdminList.slice().sort(function(a,b){
+      return (a.role === 'owner' ? 0 : 1) - (b.role === 'owner' ? 0 : 1);
+    });
+    if(!list.length) return Promise.reject(new Error('no-accounts'));
+    var i = 0;
+    function attempt(){
+      if(i >= list.length) return Promise.reject(new Error('bad-pin'));
+      var a = list[i++];
+      return auth.signInWithEmailAndPassword(emailForAuthAdmin(a), pinToPassword(pin))
+        .then(function(){ return a; })
+        .catch(function(e){
+          if(e.code === 'auth/too-many-requests') throw e;
+          return attempt();
+        });
+    }
+    return attempt();
+  }
+
+  function currentAuthRole(){
+    var u = auth.currentUser; if(!u) return null;
+    for(var i=0;i<authAdminList.length;i++){ if(authAdminList[i].uid === u.uid) return authAdminList[i].role; }
+    return null;
+  }
   try{ db.enablePersistence({synchronizeTabs:true}).catch(function(e){ console.warn('Offline persistence unavailable:', e.message); }); }catch(e){}
   // One lightweight visit record per browser session (admin Activity panel)
   try{
@@ -1653,6 +1707,8 @@
   function setUnlocked(val){
     if(val) sessionStorage.setItem(EDIT_UNLOCK_KEY, '1');
     else {
+      // Locking must drop the real credential, not just the UI flag.
+      try{ auth.signOut(); }catch(e){}
       sessionStorage.removeItem(EDIT_UNLOCK_KEY);
       sessionStorage.removeItem(COMPANY_ACCESS_KEY); // clear company view on admin lock
       sessionStorage.removeItem('aura_who');
@@ -2024,27 +2080,27 @@
   }
 
   function requireUnlock(action){
-    if(isUnlocked()){ action(); return; }
+    if(isUnlocked() && auth.currentUser){ action(); return; }
     var entered = prompt('Enter edit PIN to add, edit, or delete:');
     if(entered === null) return;
-    var who = null, asOwner = false;
-    if(entered === editPin){ who = ownerName; asOwner = true; }
-    else {
-      for(var ai=0; ai<adminUsers.length; ai++){
-        if(adminUsers[ai].pin && adminUsers[ai].pin === entered){ who = adminUsers[ai].name || 'Admin'; break; }
-      }
-    }
-    if(who){
-      sessionStorage.setItem('aura_who', who);
-      if(asOwner) sessionStorage.setItem('aura_is_owner','1');
+    signInWithPin(entered).then(function(acct){
+      sessionStorage.setItem('aura_who', acct.name || 'Admin');
+      if(acct.role === 'owner') sessionStorage.setItem('aura_is_owner','1');
       else sessionStorage.removeItem('aura_is_owner');
       setUnlocked(true);
-      auditEvent('unlock', who + ' unlocked editing');
+      auditEvent('unlock', (acct.name || 'Admin') + ' unlocked editing');
       action();
-    } else {
-      alert('Incorrect PIN.');
-    }
+    }).catch(function(e){
+      if(e.code === 'auth/too-many-requests'){
+        alert('Too many incorrect attempts. Firebase has temporarily blocked sign-in from this device. Wait a few minutes and try again.');
+      } else if(e.message === 'no-accounts'){
+        alert('No admin accounts exist yet. The owner must create one before editing is possible.');
+      } else {
+        alert('Incorrect PIN.');
+      }
+    });
   }
+
   // Expose to inline onclick handlers (outside IIFE global scope)
   window.requireUnlock = requireUnlock;
 
@@ -4286,7 +4342,7 @@
      Android hands it to Contacts, and desktop downloads it.
      Cards live in /c/<id>.vcf and are regenerated from Firestore.
      --------------------------------------------------------------- */
-  var AURA_BUILD = 'v31b-offline-emergency';
+  var AURA_BUILD = 'v32-secured';
 
   function saveToContactsBtnHtml(p){
     var href = 'c/' + encodeURIComponent(p.id) + '.vcf';
@@ -5284,11 +5340,21 @@
   var mpbEl = document.getElementById('managePinsBtn');
   if(mpbEl) mpbEl.addEventListener('click', function(){ manageCompanyPins(); });
   document.getElementById('changePinBtn').addEventListener('click', function(){
-    var next = prompt('Set a new edit PIN (share only with the people you want to be able to add/edit/delete):');
+    if(!auth.currentUser){ alert('Unlock first, then change your PIN.'); return; }
+    var next = prompt('Set a new PIN for YOUR account (this changes only your own sign-in):');
     if(!next) return;
-    db.collection('config').doc('app').set({editPin: next}).then(function(){
-      alert('Edit PIN updated. This syncs to every device live.');
-    }).catch(function(err){ alert('Could not save PIN: ' + err.message); });
+    if(next.length < 4){ alert('PIN must be at least 4 characters.'); return; }
+    if(next === '1234'){ alert('Not 1234 - that value was publicly exposed. Choose another.'); return; }
+    // Updates the hashed Firebase Auth password. The PIN is never written to
+    // Firestore, so it can no longer be read out of the database by anyone.
+    auth.currentUser.updatePassword(pinToPassword(next)).then(function(){
+      auditEvent('pin', (sessionStorage.getItem('aura_who')||'Admin') + ' changed their PIN');
+      alert('Your PIN has been updated.');
+    }).catch(function(err){
+      alert(err.code === 'auth/requires-recent-login'
+        ? 'For safety, lock and unlock again, then change the PIN.'
+        : 'Could not update PIN: ' + err.message);
+    });
   });
   loadDocs();
 })();

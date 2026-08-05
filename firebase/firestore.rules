@@ -1,0 +1,157 @@
+rules_version = '2';
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Fujifilm Aura HSE Directory — Firestore security rules
+
+   MODEL (chosen deliberately; this is a life-safety tool):
+     • Emergency-critical data stays PUBLICLY READABLE so that a worker in an
+       incident never meets a login screen before reaching emergency contacts.
+     • EVERY write is server-enforced against Firebase Auth. The in-app PIN is
+       now a convenience skin over a real credential; it is no longer the thing
+       standing between the public and the data.
+     • Secrets (PINs, admin list), confidential safety data (incidents) and
+       personal submissions (join/removal requests) are NOT publicly readable.
+     • Anything not named here is denied outright.
+
+   The admin UIDs below are Firebase Auth accounts. A UID is an identifier, not
+   a secret — possessing it grants nothing without the account's password.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    /* ── Identity ────────────────────────────────────────────────────────────
+       Who may write is decided by an allowlist collection, NOT by a PIN and NOT
+       by a hardcoded list. /authAdmins/{uid} exists  =>  that signed-in account
+       is an admin. Adding or removing an admin is a data change, not a rules
+       redeploy.
+
+       Only the NAME is public in those docs, so the unlock screen can offer a
+       "who are you" list. Names are not secrets - they are already printed in
+       the contact directory. No PIN, password or hash is ever stored there:
+       the credential lives in Firebase Auth, hashed, and is never readable. */
+    function isAdmin() {
+      return request.auth != null
+        && exists(/databases/$(database)/documents/authAdmins/$(request.auth.uid))
+        && get(/databases/$(database)/documents/authAdmins/$(request.auth.uid)).data.role in ['owner','admin'];
+    }
+    function isOwner() {
+      return request.auth != null
+        && exists(/databases/$(database)/documents/authAdmins/$(request.auth.uid))
+        && get(/databases/$(database)/documents/authAdmins/$(request.auth.uid)).data.role == 'owner';
+    }
+    function isCompany() {
+      return request.auth != null
+        && exists(/databases/$(database)/documents/authAdmins/$(request.auth.uid))
+        && get(/databases/$(database)/documents/authAdmins/$(request.auth.uid)).data.role == 'company';
+    }
+    function isSignedIn() { return isAdmin() || isCompany(); }
+
+    /* The allowlist itself: public may read ONLY to render the unlock name
+       list. Only the OWNER can grant or revoke access - an admin cannot
+       promote themselves or add an accomplice. */
+    match /authAdmins/{uid} {
+      allow read:  if true;
+      allow write: if isOwner();
+    }
+
+    // ── Helpers ─────────────────────────────────────────────────────────────
+    function changedKeys() {
+      return request.resource.data.diff(resource.data).affectedKeys();
+    }
+    function shortStr(v, max) {
+      return v is string && v.size() > 0 && v.size() <= max;
+    }
+
+    /* ── CONTACTS ────────────────────────────────────────────────────────────
+       Public read: this is the emergency roster. It must be reachable with no
+       account and no network round-trip through a login.
+       Writes are admin-only, with ONE deliberate exception: a person may set
+       their own vacation dates. That path was always PIN-free by design, so it
+       is constrained to exactly three fields and nothing else. */
+    match /contacts/{id} {
+      allow read: if true;
+      allow create, delete: if isAdmin();
+      allow update: if isAdmin()
+        || changedKeys().hasOnly(['vacationStart', 'vacationEnd', 'vacationBackup']);
+    }
+
+    // ── ROSTER TABS — public read (emergency), admin write ───────────────────
+    match /dsm4/{id}       { allow read: if true; allow write: if isAdmin(); }
+    match /dsm3/{id}       { allow read: if true; allow write: if isAdmin(); }
+    match /weekend/{id}    { allow read: if true; allow write: if isAdmin(); }
+    match /cqv/{id}        { allow read: if true; allow write: if isAdmin(); }
+    match /nightshift/{id} { allow read: if true; allow write: if isAdmin(); }
+
+    // ── SAFETY REFERENCE DOCS — public read, admin write ─────────────────────
+    match /permitDocs/{id} { allow read: if true; allow write: if isAdmin(); }
+
+    /* ── EMERGENCY STATE ─────────────────────────────────────────────────────
+       Any person reporting an emergency flips this flag, so it cannot require
+       an account. It carries no confidential data and is tightly shaped: only
+       these four fields, nothing else can be smuggled in. */
+    match /config/emergencyState {
+      allow read: if true;
+      allow write: if request.resource.data.keys()
+                      .hasOnly(['active', 'building', 'activatedAt', 'clearedAt']);
+    }
+
+    /* ── CONFIG ──────────────────────────────────────────────────────────────
+       Cosmetic config is public (labels drive the UI, including the emergency
+       screens). Everything else here is a secret and is admin-only.
+       config/app and config/companyPins previously exposed live PINs to the
+       whole internet. */
+    match /config/{doc} {
+      allow read:  if doc in ['labels', 'customRosters'] || isAdmin();
+      allow write: if isAdmin();
+    }
+
+    /* ── INCIDENTS ───────────────────────────────────────────────────────────
+       Confidential safety data. Not needed to reach an emergency contact, so it
+       is behind a credential. Company safety managers get read-only. */
+    match /incidents/{id} {
+      allow read:  if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    /* ── JOIN REQUESTS ───────────────────────────────────────────────────────
+       A member of the public may SUBMIT one (that is the feature) but may not
+       read, edit or delete any. Shape is validated so the endpoint cannot be
+       used as free anonymous storage. */
+    match /joinRequests/{id} {
+      allow read: if isAdmin();
+      allow create: if request.resource.data.keys()
+                        .hasOnly(['name','company','title','phone','email','status','submittedAt'])
+                    && shortStr(request.resource.data.name, 120)
+                    && shortStr(request.resource.data.company, 120)
+                    && shortStr(request.resource.data.title, 120)
+                    && request.resource.data.status == 'pending';
+      allow update, delete: if isAdmin();
+    }
+
+    /* ── REMOVAL REQUESTS — same shape of trust ──────────────────────────────*/
+    match /removalRequests/{id} {
+      allow read: if isAdmin();
+      allow create: if request.resource.data.keys()
+                        .hasOnly(['name','company','reason','status','submittedAt'])
+                    && shortStr(request.resource.data.name, 120)
+                    && request.resource.data.status == 'pending';
+      allow update, delete: if isAdmin();
+    }
+
+    /* ── AUDIT LOG ───────────────────────────────────────────────────────────
+       Append-only. Even an admin cannot rewrite or erase history. */
+    match /auditLog/{id} {
+      allow read:   if isAdmin();
+      allow create: if isSignedIn();
+      allow update, delete: if false;
+    }
+
+    /* ── DEFAULT DENY ────────────────────────────────────────────────────────
+       Anything not explicitly listed above — including the retired mc_*
+       collections and any collection added later — is closed. */
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
