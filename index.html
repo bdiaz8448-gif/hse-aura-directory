@@ -628,9 +628,47 @@
   .notify-warn { font-size: 13px; color: #ff8a7a; margin: 0 0 10px; }
 
   /* Emergency top button — ruby red glass */
+  /* ── Equipment Tracker ── */
+  .eq-search {
+    width: 100%; height: 52px; font-size: 16px; padding: 0 16px; margin-bottom: 12px;
+    border-radius: 10px; border: 1px solid var(--border-dim);
+    background: rgba(255,255,255,0.06); color: var(--text-primary); outline: none;
+  }
+  .eq-search:focus { border-color: var(--cyan-border); }
+  .eq-stats { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+  .eq-stat {
+    flex: 1 1 22%; min-width: 96px; padding: 10px 12px; border-radius: 10px;
+    background: rgba(255,255,255,0.05); border: 1px solid var(--border-dim);
+  }
+  .eq-stat b { display: block; font-size: 21px; color: #ffffff; line-height: 1.1; }
+  .eq-stat span { font-size: 10.5px; text-transform: uppercase; letter-spacing: .04em; color: var(--text-secondary); }
+  .eq-card-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+  .eq-serial { font-family: ui-monospace, Menlo, monospace; font-size: 13px; color: #ffd98a; }
+  .eq-row { font-size: 13.5px; color: #ffffff; margin-top: 3px; }
+  .eq-row .lbl { color: var(--text-secondary); }
+  .eq-badge { font-size: 10.5px; font-weight: 800; padding: 3px 9px; border-radius: 20px; white-space: nowrap; }
+  .eq-badge.in  { background: rgba(46,160,67,0.18);  color: #7fe08d; border: 1px solid rgba(46,160,67,0.5); }
+  .eq-badge.out { background: rgba(192,57,43,0.18);  color: #ff9c8f; border: 1px solid rgba(192,57,43,0.5); }
+  .eq-badge.due { background: rgba(201,168,76,0.18); color: #e8c86a; border: 1px solid rgba(201,168,76,0.5); }
+  .eq-actions { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
+  .eq-actions a, .eq-actions button {
+    flex: 1 1 46%; height: 40px; font-size: 13px; font-weight: 700; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center; text-decoration: none;
+    border: 1px solid var(--border-dim); background: rgba(255,255,255,0.06); color: var(--text-primary);
+  }
+  .eq-empty { text-align: center; color: var(--text-secondary); padding: 26px 10px; font-size: 14px; }
+
   .emergency-top-btn {
+    /* Pinned to the top of the screen so the emergency route is reachable at
+       any scroll position. Ancestors were checked for overflow clipping first:
+       a sticky element silently stops working inside an overflow:hidden/auto
+       parent, and .wrap has neither. Background is raised to near-opaque
+       because 392 contact cards scroll underneath it. */
+    position: sticky;
+    top: 0;
+    z-index: 40;
     width: 100%;
-    background: linear-gradient(135deg, rgba(192,57,43,0.72), rgba(130,18,12,0.58));
+    background: linear-gradient(135deg, rgba(178,45,32,0.985), rgba(112,14,9,0.985));
     backdrop-filter: var(--blur-md);
     -webkit-backdrop-filter: var(--blur-md);
     color: #fff;
@@ -870,6 +908,7 @@
 
   <div class="tabs">
     <button class="tab-btn active" id="tabContacts" data-en="Contacts" data-es="Contactos">Contacts</button>
+    <button class="tab-btn" id="tabEquipment" data-en="&#128679; Equipment" data-es="&#128679; Equipos">&#128679; Equipment</button>
     <button class="tab-btn" id="tabDSM4" data-en="DSM4 Management" data-es="Gesti&oacute;n DSM4">DSM4 Management</button>
     <button class="tab-btn" id="tabDSM3" data-en="DSM3 Management" data-es="Gesti&oacute;n DSM3">DSM3 Management</button>
     <button class="tab-btn" id="tabWeekend" data-en="Weekend Jacobs" data-es="Jacobs Fin de Semana">Weekend Jacobs</button>
@@ -941,6 +980,23 @@
     </div>
     <div class="grid" id="dsm3Grid"></div>
     <div class="empty" id="dsm3EmptyState" style="display:none;" data-en="No DSM3 Jacobs personnel found." data-es="No se encontr&oacute; personal de Jacobs en DSM3.">No DSM3 Jacobs personnel found.</div>
+  </div>
+
+  <div class="section" id="sectionEquipment">
+    <p style="font-size:14px; color:#ffffff; margin:0 0 12px; line-height:1.45;" data-en="Don&rsquo;t know who a machine belongs to? Type the serial number and we&rsquo;ll show you the company and who&rsquo;s responsible." data-es="&iquest;No sabe de qui&eacute;n es una m&aacute;quina? Escriba el n&uacute;mero de serie y le mostraremos la empresa y el responsable.">Don&rsquo;t know who a machine belongs to? Type the serial number and we&rsquo;ll show you the company and who&rsquo;s responsible.</p>
+    <input type="text" id="eqSearch" class="eq-search" placeholder="Serial number, machine, or company..." data-en-ph="Serial number, machine, or company..." data-es-ph="N&uacute;mero de serie, m&aacute;quina o empresa...">
+    <div class="eq-stats" id="eqStats"></div>
+    <div class="filters">
+      <select id="eqCompanyFilter"><option value="">All companies</option></select>
+      <select id="eqStatusFilter">
+        <option value="">All statuses</option>
+        <option value="in">In service</option>
+        <option value="out">Out of service</option>
+      </select>
+      <button class="primary" id="addEquipmentBtn" style="display:none;">+ Add equipment</button>
+      <span class="count" id="eqCount"></span>
+    </div>
+    <div class="grid" id="equipmentGrid"></div>
   </div>
 
   <div class="section" id="sectionWeekend">
@@ -1176,6 +1232,20 @@
   }
 
   var contacts = [];
+  var equipment = [];
+  var AURA_EQUIP_KEY = 'aura_equipment_cache_v1';
+  function cacheEquipmentLocally(list){
+    if(!list || !list.length) return;
+    try{ localStorage.setItem(AURA_EQUIP_KEY, JSON.stringify({savedAt:Date.now(), equipment:list})); }catch(e){}
+  }
+  (function seedEquipmentFromCache(){
+    try{
+      var raw = localStorage.getItem(AURA_EQUIP_KEY);
+      if(!raw) return;
+      var o = JSON.parse(raw);
+      if(o && Array.isArray(o.equipment) && o.equipment.length) equipment = o.equipment;
+    }catch(e){}
+  })();
 
   /* ─── OFFLINE-FIRST EMERGENCY ROSTER ────────────────────────────────────
      The emergency roster MUST be available with no network, on first paint.
@@ -1502,12 +1572,173 @@
   function closeModal(){ document.getElementById('overlay').style.display = 'none'; }
 
   /* ---------- TAB SWITCHING ---------- */
+  /* ═══ EQUIPMENT TRACKER ═══════════════════════════════════════════════════
+     Readable by anyone: finding out whose machine is blocking your work is a
+     field question, not a privileged one. Every mutation goes through
+     requireUnlock(), which now means a real Firebase Auth sign-in, and the
+     database enforces it independently of this code. */
+  function eqIsOverdue(e){
+    if(!e.inspectionDue) return false;
+    var d = new Date(e.inspectionDue);
+    return !isNaN(d) && d < new Date(new Date().toDateString());
+  }
+  function eqMatches(e, q){
+    if(!q) return true;
+    q = q.toLowerCase();
+    return [e.name, e.type, e.serial, e.company, e.responsible, e.location]
+      .some(function(v){ return (v||'').toLowerCase().indexOf(q) !== -1; });
+  }
+  function renderEquipment(){
+    var grid = document.getElementById('equipmentGrid');
+    if(!grid) return;
+    var q  = (document.getElementById('eqSearch').value || '').trim();
+    var co = document.getElementById('eqCompanyFilter').value;
+    var st = document.getElementById('eqStatusFilter').value;
+
+    var addBtn = document.getElementById('addEquipmentBtn');
+    if(addBtn) addBtn.style.display = isUnlocked() ? 'inline-block' : 'none';
+
+    // company filter options, preserving the current choice
+    var sel = document.getElementById('eqCompanyFilter');
+    var companies = equipment.map(function(e){ return e.company || ''; })
+                             .filter(function(v,i,a){ return v && a.indexOf(v) === i; }).sort();
+    if(sel.options.length !== companies.length + 1){
+      sel.innerHTML = '<option value="">' + (uiLang === 'es' ? 'Todas las empresas' : 'All companies') + '</option>'
+        + companies.map(function(c){ return '<option value="'+escapeHtml(c)+'">'+escapeHtml(c)+'</option>'; }).join('');
+      sel.value = co;
+    }
+
+    var total = equipment.length;
+    var inSvc = equipment.filter(function(e){ return (e.status||'in') === 'in'; }).length;
+    var due   = equipment.filter(eqIsOverdue).length;
+    document.getElementById('eqStats').innerHTML =
+        '<div class="eq-stat"><b>'+total+'</b><span>'+(uiLang==='es'?'M&aacute;quinas':'Machines')+'</span></div>'
+      + '<div class="eq-stat"><b>'+inSvc+'</b><span>'+(uiLang==='es'?'En servicio':'In service')+'</span></div>'
+      + '<div class="eq-stat"><b>'+(total-inSvc)+'</b><span>'+(uiLang==='es'?'Fuera de servicio':'Out of service')+'</span></div>'
+      + '<div class="eq-stat"><b>'+due+'</b><span>'+(uiLang==='es'?'Inspecci&oacute;n vencida':'Inspection overdue')+'</span></div>';
+
+    var list = equipment.filter(function(e){
+      if(!eqMatches(e, q)) return false;
+      if(co && e.company !== co) return false;
+      if(st && (e.status||'in') !== st) return false;
+      return true;
+    }).sort(function(a,b){ return (a.name||'').toLowerCase() < (b.name||'').toLowerCase() ? -1 : 1; });
+
+    document.getElementById('eqCount').textContent = list.length + ' of ' + total;
+
+    if(!list.length){
+      grid.innerHTML = '<p class="eq-empty">' + (total
+        ? (uiLang==='es' ? 'Ninguna m&aacute;quina coincide con esa b&uacute;squeda.' : 'No machine matches that search.')
+        : (uiLang==='es' ? 'A&uacute;n no hay equipos registrados.' : 'No equipment on record yet.')) + '</p>';
+      return;
+    }
+
+    grid.innerHTML = list.map(function(e){
+      var st2 = (e.status||'in') === 'in';
+      var phone = (e.responsiblePhone||'').replace(/[^0-9+]/g,'');
+      var msg = encodeURIComponent(
+        'Hello ' + (e.responsible || '') + ' - your ' + (e.name || 'equipment')
+        + (e.serial ? ' (SN ' + e.serial + ')' : '')
+        + (e.location ? ' at ' + e.location : '')
+        + ' needs to be moved. Please advise. - Fujifilm Aura HSE');
+      return '<div class="card">'
+        + '<div class="eq-card-head">'
+          + '<div><p class="card-name">'+escapeHtml(e.name||'(unnamed)')+'</p>'
+          + '<p class="card-sub">'+escapeHtml(e.type||'')+(e.serial?' &middot; <span class="eq-serial">SN '+escapeHtml(e.serial)+'</span>':'')+'</p></div>'
+          + '<span class="eq-badge '+(st2?'in':'out')+'">'+(st2?(uiLang==='es'?'En servicio':'In service'):(uiLang==='es'?'Fuera':'Out'))+'</span>'
+        + '</div>'
+        + '<div class="eq-row"><span class="lbl">'+(uiLang==='es'?'Empresa:':'Belongs to:')+'</span> '+escapeHtml(e.company||'&mdash;')+'</div>'
+        + '<div class="eq-row"><span class="lbl">'+(uiLang==='es'?'Responsable:':'Responsible:')+'</span> '+escapeHtml(e.responsible||'&mdash;')+'</div>'
+        + '<div class="eq-row"><span class="lbl">'+(uiLang==='es'?'Ubicaci&oacute;n:':'Location:')+'</span> '+escapeHtml(e.location||'&mdash;')+'</div>'
+        + (e.inspectionDue ? '<div class="eq-row"><span class="lbl">'+(uiLang==='es'?'Inspecci&oacute;n:':'Inspection due:')+'</span> '+escapeHtml(e.inspectionDue)
+             + (eqIsOverdue(e) ? ' <span class="eq-badge due">'+(uiLang==='es'?'VENCIDA':'OVERDUE')+'</span>' : '') + '</div>' : '')
+        + '<div class="eq-actions">'
+          + (phone ? '<a href="tel:'+escapeHtml(phone)+'">&#128222; '+(uiLang==='es'?'Llamar':'Call')+'</a>' : '')
+          + (phone ? '<a href="sms:'+escapeHtml(phone)+'?&body='+msg+'">&#128172; '+(uiLang==='es'?'Pedir que lo muevan':'Ask to move it')+'</a>' : '')
+          + '<button onclick="editEquipment(\''+e.id+'\')">'+(uiLang==='es'?'Editar':'Edit')+'</button>'
+        + '</div>'
+      + '</div>';
+    }).join('');
+  }
+
+  function equipmentForm(existing){
+    var e = existing || {name:'',type:'',serial:'',company:'',responsible:'',responsiblePhone:'',location:'',status:'in',inspectionDue:''};
+    var isNew = !existing;
+    var body = document.getElementById('modalBody');
+    function f(id,label,val,ph){
+      return '<label style="display:block;font-size:12px;color:#8b949e;margin:10px 0 4px;">'+label+'</label>'
+        + '<input id="'+id+'" value="'+escapeHtml(val||'')+'" placeholder="'+(ph||'')+'" '
+        + 'style="width:100%;height:44px;padding:0 12px;border-radius:8px;border:1px solid rgba(255,255,255,0.18);'
+        + 'background:rgba(255,255,255,0.06);color:#fff;font-size:15px;">';
+    }
+    body.innerHTML =
+        '<p class="topname" style="color:#ffffff;">'+(isNew?'Add equipment':'Edit equipment')+'</p>'
+      + f('eq_name','Machine name', e.name, 'e.g. Genie Scissor Lift')
+      + f('eq_type','Type', e.type, 'Scissor Lift, Boom, Forklift...')
+      + f('eq_serial','Serial number', e.serial, 'SN')
+      + f('eq_company','Belongs to (company)', e.company, '')
+      + f('eq_resp','Responsible person', e.responsible, '')
+      + f('eq_phone','Their cell phone', e.responsiblePhone, '')
+      + f('eq_loc','Location', e.location, 'e.g. DSM-4 Ground Floor')
+      + f('eq_insp','Inspection due (YYYY-MM-DD)', e.inspectionDue, '')
+      + '<label style="display:block;font-size:12px;color:#8b949e;margin:10px 0 4px;">Status</label>'
+      + '<select id="eq_status" style="width:100%;">'
+        + '<option value="in"'  + ((e.status||'in')==='in' ?' selected':'') + '>In service</option>'
+        + '<option value="out"' + ((e.status||'in')==='out'?' selected':'') + '>Out of service</option>'
+      + '</select>'
+      + '<div class="modal-btns">'
+        + '<button class="primary" id="eqSaveBtn">Save</button>'
+        + (isNew ? '' : '<button class="danger" id="eqDelBtn">Delete</button>')
+        + '<button id="eqCancelBtn">Cancel</button>'
+      + '</div>';
+    document.getElementById('overlay').classList.remove('doc-viewer-open');
+    document.getElementById('overlay').style.display = 'flex';
+    document.getElementById('eqCancelBtn').addEventListener('click', closeModal);
+    document.getElementById('eqSaveBtn').addEventListener('click', function(){
+      var rec = {
+        name: document.getElementById('eq_name').value.trim(),
+        type: document.getElementById('eq_type').value.trim(),
+        serial: document.getElementById('eq_serial').value.trim(),
+        company: document.getElementById('eq_company').value.trim(),
+        responsible: document.getElementById('eq_resp').value.trim(),
+        responsiblePhone: document.getElementById('eq_phone').value.trim(),
+        location: document.getElementById('eq_loc').value.trim(),
+        inspectionDue: document.getElementById('eq_insp').value.trim(),
+        status: document.getElementById('eq_status').value,
+        updatedAt: new Date()
+      };
+      if(!rec.name){ alert('Machine name is required.'); return; }
+      var id = isNew ? ('eq_'+Date.now()+'_'+Math.random().toString(36).slice(2,7)) : existing.id;
+      db.collection('equipment').doc(id).set(rec, {merge:true}).then(function(){
+        auditEvent('equipment', (isNew?'added ':'edited ') + rec.name + (rec.serial?' (SN '+rec.serial+')':''));
+        closeModal();
+      }).catch(function(err){ alert('Could not save: ' + err.message); });
+    });
+    if(!isNew){
+      document.getElementById('eqDelBtn').addEventListener('click', function(){
+        if(!confirm('Delete "'+(e.name||'this machine')+'" from the tracker?')) return;
+        db.collection('equipment').doc(existing.id).delete().then(function(){
+          auditEvent('equipment', 'deleted ' + (e.name||''));
+          closeModal();
+        }).catch(function(err){ alert('Could not delete: ' + err.message); });
+      });
+    }
+  }
+  function editEquipment(id){
+    requireUnlock(function(){
+      var e = equipment.filter(function(x){ return x.id === id; })[0];
+      if(e) equipmentForm(e);
+    });
+  }
+  window.editEquipment = editEquipment;
+
   function setTab(tab){
     currentCustomTab = null;
     document.querySelectorAll('.crTabBtn').forEach(function(b){ b.classList.remove('active'); });
     var _sc = document.getElementById('sectionCustom');
     if(_sc) _sc.classList.remove('active');
     document.getElementById('tabContacts').classList.toggle('active', tab === 'contacts');
+    document.getElementById('tabEquipment').classList.toggle('active', tab === 'equipment');
     document.getElementById('tabDSM4').classList.toggle('active', tab === 'dsm4');
     document.getElementById('tabDSM3').classList.toggle('active', tab === 'dsm3');
     document.getElementById('tabWeekend').classList.toggle('active', tab === 'weekend');
@@ -1516,6 +1747,7 @@
     document.getElementById('tabDocs').classList.toggle('active', tab === 'docs');
     document.getElementById('tabIncidents').classList.toggle('active', tab === 'incidents');
     document.getElementById('sectionContacts').classList.toggle('active', tab === 'contacts');
+    document.getElementById('sectionEquipment').classList.toggle('active', tab === 'equipment');
     document.getElementById('sectionDSM4').classList.toggle('active', tab === 'dsm4');
     document.getElementById('sectionDSM3').classList.toggle('active', tab === 'dsm3');
     document.getElementById('sectionWeekend').classList.toggle('active', tab === 'weekend');
@@ -1524,6 +1756,7 @@
     document.getElementById('sectionDocs').classList.toggle('active', tab === 'docs');
     document.getElementById('sectionIncidents').classList.toggle('active', tab === 'incidents');
     document.getElementById('sectionEmergency').classList.toggle('active', tab === 'emergency');
+    if(tab === 'equipment') renderEquipment();
     if(tab === 'dsm4') renderDSM4();
     if(tab === 'dsm3') renderDSM3();
     if(tab === 'weekend') renderWeekend();
@@ -1533,6 +1766,7 @@
     if(tab === 'emergency') renderEmergencyContent();
   }
   document.getElementById('tabContacts').addEventListener('click', function(){ setTab('contacts'); });
+  document.getElementById('tabEquipment').addEventListener('click', function(){ setTab('equipment'); });
   document.getElementById('tabDSM4').addEventListener('click', function(){ setTab('dsm4'); });
   document.getElementById('tabDSM3').addEventListener('click', function(){ setTab('dsm3'); });
   document.getElementById('tabWeekend').addEventListener('click', function(){ setTab('weekend'); });
@@ -4342,7 +4576,7 @@
      Android hands it to Contacts, and desktop downloads it.
      Cards live in /c/<id>.vcf and are regenerated from Firestore.
      --------------------------------------------------------------- */
-  var AURA_BUILD = 'v32-secured';
+  var AURA_BUILD = 'v33-equipment';
 
   function saveToContactsBtnHtml(p){
     var href = 'c/' + encodeURIComponent(p.id) + '.vcf';
@@ -5265,6 +5499,13 @@
       updateSyncStatus(snapshot.metadata.fromCache && !snapshot.metadata.hasPendingWrites);
       if(document.getElementById('sectionEmergency').classList.contains('active')) renderEmergencyContent();
     }, function(err){ console.error('Contacts sync error:', err); updateSyncStatus(true); });
+    db.collection('equipment').onSnapshot({includeMetadataChanges:true}, function(snapshot){
+      var incoming = snapshot.docs.map(function(doc){ var d = doc.data(); d.id = doc.id; return d; });
+      if(!incoming.length && equipment.length){ return; }   // never let an empty snapshot wipe a good list
+      equipment = incoming;
+      cacheEquipmentLocally(equipment);
+      if(document.getElementById('sectionEquipment').classList.contains('active')) renderEquipment();
+    }, function(err){ console.warn('equipment sync:', err.message); });
     db.collection('dsm4').onSnapshot({includeMetadataChanges:true}, function(snapshot){
       dsm4 = snapshot.docs.map(function(doc){ var d = doc.data(); d.id = doc.id; return d; });
       renderDSM4();
@@ -5356,6 +5597,14 @@
         : 'Could not update PIN: ' + err.message);
     });
   });
+  ['eqSearch','eqCompanyFilter','eqStatusFilter'].forEach(function(id){
+    var el = document.getElementById(id);
+    if(el) el.addEventListener('input', renderEquipment);
+    if(el) el.addEventListener('change', renderEquipment);
+  });
+  var _aeb = document.getElementById('addEquipmentBtn');
+  if(_aeb) _aeb.addEventListener('click', function(){ requireUnlock(function(){ equipmentForm(null); }); });
+
   loadDocs();
 })();
 </script>

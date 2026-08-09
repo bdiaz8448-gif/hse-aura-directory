@@ -83,6 +83,17 @@ service cloud.firestore {
     match /cqv/{id}        { allow read: if true; allow write: if isAdmin(); }
     match /nightshift/{id} { allow read: if true; allow write: if isAdmin(); }
 
+    /* ── EQUIPMENT TRACKER ───────────────────────────────────────────────────
+       Public read on purpose. "Whose lift is this and who do I call to move
+       it" is a question a worker needs answered on the spot, without an
+       account, the same reasoning that keeps the emergency roster open.
+       Nothing here is confidential: machine, serial, owning company, the
+       responsible person and where it sits. Editing is admin-only. */
+    match /equipment/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
     // ── SAFETY REFERENCE DOCS — public read, admin write ─────────────────────
     match /permitDocs/{id} { allow read: if true; allow write: if isAdmin(); }
 
