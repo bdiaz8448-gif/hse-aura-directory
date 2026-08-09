@@ -678,6 +678,50 @@
     border-color: rgba(214,180,92,0.88);
     box-shadow: 0 0 0 3px rgba(201,168,76,0.20), inset 0 1px 0 rgba(255,255,255,0.20);
   }
+  /* Helper text under a field: explains WHY the field matters, in the words a
+     person in the field would use. */
+  #modalBody.eq-form .eq-hint {
+    margin: 6px 2px 0;
+    font-size: 12.5px;
+    line-height: 1.4;
+    color: rgba(255,255,255,0.62);
+  }
+  #modalBody.eq-form textarea {
+    width: 100%;
+    min-height: 84px;
+    padding: 11px 13px;
+    font: inherit;
+    font-size: 15px;
+    color: #ffffff;
+    border-radius: 11px;
+    border: 1.5px solid rgba(255,255,255,0.30);
+    background: linear-gradient(180deg, rgba(255,255,255,0.085), rgba(255,255,255,0.032));
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.14);
+    outline: none;
+    resize: vertical;
+  }
+  #modalBody.eq-form textarea:focus {
+    border-color: rgba(214,180,92,0.88);
+    box-shadow: 0 0 0 3px rgba(201,168,76,0.20);
+  }
+  /* Make the native date picker legible on a dark panel */
+  #modalBody.eq-form input[type="date"] { color-scheme: dark; }
+  #modalBody.eq-form input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(78%) sepia(38%) saturate(560%) hue-rotate(2deg);
+    cursor: pointer;
+  }
+  #modalBody.eq-form .eq-enter-hint {
+    margin: 12px 0 0;
+    text-align: center;
+    font-size: 12.5px;
+    color: rgba(255,255,255,0.55);
+  }
+  /* Never stretch a checkbox or radio to full field height — this guard is what
+     lets the same treatment be reused on forms that contain them. */
+  #modalBody.eq-form input[type="checkbox"],
+  #modalBody.eq-form input[type="radio"] {
+    width: 18px; height: 18px; min-height: 0; padding: 0;
+  }
   #modalBody.eq-form .modal-btns { margin-top: 24px; gap: 10px; }
   #modalBody.eq-form .modal-btns button {
     height: 52px;
@@ -687,32 +731,40 @@
     letter-spacing: .3px;
     white-space: normal;
   }
-  /* Save — brushed gold with a lit top edge */
+  /* Save — green, matching the permit portal. Colour carries the meaning:
+     green go, red stop, so it reads the same way at a glance in either app. */
   #modalBody.eq-form #eqSaveBtn {
-    background: linear-gradient(180deg, #e8c877 0%, #c9a84c 46%, #a5822c 100%);
-    border: 1px solid rgba(255,228,158,0.70);
-    color: #241a00;
-    text-shadow: 0 1px 0 rgba(255,255,255,0.30);
-    box-shadow: inset 0 1px 0 rgba(255,255,255,0.60), inset 0 -1px 0 rgba(0,0,0,0.22),
-                0 7px 20px rgba(201,168,76,0.34);
+    background: linear-gradient(180deg, rgba(40,120,62,0.55), rgba(20,72,36,0.42));
+    border: 1.5px solid rgba(86,214,122,0.72);
+    color: #9dffb4;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.20), 0 6px 18px rgba(40,150,70,0.24);
   }
-  #modalBody.eq-form #eqSaveBtn:hover { filter: brightness(1.07); }
-  #modalBody.eq-form #eqSaveBtn:active { filter: brightness(0.96); transform: translateY(1px); }
-  /* Cancel — polished glass */
+  #modalBody.eq-form #eqSaveBtn:hover {
+    background: linear-gradient(180deg, rgba(52,150,78,0.68), rgba(26,92,46,0.52));
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.26), 0 8px 24px rgba(40,150,70,0.36);
+  }
+  #modalBody.eq-form #eqSaveBtn:active { transform: translateY(1px); filter: brightness(0.96); }
+  /* Cancel — red, so leaving without saving is never the accidental tap */
   #modalBody.eq-form #eqCancelBtn {
-    background: linear-gradient(180deg, rgba(255,255,255,0.135), rgba(255,255,255,0.045));
-    border: 1.5px solid rgba(255,255,255,0.30);
-    color: #ffffff;
-    box-shadow: inset 0 1px 0 rgba(255,255,255,0.26), 0 4px 14px rgba(0,0,0,0.34);
-  }
-  #modalBody.eq-form #eqCancelBtn:hover { background: linear-gradient(180deg, rgba(255,255,255,0.19), rgba(255,255,255,0.07)); }
-  /* Delete — restrained, deliberately less inviting than Save */
-  #modalBody.eq-form #eqDelBtn {
-    background: linear-gradient(180deg, rgba(196,58,44,0.34), rgba(132,24,17,0.24));
-    border: 1.5px solid rgba(255,124,108,0.48);
+    background: linear-gradient(180deg, rgba(150,44,34,0.42), rgba(96,20,14,0.30));
+    border: 1.5px solid rgba(255,124,108,0.60);
     color: #ffb3a8;
-    box-shadow: inset 0 1px 0 rgba(255,255,255,0.14);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.16), 0 4px 14px rgba(0,0,0,0.34);
   }
+  #modalBody.eq-form #eqCancelBtn:hover { background: linear-gradient(180deg, rgba(178,54,42,0.55), rgba(112,24,17,0.40)); }
+  /* Delete — full width on its own row, visually separated from Save/Cancel so
+     it cannot be hit by muscle memory. */
+  #modalBody.eq-form #eqDelBtn {
+    flex-basis: 100%;
+    margin-top: 4px;
+    background: linear-gradient(180deg, rgba(120,32,24,0.34), rgba(70,14,10,0.24));
+    border: 1.5px solid rgba(255,124,108,0.34);
+    color: #ff9c8f;
+    font-size: 14px;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.10);
+  }
+  #modalBody.eq-form #eqDelBtn:hover { border-color: rgba(255,124,108,0.62); color: #ffb3a8; }
 
   /* ── Equipment Tracker ── */
   .eq-search {
@@ -735,6 +787,15 @@
   .eq-badge { font-size: 10.5px; font-weight: 800; padding: 3px 9px; border-radius: 20px; white-space: nowrap; }
   .eq-badge.in  { background: rgba(46,160,67,0.18);  color: #7fe08d; border: 1px solid rgba(46,160,67,0.5); }
   .eq-badge.out { background: rgba(192,57,43,0.18);  color: #ff9c8f; border: 1px solid rgba(192,57,43,0.5); }
+  .eq-badge.off { background: rgba(140,140,150,0.20); color: #c9ccd4; border: 1px solid rgba(180,184,196,0.45); }
+  .eq-row.insp-yellow { color: #ffd98a; }
+  .eq-row.insp-orange { color: #ffb066; }
+  .eq-row.insp-red    { color: #ff9c8f; font-weight: 700; }
+  .eq-insp-tag {
+    font-size: 10.5px; font-weight: 800; padding: 2px 7px; border-radius: 20px;
+    margin-left: 6px; background: rgba(255,255,255,0.10); border: 1px solid currentColor;
+  }
+  .eq-stat { flex: 1 1 18%; }
   .eq-badge.due { background: rgba(201,168,76,0.18); color: #e8c86a; border: 1px solid rgba(201,168,76,0.5); }
   .eq-actions { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
   .eq-actions a, .eq-actions button {
@@ -1076,8 +1137,10 @@
       <select id="eqCompanyFilter"><option value="">All companies</option></select>
       <select id="eqStatusFilter">
         <option value="">All statuses</option>
-        <option value="in">In service</option>
-        <option value="out">Out of service</option>
+        <option value="in">In Service</option>
+        <option value="out">Out of Service</option>
+        <option value="removed">Removed from Site</option>
+        <option value="rental">Rental Returned</option>
       </select>
       <button class="primary" id="addEquipmentBtn" style="display:none;">+ Add equipment</button>
       <span class="count" id="eqCount"></span>
@@ -1663,6 +1726,41 @@
      field question, not a privileged one. Every mutation goes through
      requireUnlock(), which now means a real Firebase Auth sign-in, and the
      database enforces it independently of this code. */
+  var EQ_STATUSES = ['in','out','removed','rental'];
+  function eqStatusLabel(k){
+    var en = {in:'In Service', out:'Out of Service', removed:'Removed from Site', rental:'Rental Returned'};
+    var es = {in:'En Servicio', out:'Fuera de Servicio', removed:'Retirado del Sitio', rental:'Renta Devuelta'};
+    return (uiLang === 'es' ? es : en)[k] || k;
+  }
+  function eqStatusClass(k){ return k === 'in' ? 'in' : (k === 'out' ? 'out' : 'off'); }
+  function eqOnSite(e){ var s = e.status || 'in'; return s === 'in' || s === 'out'; }
+
+  /* Days until the next inspection, so a card can warn before it lapses
+     rather than only after. Mirrors the permit portal: yellow at 30 days,
+     orange at 15, red once overdue. */
+  function eqDaysToInspection(e){
+    if(!e.inspectionDue) return null;
+    var d = new Date(e.inspectionDue + 'T00:00:00');
+    if(isNaN(d)) return null;
+    var today = new Date(); today.setHours(0,0,0,0);
+    return Math.round((d - today) / 86400000);
+  }
+  function eqInspectionClass(e){
+    var n = eqDaysToInspection(e);
+    if(n === null) return '';
+    if(n < 0)  return 'insp-red';
+    if(n <= 15) return 'insp-orange';
+    if(n <= 30) return 'insp-yellow';
+    return '';
+  }
+  function eqInspectionNote(e){
+    var n = eqDaysToInspection(e);
+    if(n === null) return '';
+    if(n < 0)  return uiLang==='es' ? 'VENCIDA hace '+Math.abs(n)+' d' : 'OVERDUE by '+Math.abs(n)+'d';
+    if(n === 0) return uiLang==='es' ? 'VENCE HOY' : 'DUE TODAY';
+    if(n <= 30) return uiLang==='es' ? 'en '+n+' d' : 'in '+n+'d';
+    return '';
+  }
   function eqIsOverdue(e){
     if(!e.inspectionDue) return false;
     var d = new Date(e.inspectionDue);
@@ -1694,13 +1792,16 @@
       sel.value = co;
     }
 
-    var total = equipment.length;
-    var inSvc = equipment.filter(function(e){ return (e.status||'in') === 'in'; }).length;
-    var due   = equipment.filter(eqIsOverdue).length;
+    var total   = equipment.length;
+    var inSvc   = equipment.filter(function(e){ return (e.status||'in') === 'in'; }).length;
+    var outSvc  = equipment.filter(function(e){ return (e.status||'in') === 'out'; }).length;
+    var offSite = equipment.filter(function(e){ return !eqOnSite(e); }).length;
+    var due     = equipment.filter(eqIsOverdue).length;
     document.getElementById('eqStats').innerHTML =
         '<div class="eq-stat"><b>'+total+'</b><span>'+(uiLang==='es'?'M&aacute;quinas':'Machines')+'</span></div>'
       + '<div class="eq-stat"><b>'+inSvc+'</b><span>'+(uiLang==='es'?'En servicio':'In service')+'</span></div>'
-      + '<div class="eq-stat"><b>'+(total-inSvc)+'</b><span>'+(uiLang==='es'?'Fuera de servicio':'Out of service')+'</span></div>'
+      + '<div class="eq-stat"><b>'+outSvc+'</b><span>'+(uiLang==='es'?'Fuera de servicio':'Out of service')+'</span></div>'
+      + '<div class="eq-stat"><b>'+offSite+'</b><span>'+(uiLang==='es'?'Fuera del sitio':'Off site')+'</span></div>'
       + '<div class="eq-stat"><b>'+due+'</b><span>'+(uiLang==='es'?'Inspecci&oacute;n vencida':'Inspection overdue')+'</span></div>';
 
     var list = equipment.filter(function(e){
@@ -1720,7 +1821,7 @@
     }
 
     grid.innerHTML = list.map(function(e){
-      var st2 = (e.status||'in') === 'in';
+      var stKey = e.status || 'in';
       var phone = (e.responsiblePhone||'').replace(/[^0-9+]/g,'');
       var msg = encodeURIComponent(
         'Hello ' + (e.responsible || '') + ' - your ' + (e.name || 'equipment')
@@ -1731,13 +1832,13 @@
         + '<div class="eq-card-head">'
           + '<div><p class="card-name">'+escapeHtml(e.name||'(unnamed)')+'</p>'
           + '<p class="card-sub">'+escapeHtml(e.type||'')+(e.serial?' &middot; <span class="eq-serial">SN '+escapeHtml(e.serial)+'</span>':'')+'</p></div>'
-          + '<span class="eq-badge '+(st2?'in':'out')+'">'+(st2?(uiLang==='es'?'En servicio':'In service'):(uiLang==='es'?'Fuera':'Out'))+'</span>'
+          + '<span class="eq-badge '+eqStatusClass(stKey)+'">'+eqStatusLabel(stKey)+'</span>'
         + '</div>'
         + '<div class="eq-row"><span class="lbl">'+(uiLang==='es'?'Empresa:':'Belongs to:')+'</span> '+escapeHtml(e.company||'&mdash;')+'</div>'
         + '<div class="eq-row"><span class="lbl">'+(uiLang==='es'?'Responsable:':'Responsible:')+'</span> '+escapeHtml(e.responsible||'&mdash;')+'</div>'
         + '<div class="eq-row"><span class="lbl">'+(uiLang==='es'?'Ubicaci&oacute;n:':'Location:')+'</span> '+escapeHtml(e.location||'&mdash;')+'</div>'
-        + (e.inspectionDue ? '<div class="eq-row"><span class="lbl">'+(uiLang==='es'?'Inspecci&oacute;n:':'Inspection due:')+'</span> '+escapeHtml(e.inspectionDue)
-             + (eqIsOverdue(e) ? ' <span class="eq-badge due">'+(uiLang==='es'?'VENCIDA':'OVERDUE')+'</span>' : '') + '</div>' : '')
+        + (e.inspectionDue ? '<div class="eq-row '+eqInspectionClass(e)+'"><span class="lbl">'+(uiLang==='es'?'Inspecci&oacute;n:':'Inspection due:')+'</span> '+escapeHtml(e.inspectionDue)
+             + (eqInspectionNote(e) ? ' <span class="eq-insp-tag">'+eqInspectionNote(e)+'</span>' : '') + '</div>' : '')
         + '<div class="eq-actions">'
           + (phone ? '<a href="tel:'+escapeHtml(phone)+'">&#128222; '+(uiLang==='es'?'Llamar':'Call')+'</a>' : '')
           + (phone ? '<a href="sms:'+escapeHtml(phone)+'?&body='+msg+'">&#128172; '+(uiLang==='es'?'Pedir que lo muevan':'Ask to move it')+'</a>' : '')
@@ -1748,38 +1849,75 @@
   }
 
   function equipmentForm(existing){
-    var e = existing || {name:'',type:'',serial:'',company:'',responsible:'',responsiblePhone:'',location:'',status:'in',inspectionDue:''};
+    var e = existing || {name:'',type:'',serial:'',company:'',responsible:'',responsiblePhone:'',location:'',status:'in',inspectionDue:'',notes:''};
     var isNew = !existing;
     var body = document.getElementById('modalBody');
-    function f(id,label,val,ph){
-      return '<label>'+label+'</label>'
-        + '<input id="'+id+'" value="'+escapeHtml(val||'')+'" placeholder="'+(ph||'')+'">';
+    var es = (uiLang === 'es');
+
+    /* Pick-or-type: offer what is already on the project so spellings stay
+       consistent, without stopping anyone entering something new. */
+    function uniq(key){
+      return equipment.map(function(x){ return (x[key]||'').trim(); })
+        .filter(function(v,i,a){ return v && a.indexOf(v) === i; }).sort();
     }
+    function dl(id, vals){
+      return '<datalist id="'+id+'">' + vals.map(function(v){ return '<option value="'+escapeHtml(v)+'">'; }).join('') + '</datalist>';
+    }
+    function fld(id, label, val, ph, hint, listId){
+      return '<label for="'+id+'">'+label+'</label>'
+        + '<input id="'+id+'" value="'+escapeHtml(val||'')+'" placeholder="'+(ph||'')+'"'
+        + (listId ? ' list="'+listId+'" autocomplete="off"' : '') + '>'
+        + (hint ? '<p class="eq-hint">'+hint+'</p>' : '');
+    }
+
+    body.className = 'eq-form';
     body.innerHTML =
-        '<p class="topname" style="color:#ffffff;">'+(isNew?'Add equipment':'Edit equipment')+'</p>'
-      + f('eq_name','Machine name', e.name, 'e.g. Genie Scissor Lift')
-      + f('eq_type','Type', e.type, 'Scissor Lift, Boom, Forklift...')
-      + f('eq_serial','Serial number', e.serial, 'SN')
-      + f('eq_company','Belongs to (company)', e.company, '')
-      + f('eq_resp','Responsible person', e.responsible, '')
-      + f('eq_phone','Their cell phone', e.responsiblePhone, '')
-      + f('eq_loc','Location', e.location, 'e.g. DSM-4 Ground Floor')
-      + f('eq_insp','Inspection due (YYYY-MM-DD)', e.inspectionDue, '')
-      + '<label>Status</label>'
+        '<p class="topname">'+(isNew ? (es?'Agregar Equipo':'Add Equipment') : (es?'Editar Equipo':'Edit Equipment'))+'</p>'
+      + dl('dlType', uniq('type')) + dl('dlCompany', uniq('company')) + dl('dlLoc', uniq('location'))
+      + fld('eq_type', es?'Tipo de Equipo':'Equipment Type', e.type,
+            es?'Escriba o elija de la lista...':'Type it, or pick from the list...',
+            es?'Elija de la lista o escriba el suyo.':'Pick from the list or type your own.', 'dlType')
+      + fld('eq_name', es?'Marca / Modelo (ej. Genie GS-1930)':'Make / Model (e.g. Genie GS-1930)', e.name, '', '')
+      + fld('eq_serial', es?'N&uacute;mero de Serie':'Serial Number', e.serial, '',
+            es?'El n&uacute;mero de la placa o calcoman&iacute;a de la m&aacute;quina &mdash; as&iacute; la encontrar&aacute;n.'
+              :'The number on the machine&rsquo;s plate or sticker &mdash; this is how people will find it.')
+      + fld('eq_company', es?'Socio Comercial (propietario)':'Trade Partner (owner)', e.company,
+            es?'Escriba o elija de la lista...':'Type it, or pick from the list...',
+            es?'Empiece a escribir &mdash; su empresa aparecer&aacute;; o escriba una nueva.'
+              :'Start typing &mdash; the company will appear; or type a new one.', 'dlCompany')
+      + fld('eq_resp', es?'Persona Responsable':'Person Responsible', e.responsible, '', '')
+      + fld('eq_phone', es?'Su Tel&eacute;fono Celular':'Their Cell Phone', e.responsiblePhone, '',
+            es?'Permite llamar o enviar un mensaje directamente desde la tarjeta.'
+              :'Lets anyone call or text them straight from the card.')
+      + fld('eq_loc', es?'Ubicaci&oacute;n Habitual (edificio / piso / &aacute;rea)':'Usual Location (building / floor / area)',
+            e.location, 'DSM-4 Ground Floor', '', 'dlLoc')
+      + '<label for="eq_status">'+(es?'Estado':'Status')+'</label>'
       + '<select id="eq_status">'
-        + '<option value="in"'  + ((e.status||'in')==='in' ?' selected':'') + '>In service</option>'
-        + '<option value="out"' + ((e.status||'in')==='out'?' selected':'') + '>Out of service</option>'
+        + EQ_STATUSES.map(function(k){
+            return '<option value="'+k+'"'+(((e.status||'in')===k)?' selected':'')+'>'+eqStatusLabel(k)+'</option>';
+          }).join('')
       + '</select>'
+      + '<label for="eq_insp">'+(es?'Pr&oacute;xima Inspecci&oacute;n (opcional)':'Next Inspection Due (optional)')+'</label>'
+      + '<input type="date" id="eq_insp" value="'+escapeHtml(e.inspectionDue||'')+'">'
+      + '<p class="eq-hint">'+(es
+          ? 'Elija del calendario. La tarjeta se pone amarilla a 30 d&iacute;as, naranja a 15, roja al vencer.'
+          : 'Pick from the calendar. The card turns yellow 30 days out, orange 15 days out, red when overdue.')+'</p>'
+      + '<label for="eq_notes">'+(es?'Notas':'Notes')+'</label>'
+      + '<textarea id="eq_notes" rows="3"></textarea>'
       + '<div class="modal-btns">'
-        + '<button class="primary" id="eqSaveBtn">Save</button>'
-        + (isNew ? '' : '<button class="danger" id="eqDelBtn">Delete</button>')
-        + '<button id="eqCancelBtn">Cancel</button>'
-      + '</div>';
+        + '<button id="eqSaveBtn">&#10003; '+(es?'Guardar':'Save')+'</button>'
+        + '<button id="eqCancelBtn">'+(es?'Cancelar':'Cancel')+'</button>'
+        + (isNew ? '' : '<button id="eqDelBtn" class="full-row">'+(es?'Eliminar este equipo':'Delete this equipment')+'</button>')
+      + '</div>'
+      + '<p class="eq-enter-hint">'+(es?'Presione <b>Enter</b> para guardar.':'Press <b>Enter</b> to save.')+'</p>';
+
+    // set textarea via value, never innerHTML, so notes cannot inject markup
+    document.getElementById('eq_notes').value = e.notes || '';
+
     document.getElementById('overlay').classList.remove('doc-viewer-open');
-    document.getElementById('modalBody').classList.add('eq-form');
     document.getElementById('overlay').style.display = 'flex';
-    document.getElementById('eqCancelBtn').addEventListener('click', closeModal);
-    document.getElementById('eqSaveBtn').addEventListener('click', function(){
+
+    function save(){
       var rec = {
         name: document.getElementById('eq_name').value.trim(),
         type: document.getElementById('eq_type').value.trim(),
@@ -1790,25 +1928,44 @@
         location: document.getElementById('eq_loc').value.trim(),
         inspectionDue: document.getElementById('eq_insp').value.trim(),
         status: document.getElementById('eq_status').value,
+        notes: document.getElementById('eq_notes').value.trim(),
         updatedAt: new Date()
       };
-      if(!rec.name){ alert('Machine name is required.'); return; }
+      if(!rec.name && !rec.type){
+        alert(es?'Escriba al menos el tipo o la marca/modelo.':'Enter at least the type or the make/model.');
+        return;
+      }
+      if(!rec.name) rec.name = rec.type;
       var id = isNew ? ('eq_'+Date.now()+'_'+Math.random().toString(36).slice(2,7)) : existing.id;
       db.collection('equipment').doc(id).set(rec, {merge:true}).then(function(){
         auditEvent('equipment', (isNew?'added ':'edited ') + rec.name + (rec.serial?' (SN '+rec.serial+')':''));
         closeModal();
       }).catch(function(err){ alert('Could not save: ' + err.message); });
+    }
+
+    document.getElementById('eqSaveBtn').addEventListener('click', save);
+    document.getElementById('eqCancelBtn').addEventListener('click', closeModal);
+    // Enter saves from any single-line field; the notes box keeps its newlines.
+    body.querySelectorAll('input').forEach(function(inp){
+      inp.addEventListener('keydown', function(ev){
+        if(ev.key === 'Enter'){ ev.preventDefault(); save(); }
+      });
     });
     if(!isNew){
       document.getElementById('eqDelBtn').addEventListener('click', function(){
-        if(!confirm('Delete "'+(e.name||'this machine')+'" from the tracker?')) return;
+        var q = es ? ('Eliminar "'+(e.name||'este equipo')+'" del rastreador?')
+                   : ('Delete "'+(e.name||'this machine')+'" from the tracker?');
+        if(!confirm(q)) return;
         db.collection('equipment').doc(existing.id).delete().then(function(){
           auditEvent('equipment', 'deleted ' + (e.name||''));
           closeModal();
         }).catch(function(err){ alert('Could not delete: ' + err.message); });
       });
     }
+    var first = document.getElementById('eq_type');
+    if(first) setTimeout(function(){ try{ first.focus(); }catch(err){} }, 60);
   }
+
   function editEquipment(id){
     requireUnlock(function(){
       var e = equipment.filter(function(x){ return x.id === id; })[0];
@@ -4661,7 +4818,7 @@
      Android hands it to Contacts, and desktop downloads it.
      Cards live in /c/<id>.vcf and are regenerated from Firestore.
      --------------------------------------------------------------- */
-  var AURA_BUILD = 'v34-equipment-polish';
+  var AURA_BUILD = 'v35-equipment-portal-parity';
 
   function saveToContactsBtnHtml(p){
     var href = 'c/' + encodeURIComponent(p.id) + '.vcf';
