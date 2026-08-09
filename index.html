@@ -710,6 +710,32 @@
     filter: invert(78%) sepia(38%) saturate(560%) hue-rotate(2deg);
     cursor: pointer;
   }
+  #modalBody.eq-form .eq-combo { position: relative; }
+  #modalBody.eq-form .eq-combo input { padding-right: 44px; }
+  #modalBody.eq-form .eq-combo-caret {
+    position: absolute; right: 6px; top: 23px; transform: translateY(-50%);
+    width: 32px; height: 32px; padding: 0; border: none; background: transparent;
+    color: #d6b45c; font-size: 14px; line-height: 1; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; border-radius: 8px;
+  }
+  #modalBody.eq-form .eq-combo-caret:hover { background: rgba(214,180,92,0.16); }
+  #modalBody.eq-form .eq-combo.open .eq-combo-caret { transform: translateY(-50%) rotate(180deg); }
+  #modalBody.eq-form .eq-combo-list {
+    display: none; position: absolute; z-index: 6; left: 0; right: 0; top: 52px;
+    max-height: 244px; overflow-y: auto; margin: 0; padding: 5px; list-style: none;
+    background: linear-gradient(145deg, rgba(27,32,45,0.995), rgba(12,15,24,0.995));
+    border: 1.5px solid rgba(255,255,255,0.26); border-radius: 12px;
+    box-shadow: 0 18px 46px rgba(0,0,0,0.74), inset 0 1px 0 rgba(255,255,255,0.14);
+  }
+  #modalBody.eq-form .eq-combo.open .eq-combo-list { display: block; }
+  #modalBody.eq-form .eq-combo-list li {
+    padding: 11px 12px; border-radius: 8px; font-size: 15px; color: #ffffff; cursor: pointer;
+  }
+  #modalBody.eq-form .eq-combo-list li:hover { background: rgba(214,180,92,0.20); }
+  #modalBody.eq-form .eq-combo-list li.eq-combo-none {
+    color: rgba(255,255,255,0.58); font-size: 13px; cursor: default;
+  }
+  #modalBody.eq-form .eq-combo-list li.eq-combo-none:hover { background: transparent; }
   #modalBody.eq-form .eq-enter-hint {
     margin: 12px 0 0;
     text-align: center;
@@ -1727,6 +1753,88 @@
      requireUnlock(), which now means a real Firebase Auth sign-in, and the
      database enforces it independently of this code. */
   var EQ_STATUSES = ['in','out','removed','rental'];
+
+  /* The starting menu of equipment types. This is a floor, not a ceiling:
+     eqTypeOptions() merges this list with every type already saved on the
+     project, so anything a person types once becomes a menu choice for
+     everyone afterwards, live, with no code change. */
+  var EQ_TYPES = ['Scissor Lift','Boom Lift','Aerial Lift','Forklift','Telehandler',
+                  'Crane','Buggy / Cart','Skid Steer','Excavator','Generator',
+                  'Compressor','Welder','Light Tower','Pump','Scaffold','Other'];
+
+  function eqUniq(key){
+    return equipment.map(function(x){ return (x[key]||'').trim(); })
+      .filter(function(v){ return !!v; });
+  }
+  function eqMerge(){
+    var out = [], seen = {};
+    Array.prototype.slice.call(arguments).forEach(function(arr){
+      (arr||[]).forEach(function(v){
+        var k = (v||'').trim(); if(!k) return;
+        var low = k.toLowerCase();
+        if(!seen[low]){ seen[low] = 1; out.push(k); }
+      });
+    });
+    return out.sort(function(a,b){ return a.toLowerCase() < b.toLowerCase() ? -1 : 1; });
+  }
+  function eqTypeOptions(){    return eqMerge(EQ_TYPES, eqUniq('type')); }
+  function eqCompanyOptions(){ return eqMerge(eqUniq('company'),
+                                 contacts.map(function(c){ return (c.company||'').trim(); })); }
+  function eqLocationOptions(){ return eqMerge(eqUniq('location')); }
+
+  /* A combo box: a normal text field you can type anything into, with a caret
+     that opens the full menu. A native <datalist> was the first attempt, but on
+     iOS Safari it only surfaces as a thin suggestion strip and gives no visible
+     "there is a list here" affordance - which is the whole point. */
+  var eqOpenCombos = [];
+  function eqComboHtml(id, val, ph){
+    return '<div class="eq-combo" id="'+id+'_wrap">'
+         +   '<input id="'+id+'" value="'+escapeHtml(val||'')+'" placeholder="'+(ph||'')+'" autocomplete="off">'
+         +   '<button type="button" class="eq-combo-caret" tabindex="-1" aria-label="Show list">&#9662;</button>'
+         +   '<ul class="eq-combo-list" id="'+id+'_list"></ul>'
+         + '</div>';
+  }
+  function eqWireCombo(id, getOptions){
+    var wrap = document.getElementById(id+'_wrap');
+    var inp  = document.getElementById(id);
+    var list = document.getElementById(id+'_list');
+    if(!wrap || !inp || !list) return;
+    var caret = wrap.querySelector('.eq-combo-caret');
+
+    function draw(filter){
+      var f = (filter||'').trim().toLowerCase();
+      var opts = getOptions().filter(function(o){ return !f || o.toLowerCase().indexOf(f) !== -1; });
+      if(opts.length){
+        list.innerHTML = opts.map(function(o){ return '<li>'+escapeHtml(o)+'</li>'; }).join('');
+        Array.prototype.forEach.call(list.querySelectorAll('li'), function(li){
+          li.addEventListener('mousedown', function(ev){
+            ev.preventDefault();            // fire before blur closes the list
+            inp.value = li.textContent;
+            close();
+          });
+        });
+      } else {
+        list.innerHTML = '<li class="eq-combo-none">'
+          + (uiLang === 'es' ? 'Sin coincidencias &mdash; se guardar&aacute; como nuevo.'
+                             : 'No match &mdash; what you typed will be saved as a new one.')
+          + '</li>';
+      }
+    }
+    function open(f){ draw(f); wrap.classList.add('open'); }
+    function close(){ wrap.classList.remove('open'); }
+
+    caret.addEventListener('click', function(){
+      if(wrap.classList.contains('open')){ close(); }
+      else { open(''); inp.focus(); }
+    });
+    inp.addEventListener('focus', function(){ open(inp.value); });
+    inp.addEventListener('input', function(){ open(inp.value); });
+    inp.addEventListener('blur',  function(){ setTimeout(close, 130); });
+    inp.addEventListener('keydown', function(ev){ if(ev.key === 'Escape'){ close(); } });
+
+    eqOpenCombos.push({ isOpen: function(){ return wrap.classList.contains('open'); }, close: close });
+  }
+
   function eqStatusLabel(k){
     var en = {in:'In Service', out:'Out of Service', removed:'Removed from Site', rental:'Rental Returned'};
     var es = {in:'En Servicio', out:'Fuera de Servicio', removed:'Retirado del Sitio', rental:'Renta Devuelta'};
@@ -1854,29 +1962,20 @@
     var body = document.getElementById('modalBody');
     var es = (uiLang === 'es');
 
-    /* Pick-or-type: offer what is already on the project so spellings stay
-       consistent, without stopping anyone entering something new. */
-    function uniq(key){
-      return equipment.map(function(x){ return (x[key]||'').trim(); })
-        .filter(function(v,i,a){ return v && a.indexOf(v) === i; }).sort();
-    }
-    function dl(id, vals){
-      return '<datalist id="'+id+'">' + vals.map(function(v){ return '<option value="'+escapeHtml(v)+'">'; }).join('') + '</datalist>';
-    }
-    function fld(id, label, val, ph, hint, listId){
+    eqOpenCombos = [];
+    function fld(id, label, val, ph, hint, combo){
       return '<label for="'+id+'">'+label+'</label>'
-        + '<input id="'+id+'" value="'+escapeHtml(val||'')+'" placeholder="'+(ph||'')+'"'
-        + (listId ? ' list="'+listId+'" autocomplete="off"' : '') + '>'
+        + (combo ? eqComboHtml(id, val, ph)
+                 : '<input id="'+id+'" value="'+escapeHtml(val||'')+'" placeholder="'+(ph||'')+'">')
         + (hint ? '<p class="eq-hint">'+hint+'</p>' : '');
     }
 
     body.className = 'eq-form';
     body.innerHTML =
         '<p class="topname">'+(isNew ? (es?'Agregar Equipo':'Add Equipment') : (es?'Editar Equipo':'Edit Equipment'))+'</p>'
-      + dl('dlType', uniq('type')) + dl('dlCompany', uniq('company')) + dl('dlLoc', uniq('location'))
       + fld('eq_type', es?'Tipo de Equipo':'Equipment Type', e.type,
             es?'Escriba o elija de la lista...':'Type it, or pick from the list...',
-            es?'Elija de la lista o escriba el suyo.':'Pick from the list or type your own.', 'dlType')
+            es?'Elija de la lista o escriba el suyo.':'Pick from the list, or type your own.', true)
       + fld('eq_name', es?'Marca / Modelo (ej. Genie GS-1930)':'Make / Model (e.g. Genie GS-1930)', e.name, '', '')
       + fld('eq_serial', es?'N&uacute;mero de Serie':'Serial Number', e.serial, '',
             es?'El n&uacute;mero de la placa o calcoman&iacute;a de la m&aacute;quina &mdash; as&iacute; la encontrar&aacute;n.'
@@ -1884,13 +1983,13 @@
       + fld('eq_company', es?'Socio Comercial (propietario)':'Trade Partner (owner)', e.company,
             es?'Escriba o elija de la lista...':'Type it, or pick from the list...',
             es?'Empiece a escribir &mdash; su empresa aparecer&aacute;; o escriba una nueva.'
-              :'Start typing &mdash; the company will appear; or type a new one.', 'dlCompany')
+              :'Start typing &mdash; the company will appear; or type a new one.', true)
       + fld('eq_resp', es?'Persona Responsable':'Person Responsible', e.responsible, '', '')
       + fld('eq_phone', es?'Su Tel&eacute;fono Celular':'Their Cell Phone', e.responsiblePhone, '',
             es?'Permite llamar o enviar un mensaje directamente desde la tarjeta.'
               :'Lets anyone call or text them straight from the card.')
       + fld('eq_loc', es?'Ubicaci&oacute;n Habitual (edificio / piso / &aacute;rea)':'Usual Location (building / floor / area)',
-            e.location, 'DSM-4 Ground Floor', '', 'dlLoc')
+            e.location, 'DSM-4 Ground Floor', '', true)
       + '<label for="eq_status">'+(es?'Estado':'Status')+'</label>'
       + '<select id="eq_status">'
         + EQ_STATUSES.map(function(k){
@@ -1948,7 +2047,13 @@
     // Enter saves from any single-line field; the notes box keeps its newlines.
     body.querySelectorAll('input').forEach(function(inp){
       inp.addEventListener('keydown', function(ev){
-        if(ev.key === 'Enter'){ ev.preventDefault(); save(); }
+        if(ev.key !== 'Enter') return;
+        ev.preventDefault();
+        // If a menu is open the person is choosing, not finishing - close it
+        // and let them carry on rather than saving out from under them.
+        var anyOpen = eqOpenCombos.some(function(c){ return c.isOpen(); });
+        if(anyOpen){ eqOpenCombos.forEach(function(c){ c.close(); }); return; }
+        save();
       });
     });
     if(!isNew){
@@ -1962,8 +2067,9 @@
         }).catch(function(err){ alert('Could not delete: ' + err.message); });
       });
     }
-    var first = document.getElementById('eq_type');
-    if(first) setTimeout(function(){ try{ first.focus(); }catch(err){} }, 60);
+    eqWireCombo('eq_type',    eqTypeOptions);
+    eqWireCombo('eq_company', eqCompanyOptions);
+    eqWireCombo('eq_loc',     eqLocationOptions);
   }
 
   function editEquipment(id){
@@ -3081,7 +3187,10 @@
     var p = existing || {id:'dsm4_'+Date.now()+'_'+Math.random().toString(36).slice(2,7), name:'', role:'', company:'JACOBS', cellPhone:'', officePhone:'', email:'', trailer:''};
     var body = document.getElementById('modalBody');
     document.getElementById('overlay').classList.remove('doc-viewer-open');
-    body.className = '';
+    // Same raised, high-contrast treatment as the equipment form. The
+    // checkbox/radio size guard in that CSS is what makes this safe here -
+    // without it the roster checkboxes would stretch to full field height.
+    body.className = 'eq-form';
     body.innerHTML =
       '<p class="topname">'+(existing?'Edit person':'Add person')+'</p>'
       + field('g_name','Full name', p.name)
@@ -4818,7 +4927,7 @@
      Android hands it to Contacts, and desktop downloads it.
      Cards live in /c/<id>.vcf and are regenerated from Firestore.
      --------------------------------------------------------------- */
-  var AURA_BUILD = 'v35-equipment-portal-parity';
+  var AURA_BUILD = 'v36-type-dropdown';
 
   function saveToContactsBtnHtml(p){
     var href = 'c/' + encodeURIComponent(p.id) + '.vcf';
