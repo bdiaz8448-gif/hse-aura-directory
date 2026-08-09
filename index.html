@@ -628,6 +628,92 @@
   .notify-warn { font-size: 13px; color: #ff8a7a; margin: 0 0 10px; }
 
   /* Emergency top button — ruby red glass */
+  /* ── Equipment form: raised, glossy treatment ──────────────────────────────
+     Scoped to #modalBody.eq-form so every other modal in the app is untouched. */
+  #modalBody.eq-form {
+    max-width: 470px;
+    border: 1.5px solid rgba(255,255,255,0.30);
+    background:
+      linear-gradient(180deg, rgba(255,255,255,0.075), rgba(255,255,255,0) 32%),
+      linear-gradient(145deg, rgba(23,28,40,0.985), rgba(8,10,18,0.99));
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.30),
+      inset 0 0 0 1px rgba(255,255,255,0.05),
+      0 26px 64px rgba(0,0,0,0.72),
+      0 0 70px rgba(201,168,76,0.10);
+  }
+  #modalBody.eq-form .topname {
+    font-size: 19px;
+    color: #ffffff;
+    letter-spacing: .2px;
+    padding-bottom: 13px;
+    margin-bottom: 2px;
+    border-bottom: 1px solid rgba(255,255,255,0.12);
+  }
+  #modalBody.eq-form label {
+    display: block;
+    font-size: 13.5px;
+    font-weight: 700;
+    color: #ffffff;
+    letter-spacing: .015em;
+    margin: 15px 0 6px;
+  }
+  #modalBody.eq-form input,
+  #modalBody.eq-form select {
+    width: 100%;
+    height: 47px;
+    padding: 0 13px;
+    font-size: 15.5px;
+    color: #ffffff;
+    border-radius: 11px;
+    border: 1.5px solid rgba(255,255,255,0.30);
+    background: linear-gradient(180deg, rgba(255,255,255,0.085), rgba(255,255,255,0.032));
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.14), 0 1px 2px rgba(0,0,0,0.35);
+    transition: border-color .15s, box-shadow .15s;
+    outline: none;
+  }
+  #modalBody.eq-form input::placeholder { color: rgba(255,255,255,0.36); }
+  #modalBody.eq-form input:focus,
+  #modalBody.eq-form select:focus {
+    border-color: rgba(214,180,92,0.88);
+    box-shadow: 0 0 0 3px rgba(201,168,76,0.20), inset 0 1px 0 rgba(255,255,255,0.20);
+  }
+  #modalBody.eq-form .modal-btns { margin-top: 24px; gap: 10px; }
+  #modalBody.eq-form .modal-btns button {
+    height: 52px;
+    border-radius: 13px;
+    font-size: 15.5px;
+    font-weight: 800;
+    letter-spacing: .3px;
+    white-space: normal;
+  }
+  /* Save — brushed gold with a lit top edge */
+  #modalBody.eq-form #eqSaveBtn {
+    background: linear-gradient(180deg, #e8c877 0%, #c9a84c 46%, #a5822c 100%);
+    border: 1px solid rgba(255,228,158,0.70);
+    color: #241a00;
+    text-shadow: 0 1px 0 rgba(255,255,255,0.30);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.60), inset 0 -1px 0 rgba(0,0,0,0.22),
+                0 7px 20px rgba(201,168,76,0.34);
+  }
+  #modalBody.eq-form #eqSaveBtn:hover { filter: brightness(1.07); }
+  #modalBody.eq-form #eqSaveBtn:active { filter: brightness(0.96); transform: translateY(1px); }
+  /* Cancel — polished glass */
+  #modalBody.eq-form #eqCancelBtn {
+    background: linear-gradient(180deg, rgba(255,255,255,0.135), rgba(255,255,255,0.045));
+    border: 1.5px solid rgba(255,255,255,0.30);
+    color: #ffffff;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.26), 0 4px 14px rgba(0,0,0,0.34);
+  }
+  #modalBody.eq-form #eqCancelBtn:hover { background: linear-gradient(180deg, rgba(255,255,255,0.19), rgba(255,255,255,0.07)); }
+  /* Delete — restrained, deliberately less inviting than Save */
+  #modalBody.eq-form #eqDelBtn {
+    background: linear-gradient(180deg, rgba(196,58,44,0.34), rgba(132,24,17,0.24));
+    border: 1.5px solid rgba(255,124,108,0.48);
+    color: #ffb3a8;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.14);
+  }
+
   /* ── Equipment Tracker ── */
   .eq-search {
     width: 100%; height: 52px; font-size: 16px; padding: 0 16px; margin-bottom: 12px;
@@ -1569,7 +1655,7 @@
     return Object.keys(set).sort(function(a,b){ return a.localeCompare(b); });
   }
 
-  function closeModal(){ document.getElementById('overlay').style.display = 'none'; }
+  function closeModal(){ document.getElementById('overlay').style.display = 'none'; document.getElementById('modalBody').classList.remove('eq-form'); }
 
   /* ---------- TAB SWITCHING ---------- */
   /* ═══ EQUIPMENT TRACKER ═══════════════════════════════════════════════════
@@ -1666,10 +1752,8 @@
     var isNew = !existing;
     var body = document.getElementById('modalBody');
     function f(id,label,val,ph){
-      return '<label style="display:block;font-size:12px;color:#8b949e;margin:10px 0 4px;">'+label+'</label>'
-        + '<input id="'+id+'" value="'+escapeHtml(val||'')+'" placeholder="'+(ph||'')+'" '
-        + 'style="width:100%;height:44px;padding:0 12px;border-radius:8px;border:1px solid rgba(255,255,255,0.18);'
-        + 'background:rgba(255,255,255,0.06);color:#fff;font-size:15px;">';
+      return '<label>'+label+'</label>'
+        + '<input id="'+id+'" value="'+escapeHtml(val||'')+'" placeholder="'+(ph||'')+'">';
     }
     body.innerHTML =
         '<p class="topname" style="color:#ffffff;">'+(isNew?'Add equipment':'Edit equipment')+'</p>'
@@ -1681,8 +1765,8 @@
       + f('eq_phone','Their cell phone', e.responsiblePhone, '')
       + f('eq_loc','Location', e.location, 'e.g. DSM-4 Ground Floor')
       + f('eq_insp','Inspection due (YYYY-MM-DD)', e.inspectionDue, '')
-      + '<label style="display:block;font-size:12px;color:#8b949e;margin:10px 0 4px;">Status</label>'
-      + '<select id="eq_status" style="width:100%;">'
+      + '<label>Status</label>'
+      + '<select id="eq_status">'
         + '<option value="in"'  + ((e.status||'in')==='in' ?' selected':'') + '>In service</option>'
         + '<option value="out"' + ((e.status||'in')==='out'?' selected':'') + '>Out of service</option>'
       + '</select>'
@@ -1692,6 +1776,7 @@
         + '<button id="eqCancelBtn">Cancel</button>'
       + '</div>';
     document.getElementById('overlay').classList.remove('doc-viewer-open');
+    document.getElementById('modalBody').classList.add('eq-form');
     document.getElementById('overlay').style.display = 'flex';
     document.getElementById('eqCancelBtn').addEventListener('click', closeModal);
     document.getElementById('eqSaveBtn').addEventListener('click', function(){
@@ -4576,7 +4661,7 @@
      Android hands it to Contacts, and desktop downloads it.
      Cards live in /c/<id>.vcf and are regenerated from Firestore.
      --------------------------------------------------------------- */
-  var AURA_BUILD = 'v33-equipment';
+  var AURA_BUILD = 'v34-equipment-polish';
 
   function saveToContactsBtnHtml(p){
     var href = 'c/' + encodeURIComponent(p.id) + '.vcf';
