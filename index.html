@@ -792,6 +792,40 @@
   }
   #modalBody.eq-form #eqDelBtn:hover { border-color: rgba(255,124,108,0.62); color: #ffb3a8; }
 
+  /* ── Company cleanup list ── */
+  .co-list { max-height: 46vh; overflow-y: auto; margin-bottom: 4px; }
+  .co-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 4px; border-bottom: 1px solid rgba(255,255,255,0.09);
+  }
+  .co-name  { flex: 1 1 auto; font-size: 14.5px; font-weight: 700; color: #ffffff; }
+  .co-count { font-size: 11.5px; color: rgba(255,255,255,0.55); white-space: nowrap; }
+  .co-edit {
+    height: 34px; padding: 0 13px; border-radius: 8px; font-size: 13px; font-weight: 700;
+    border: 1.5px solid rgba(214,180,92,0.55); background: rgba(214,180,92,0.14);
+    color: #e8c86a; cursor: pointer; white-space: nowrap;
+  }
+  .co-edit:hover { background: rgba(214,180,92,0.24); }
+
+  /* ── Self-service block on a person card ── */
+  .self-serve {
+    margin-top: 14px; padding-top: 12px;
+    border-top: 1px solid rgba(255,255,255,0.12);
+  }
+  .self-serve-head {
+    margin: 0 0 8px; font-size: 12.5px; color: rgba(255,255,255,0.62);
+  }
+  .self-serve-btn {
+    width: 100%; height: 44px; margin-bottom: 7px;
+    border-radius: 10px; font-size: 14px; font-weight: 700;
+    border: 1.5px solid rgba(255,255,255,0.26);
+    background: linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.035));
+    color: #ffffff; cursor: pointer;
+  }
+  .self-serve-btn:hover { background: linear-gradient(180deg, rgba(255,255,255,0.16), rgba(255,255,255,0.06)); }
+  .self-serve-btn.danger-lite { border-color: rgba(255,124,108,0.40); color: #ffb3a8; }
+  .self-serve-btn.danger-lite:hover { border-color: rgba(255,124,108,0.66); }
+
   /* ── Equipment Tracker ── */
   .eq-search {
     width: 100%; height: 52px; font-size: 16px; padding: 0 16px; margin-bottom: 12px;
@@ -1221,7 +1255,7 @@
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap;">
         <h2 style="font-size:17px;font-weight:700;color:#1565c0;margin:0;">&#128203; Incident Log</h2>
         <span id="incidentCountLabel" style="font-size:12px;color:#666;flex:1;"></span>
-        <button id="managePinsBtn" onclick="manageCompanyPins()" style="display:none;background:#fff;color:#1565c0;border:1.5px solid #1565c0;border-radius:6px;padding:5px 11px;font-weight:700;cursor:pointer;font-size:12px;">Company PINs</button>
+        <button id="companyCleanupBtn" style="display:none;background:#2b3446;color:#cfe9f5;border:none;border-radius:6px;padding:6px 12px;font-weight:700;cursor:pointer;font-size:13px;margin-right:6px;">&#127970; Company names</button><button id="managePinsBtn" onclick="manageCompanyPins()" style="display:none;background:#fff;color:#1565c0;border:1.5px solid #1565c0;border-radius:6px;padding:5px 11px;font-weight:700;cursor:pointer;font-size:12px;">Company PINs</button>
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;" id="incidentFilterRow">
         <button class="filter-btn active" data-filter="all" onclick="setIncidentFilter('all',this)">All<span class="f-count" id="fc-all"></span></button>
@@ -1498,6 +1532,7 @@
   var nightshift = [];
   var pendingJoinRequests = [];
   var pendingRemovalRequests = [];
+  var pendingChangeRequests = [];
   var allIncidents = [];
   var incidentFilter = 'all';
   var incidentEditId = null;
@@ -2311,6 +2346,8 @@
       if(aib) aib.style.display = 'inline-block';
       var mpb = document.getElementById('managePinsBtn');
       if(mpb) mpb.style.display = 'inline-block';
+      var ccb2 = document.getElementById('companyCleanupBtn');
+      if(ccb2) ccb2.style.display = (sessionStorage.getItem('aura_is_owner') === '1') ? 'inline-block' : 'none';
       ensureAdminButtons(true);
     } else {
       ensureAdminButtons(false);
@@ -3161,6 +3198,7 @@
       + row('Trailer / office', p.trailer)
       + '</table>'
       + saveToContactsBtnHtml(p)
+      + selfServiceBtnsHtml(p)
       + '<div class="modal-btns">'
       + '<button id="editDsm4Btn">Edit</button>'
       + '<button class="danger" id="deleteDsm4Btn">Delete</button>'
@@ -3330,6 +3368,7 @@
       + row('Trailer / office', p.trailer)
       + '</table>'
       + saveToContactsBtnHtml(p)
+      + selfServiceBtnsHtml(p)
       + '<div class="modal-btns">'
       + '<button id="editDsm3Btn">Edit</button>'
       + '<button class="danger" id="deleteDsm3Btn">Delete</button>'
@@ -3846,7 +3885,7 @@
   }
 
   function updatePendingBadge(){
-    var total = pendingJoinRequests.length + pendingRemovalRequests.length;
+    var total = pendingJoinRequests.length + pendingRemovalRequests.length + pendingChangeRequests.length;
     var rb = document.getElementById('pendingRequestsBtn');
     var badge = document.getElementById('pendingBadge');
     if(!rb) return;
@@ -4024,6 +4063,30 @@
       }
 
       // ── Removal Requests ──
+      // ── Correction requests ────────────────────────────────────────────────
+      html2 += '<p style="font-weight:800;margin:18px 0 8px;font-size:14px;color:#fff;">Correction Requests (' + pendingChangeRequests.length + ')</p>';
+      if(pendingChangeRequests.length === 0){
+        html2 += '<p style="color:#8b949e;font-size:13px;margin:0 0 6px;">None right now.</p>';
+      } else {
+        pendingChangeRequests.forEach(function(req){
+          var diffs = Object.keys(req.requested || {}).map(function(k){
+            return '<div style="font-size:12.5px;color:#fff;margin:2px 0;">'
+                 + '<span style="color:#8b949e;">' + escapeHtml(k) + ':</span> '
+                 + escapeHtml(String((req.requested||{})[k])) + '</div>';
+          }).join('');
+          html2 += '<div style="border:1px solid rgba(255,255,255,0.14);border-radius:10px;padding:11px;margin-bottom:9px;">'
+            + '<div style="font-weight:800;color:#fff;font-size:14px;">' + escapeHtml(req.personName || '(unknown)') + '</div>'
+            + '<div style="font-size:12px;color:#8b949e;margin:3px 0 6px;">asked for these to be changed:</div>'
+            + diffs
+            + (req.note ? '<div style="font-size:12.5px;color:#ffd98a;margin-top:6px;">&ldquo;' + escapeHtml(req.note) + '&rdquo;</div>' : '')
+            + '<div style="display:flex;gap:7px;margin-top:9px;">'
+              + '<button onclick="applyChangeRequest(\'' + req.id + '\')" style="flex:1;background:rgba(40,120,62,0.45);border:1.5px solid rgba(86,214,122,0.7);color:#9dffb4;border-radius:8px;padding:9px;font-weight:800;font-size:13px;cursor:pointer;">&#10003; Apply</button>'
+              + '<button onclick="declineChangeRequest(\'' + req.id + '\')" style="flex:1;background:rgba(150,44,34,0.4);border:1.5px solid rgba(255,124,108,0.6);color:#ffb3a8;border-radius:8px;padding:9px;font-weight:800;font-size:13px;cursor:pointer;">Decline</button>'
+            + '</div>'
+          + '</div>';
+        });
+      }
+
       html2 += '<p style="font-weight:800;margin:18px 0 8px;font-size:14px;color:#fff;">Removal Requests (' + pendingRemovalRequests.length + ')</p>';
       if(pendingRemovalRequests.length === 0){
         html2 += '<p style="color:#bbb;font-size:13px;margin:0;">No pending removal requests.</p>';
@@ -4403,6 +4466,7 @@
       + row('Trailer / office', p.trailer)
       + '</table>'
       + saveToContactsBtnHtml(p)
+      + selfServiceBtnsHtml(p)
       + '<div class="modal-btns">'
       + '<button id="editWeekendBtn">Edit</button>'
       + '<button class="danger" id="deleteWeekendBtn">Delete</button>'
@@ -4550,6 +4614,7 @@
       + row('Trailer / office', p.trailer)
       + '</table>'
       + saveToContactsBtnHtml(p)
+      + selfServiceBtnsHtml(p)
       + '<div class="modal-btns">'
       + '<button id="editCQVBtn">Edit</button>'
       + '<button class="danger" id="deleteCQVBtn">Delete</button>'
@@ -4697,6 +4762,7 @@
       + row('Trailer / office', p.trailer)
       + '</table>'
       + saveToContactsBtnHtml(p)
+      + selfServiceBtnsHtml(p)
       + '<div class="modal-btns">'
       + '<button id="editNightShiftBtn">Edit</button>'
       + '<button class="danger" id="deleteNightShiftBtn">Delete</button>'
@@ -4797,6 +4863,7 @@
       + row('Trailer / office', p.trailer)
       + '</table>'
       + saveToContactsBtnHtml(p)
+      + selfServiceBtnsHtml(p)
       + '<div class="modal-btns">'
       + '<button id="editPersonBtn">Edit</button>'
       + '<button class="danger" id="deletePersonBtn">Delete</button>'
@@ -4927,7 +4994,264 @@
      Android hands it to Contacts, and desktop downloads it.
      Cards live in /c/<id>.vcf and are regenerated from Firestore.
      --------------------------------------------------------------- */
-  var AURA_BUILD = 'v37-forms-consistent';
+  var AURA_BUILD = 'v39-company-cleanup';
+
+  /* ═══ SELF-SERVICE: "this is my record and it is wrong" ═══════════════════
+     Anyone looking at a card can ask for it to be corrected or ask to be taken
+     off the directory. They cannot change the directory themselves - the
+     request goes to an admin to review and apply. That keeps the door shut on
+     a stranger editing someone else's details while still giving people a way
+     to fix their own. Rendered from ONE helper used by every card builder, so
+     every person - including anyone added later - gets the same options. */
+  /* An admin applying a correction is what actually edits the directory. The
+     request itself never touches the contact record - that is the whole point
+     of routing it through review. */
+  function applyChangeRequest(id){
+    requireUnlock(function(){
+      var req = pendingChangeRequests.filter(function(r){ return r.id === id; })[0];
+      if(!req) return;
+      var upd = {};
+      Object.keys(req.requested || {}).forEach(function(k){ upd[k] = req.requested[k]; });
+      if(!Object.keys(upd).length) return;
+      db.collection('contacts').doc(req.contactId).update(upd).then(function(){
+        return db.collection('changeRequests').doc(id).update({status:'applied'});
+      }).then(function(){
+        auditEvent('correction', 'applied correction for ' + (req.personName||'') + ' (' + Object.keys(upd).join(', ') + ')');
+        alert('Applied. The directory now shows the corrected details.');
+        openPendingRequestsPanel();
+      }).catch(function(err){ alert('Could not apply: ' + err.message); });
+    });
+  }
+  window.applyChangeRequest = applyChangeRequest;
+
+  function declineChangeRequest(id){
+    requireUnlock(function(){
+      var req = pendingChangeRequests.filter(function(r){ return r.id === id; })[0];
+      db.collection('changeRequests').doc(id).update({status:'declined'}).then(function(){
+        auditEvent('correction', 'declined correction for ' + ((req&&req.personName)||''));
+        openPendingRequestsPanel();
+      }).catch(function(err){ alert('Could not decline: ' + err.message); });
+    });
+  }
+  window.declineChangeRequest = declineChangeRequest;
+
+  /* ═══ COMPANY NAME CLEANUP (owner only) ══════════════════════════════════
+     Free-text company fields drift: "Exceed", "Exceed Safety" and "EXCEED
+     SAFETY" become three companies that are really one, which breaks the
+     company filter and the per-company counts. This renames one across every
+     record at once - contacts and equipment together - so the two lists can
+     never disagree about what a company is called. Owner only: it rewrites
+     hundreds of records in one action. */
+  function isOwnerUser(){ return sessionStorage.getItem('aura_is_owner') === '1'; }
+
+  function companyUsage(){
+    var map = {};
+    function add(name, bucket){
+      var k = (name || '').trim();
+      if(!k) return;
+      if(!map[k]) map[k] = {name:k, contacts:0, equipment:0};
+      map[k][bucket]++;
+    }
+    contacts.forEach(function(c){ add(c.company, 'contacts'); });
+    equipment.forEach(function(e){ add(e.company, 'equipment'); });
+    return Object.keys(map).map(function(k){ return map[k]; })
+      .sort(function(a,b){ return a.name.toLowerCase() < b.name.toLowerCase() ? -1 : 1; });
+  }
+
+  function openCompanyCleanup(){
+    requireUnlock(function(){
+      if(!isOwnerUser()){ alert('Only the owner can rename companies across the directory.'); return; }
+      renderCompanyCleanup();
+    });
+  }
+  window.openCompanyCleanup = openCompanyCleanup;
+
+  function renderCompanyCleanup(){
+    var es = (uiLang === 'es');
+    var list = companyUsage();
+    var body = document.getElementById('modalBody');
+    body.className = 'eq-form';
+    body.innerHTML =
+        '<p class="topname">' + (es ? 'Nombres de Empresas' : 'Company Names') + '</p>'
+      + '<p class="eq-hint" style="margin-bottom:12px;">'
+        + (es ? 'Renombrar una empresa la cambia en TODOS los contactos y equipos a la vez. Para unir duplicados, renombre el incorrecto exactamente igual que el correcto.'
+              : 'Renaming a company changes it on EVERY contact and piece of equipment at once. To merge duplicates, rename the wrong one to exactly match the right one.')
+      + '</p>'
+      + '<div class="co-list">'
+      + list.map(function(c){
+          return '<div class="co-row">'
+            + '<div class="co-name">' + escapeHtml(c.name) + '</div>'
+            + '<div class="co-count">' + c.contacts + ' ' + (es?'personas':'people')
+              + (c.equipment ? ' &middot; ' + c.equipment + ' ' + (es?'equipos':'equipment') : '') + '</div>'
+            + '<button class="co-edit" onclick="renameCompany(' + JSON.stringify(c.name).replace(/"/g,'&quot;') + ')">'
+              + (es ? 'Renombrar' : 'Rename') + '</button>'
+          + '</div>';
+        }).join('')
+      + '</div>'
+      + '<div class="modal-btns"><button id="eqCancelBtn">' + (es ? 'Cerrar' : 'Close') + '</button></div>';
+    document.getElementById('overlay').classList.remove('doc-viewer-open');
+    document.getElementById('overlay').style.display = 'flex';
+    document.getElementById('eqCancelBtn').addEventListener('click', closeModal);
+  }
+
+  function renameCompany(oldName){
+    var es = (uiLang === 'es');
+    var next = prompt((es ? 'Nuevo nombre para "' : 'New name for "') + oldName + '":', oldName);
+    if(next === null) return;
+    next = next.trim();
+    if(!next || next === oldName) return;
+
+    var cHits = contacts.filter(function(c){ return (c.company||'').trim() === oldName; });
+    var eHits = equipment.filter(function(e){ return (e.company||'').trim() === oldName; });
+    var merging = companyUsage().some(function(c){ return c.name.toLowerCase() === next.toLowerCase(); });
+
+    var msg = (merging
+        ? (es ? '"' + next + '" ya existe, as&iacute; que esto UNIR&Aacute; las dos.\n\n'
+              : '"' + next + '" already exists, so this will MERGE the two.\n\n')
+        : '')
+      + (es ? 'Cambiar "' : 'Change "') + oldName + (es ? '" a "' : '" to "') + next + '"\n'
+      + (es ? 'Afecta ' : 'Affects ') + cHits.length + (es ? ' personas' : ' people')
+      + (eHits.length ? ' + ' + eHits.length + (es ? ' equipos' : ' equipment') : '') + '.';
+    if(!confirm(msg)) return;
+
+    var jobs = [];
+    cHits.forEach(function(c){ jobs.push(db.collection('contacts').doc(c.id).update({company: next})); });
+    eHits.forEach(function(e){ jobs.push(db.collection('equipment').doc(e.id).update({company: next})); });
+    if(!jobs.length){ alert(es ? 'Nada que cambiar.' : 'Nothing to change.'); return; }
+
+    Promise.all(jobs).then(function(){
+      auditEvent('company', 'renamed "' + oldName + '" to "' + next + '" across '
+        + cHits.length + ' contacts, ' + eHits.length + ' equipment');
+      alert((es ? 'Listo. ' : 'Done. ') + jobs.length + (es ? ' registros actualizados.' : ' records updated.'));
+      renderCompanyCleanup();
+    }).catch(function(err){ alert('Could not rename: ' + err.message); });
+  }
+  window.renameCompany = renameCompany;
+
+  function selfServiceBtnsHtml(p){
+    var es = (uiLang === 'es');
+    return '<div class="self-serve">'
+      + '<p class="self-serve-head">' + (es ? '&iquest;Es usted? &iquest;Algo est&aacute; mal?' : 'Is this you? Something not right?') + '</p>'
+      + '<button class="self-serve-btn" onclick="openChangeRequestForm(\'' + p.id + '\')">'
+        + '&#9998; ' + (es ? 'Sugerir una correcci&oacute;n' : 'Suggest a correction') + '</button>'
+      + '<button class="self-serve-btn danger-lite" onclick="openSelfRemovalForm(\'' + p.id + '\')">'
+        + '&#128465; ' + (es ? 'Pedir que me quiten del directorio' : 'Ask to be removed from the directory') + '</button>'
+      + '</div>';
+  }
+
+  function findPersonById(id){
+    var all = [].concat(contacts, dsm4 || [], dsm3 || []);
+    for(var i = 0; i < all.length; i++){ if(all[i] && all[i].id === id) return all[i]; }
+    return null;
+  }
+
+  function openChangeRequestForm(id){
+    var p = findPersonById(id); if(!p) return;
+    var es = (uiLang === 'es');
+    var body = document.getElementById('modalBody');
+    body.className = 'eq-form';
+    function f(fid, label, val){
+      return '<label for="' + fid + '">' + label + '</label>'
+           + '<input id="' + fid + '" value="' + escapeHtml(val || '') + '">';
+    }
+    body.innerHTML =
+        '<p class="topname">' + (es ? 'Sugerir una correcci&oacute;n' : 'Suggest a correction') + '</p>'
+      + '<p class="eq-hint" style="margin-bottom:10px;">'
+        + (es ? 'Corrija lo que est&eacute; mal y env&iacute;elo. Un administrador lo revisar&aacute; antes de que aparezca en el directorio &mdash; nada cambia todav&iacute;a.'
+              : 'Fix whatever is wrong and send it. An admin reviews it before it appears in the directory &mdash; nothing changes yet.')
+      + '</p>'
+      + f('cr_name',    es ? 'Nombre completo' : 'Full name',            p.name)
+      + f('cr_role',    es ? 'Puesto / rol'    : 'Job title / role',     p.role)
+      + f('cr_company', es ? 'Empresa'         : 'Company',              p.company)
+      + f('cr_cell',    es ? 'Tel&eacute;fono celular' : 'Cell phone',   p.cellPhone)
+      + f('cr_office',  es ? 'Tel&eacute;fono de oficina' : 'Office phone', p.officePhone)
+      + f('cr_email',   es ? 'Correo electr&oacute;nico' : 'Email',      p.email)
+      + f('cr_trailer', es ? 'Tr&aacute;iler / oficina' : 'Trailer / office', p.trailer)
+      + '<label for="cr_note">' + (es ? 'Nota para el administrador (opcional)' : 'Note to the admin (optional)') + '</label>'
+      + '<textarea id="cr_note" rows="3"></textarea>'
+      + '<div class="modal-btns">'
+        + '<button id="eqSaveBtn">&#10003; ' + (es ? 'Enviar' : 'Send request') + '</button>'
+        + '<button id="eqCancelBtn">' + (es ? 'Cancelar' : 'Cancel') + '</button>'
+      + '</div>';
+    document.getElementById('overlay').classList.remove('doc-viewer-open');
+    document.getElementById('overlay').style.display = 'flex';
+    document.getElementById('eqCancelBtn').addEventListener('click', closeModal);
+    document.getElementById('eqSaveBtn').addEventListener('click', function(){
+      var req = {
+        name:        document.getElementById('cr_name').value.trim(),
+        role:        document.getElementById('cr_role').value.trim(),
+        company:     document.getElementById('cr_company').value.trim(),
+        cellPhone:   document.getElementById('cr_cell').value.trim(),
+        officePhone: document.getElementById('cr_office').value.trim(),
+        email:       document.getElementById('cr_email').value.trim(),
+        trailer:     document.getElementById('cr_trailer').value.trim()
+      };
+      if(!req.name){ alert(es ? 'El nombre no puede quedar vac&iacute;o.' : 'Name cannot be blank.'); return; }
+      // Only send what actually differs, so the admin sees the change, not a wall of text.
+      var changed = {};
+      Object.keys(req).forEach(function(k){ if((p[k] || '') !== req[k]) changed[k] = req[k]; });
+      if(!Object.keys(changed).length){
+        alert(es ? 'No cambi&oacute; nada todav&iacute;a.' : 'Nothing has been changed yet.');
+        return;
+      }
+      db.collection('changeRequests').add({
+        contactId: p.id,
+        personName: p.name || '',
+        requested: changed,
+        note: document.getElementById('cr_note').value.trim().slice(0, 300),
+        status: 'pending',
+        submittedAt: firebase.firestore.FieldValue.serverTimestamp()
+      }).then(function(){
+        try{ sendRequestEmail('Correction requested: ' + (p.name || ''),
+              (p.name || '') + ' asked for their directory record to be corrected.'); }catch(e){}
+        closeModal();
+        alert(es ? 'Enviado. Un administrador lo revisar&aacute;.' : 'Sent. An admin will review it.');
+      }).catch(function(err){ alert('Could not send: ' + err.message); });
+    });
+  }
+  window.openChangeRequestForm = openChangeRequestForm;
+
+  function openSelfRemovalForm(id){
+    var p = findPersonById(id); if(!p) return;
+    var es = (uiLang === 'es');
+    var body = document.getElementById('modalBody');
+    body.className = 'eq-form';
+    body.innerHTML =
+        '<p class="topname">' + (es ? 'Pedir que me quiten' : 'Ask to be removed') + '</p>'
+      + '<p class="eq-hint" style="margin-bottom:10px;">'
+        + (es ? 'Esto avisa a un administrador para quitar este contacto del directorio. Nada se borra hasta que lo aprueben.'
+              : 'This asks an admin to take this contact out of the directory. Nothing is deleted until they approve it.')
+      + '</p>'
+      + '<label>' + (es ? 'Nombre' : 'Name') + '</label>'
+      + '<input id="sr_name" value="' + escapeHtml(p.name || '') + '">'
+      + '<label>' + (es ? 'Empresa' : 'Company') + '</label>'
+      + '<input id="sr_company" value="' + escapeHtml(p.company || '') + '">'
+      + '<label for="sr_reason">' + (es ? 'Motivo (opcional)' : 'Reason (optional)') + '</label>'
+      + '<textarea id="sr_reason" rows="3"></textarea>'
+      + '<div class="modal-btns">'
+        + '<button id="eqSaveBtn">&#10003; ' + (es ? 'Enviar solicitud' : 'Send request') + '</button>'
+        + '<button id="eqCancelBtn">' + (es ? 'Cancelar' : 'Cancel') + '</button>'
+      + '</div>';
+    document.getElementById('overlay').classList.remove('doc-viewer-open');
+    document.getElementById('overlay').style.display = 'flex';
+    document.getElementById('eqCancelBtn').addEventListener('click', closeModal);
+    document.getElementById('eqSaveBtn').addEventListener('click', function(){
+      var nm = document.getElementById('sr_name').value.trim();
+      if(!nm){ alert(es ? 'Escriba el nombre.' : 'Enter the name.'); return; }
+      db.collection('removalRequests').add({
+        name: nm,
+        company: document.getElementById('sr_company').value.trim(),
+        reason: document.getElementById('sr_reason').value.trim().slice(0, 300),
+        status: 'pending',
+        submittedAt: firebase.firestore.FieldValue.serverTimestamp()
+      }).then(function(){
+        try{ sendRequestEmail('Removal request: ' + nm, nm + ' asked to be removed from the HSE directory.'); }catch(e){}
+        closeModal();
+        alert(es ? 'Enviado. Un administrador lo revisar&aacute;.' : 'Sent. An admin will review it.');
+      }).catch(function(err){ alert('Could not send: ' + err.message); });
+    });
+  }
+  window.openSelfRemovalForm = openSelfRemovalForm;
 
   function saveToContactsBtnHtml(p){
     var href = 'c/' + encodeURIComponent(p.id) + '.vcf';
@@ -5899,6 +6223,10 @@
       pendingJoinRequests = snapshot.docs.map(function(doc){ var d = doc.data(); d.id = doc.id; return d; });
       updatePendingBadge();
     }, function(err){ console.error('joinRequests sync error:', err); });
+    db.collection('changeRequests').where('status','==','pending').onSnapshot(function(snapshot){
+      pendingChangeRequests = snapshot.docs.map(function(doc){ var d = doc.data(); d.id = doc.id; return d; });
+      updatePendingBadge();
+    }, function(err){ console.warn('changeRequests sync:', err.message); });
     db.collection('removalRequests').where('status','==','pending').onSnapshot(function(snapshot){
       pendingRemovalRequests = snapshot.docs.map(function(doc){ var d = doc.data(); d.id = doc.id; return d; });
       updatePendingBadge();
@@ -5929,6 +6257,8 @@
     if(isUnlocked()) setUnlocked(false);
     else requireUnlock(function(){});
   });
+  var ccb = document.getElementById('companyCleanupBtn');
+  if(ccb) ccb.addEventListener('click', function(){ openCompanyCleanup(); });
   var mpbEl = document.getElementById('managePinsBtn');
   if(mpbEl) mpbEl.addEventListener('click', function(){ manageCompanyPins(); });
   document.getElementById('changePinBtn').addEventListener('click', function(){

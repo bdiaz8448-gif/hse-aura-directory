@@ -140,6 +140,22 @@ service cloud.firestore {
       allow update, delete: if isAdmin();
     }
 
+    /* ── CHANGE REQUESTS ─────────────────────────────────────────────────────
+       A person may ask for their OWN record to be corrected. They submit; they
+       cannot read anyone's submissions and cannot apply the change themselves.
+       An admin reviews and applies it, so a stranger cannot edit the directory
+       by pretending to be someone. */
+    match /changeRequests/{id} {
+      allow read: if isAdmin();
+      allow create: if request.resource.data.keys()
+                        .hasOnly(['contactId','personName','requested','note','status','submittedAt'])
+                    && request.resource.data.status == 'pending'
+                    && shortStr(request.resource.data.personName, 120)
+                    && request.resource.data.requested is map
+                    && request.resource.data.requested.keys().size() <= 10;
+      allow update, delete: if isAdmin();
+    }
+
     /* ── REMOVAL REQUESTS — same shape of trust ──────────────────────────────*/
     match /removalRequests/{id} {
       allow read: if isAdmin();
