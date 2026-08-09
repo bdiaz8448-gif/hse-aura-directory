@@ -3356,7 +3356,7 @@
     var p = existing || {id:'dsm3_'+Date.now()+'_'+Math.random().toString(36).slice(2,7), name:'', role:'', company:'JACOBS', cellPhone:'', officePhone:'', email:'', trailer:''};
     var body = document.getElementById('modalBody');
     document.getElementById('overlay').classList.remove('doc-viewer-open');
-    body.className = '';
+    body.className = 'eq-form';
     body.innerHTML =
       '<p class="topname">'+(existing?'Edit person':'Add person')+'</p>'
       + field('h_name','Full name', p.name)
@@ -4434,7 +4434,7 @@
     var p = existing || {id:'weekend_'+Date.now()+'_'+Math.random().toString(36).slice(2,7), name:'', role:'', company:'JACOBS', cellPhone:'', officePhone:'', email:'', trailer:''};
     var body = document.getElementById('modalBody');
     document.getElementById('overlay').classList.remove('doc-viewer-open');
-    body.className = '';
+    body.className = 'eq-form';
     body.innerHTML =
       '<p class="topname">'+(existing?'Edit person':'Add person')+'</p>'
       + field('w_name','Full name', p.name)
@@ -4581,7 +4581,7 @@
     var p = existing || {id:'cqv_'+Date.now()+'_'+Math.random().toString(36).slice(2,7), name:'', role:'', company:'', cellPhone:'', officePhone:'', email:'', trailer:''};
     var body = document.getElementById('modalBody');
     document.getElementById('overlay').classList.remove('doc-viewer-open');
-    body.className = '';
+    body.className = 'eq-form';
     body.innerHTML =
       '<p class="topname">'+(existing?'Edit person':'Add person')+'</p>'
       + field('cq_name','Full name', p.name)
@@ -4728,7 +4728,7 @@
     var p = existing || {id:'nightshift_'+Date.now()+'_'+Math.random().toString(36).slice(2,7), name:'', role:'', company:'JACOBS', cellPhone:'', officePhone:'', email:'', trailer:''};
     var body = document.getElementById('modalBody');
     document.getElementById('overlay').classList.remove('doc-viewer-open');
-    body.className = '';
+    body.className = 'eq-form';
     body.innerHTML =
       '<p class="topname">'+(existing?'Edit person':'Add person')+'</p>'
       + field('n_name','Full name', p.name)
@@ -4927,7 +4927,7 @@
      Android hands it to Contacts, and desktop downloads it.
      Cards live in /c/<id>.vcf and are regenerated from Firestore.
      --------------------------------------------------------------- */
-  var AURA_BUILD = 'v36-type-dropdown';
+  var AURA_BUILD = 'v37-forms-consistent';
 
   function saveToContactsBtnHtml(p){
     var href = 'c/' + encodeURIComponent(p.id) + '.vcf';
@@ -4996,7 +4996,7 @@
     var p = existing || {id:'id_'+Date.now()+'_'+Math.random().toString(36).slice(2,7), name:'', role:'', company:'', cellPhone:'', officePhone:'', email:'', trailer:'', notifyDSM4:false, notifyDSM3:false};
     var body = document.getElementById('modalBody');
     document.getElementById('overlay').classList.remove('doc-viewer-open');
-    body.className = '';
+    body.className = 'eq-form';
     body.innerHTML =
       '<p class="topname">'+(existing?'Edit person':'Add person')+'</p>'
       + field('f_name','Full name', p.name)
