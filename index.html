@@ -5119,7 +5119,7 @@
      Android hands it to Contacts, and desktop downloads it.
      Cards live in /c/<id>.vcf and are regenerated from Firestore.
      --------------------------------------------------------------- */
-  var AURA_BUILD = 'v41-field-order';
+  var AURA_BUILD = 'v42-save-fix';
 
   /* ═══ SELF-SERVICE: "this is my record and it is wrong" ═══════════════════
      Anyone looking at a card can ask for it to be corrected or ask to be taken
@@ -5485,16 +5485,19 @@
       + '<label style="display:flex; align-items:center; gap:8px; font-size:14px; color:#f2ede2; margin-bottom:6px;"><input type="checkbox" id="f_notifyDSM4" style="width:18px; height:18px;" '+(p.notifyDSM4?'checked':'')+'> Notify &ndash; '+bl('DSM4')+' Emergency</label>'
       + '<label style="display:flex; align-items:center; gap:8px; font-size:14px; color:#f2ede2;"><input type="checkbox" id="f_notifyDSM3" style="width:18px; height:18px;" '+(p.notifyDSM3?'checked':'')+'> Notify &ndash; '+bl('DSM3')+' Emergency</label>'
       + '</div>'
-      +       + '<div style="margin:14px 0 2px;padding:11px 13px;border:1px solid rgba(201,168,76,0.42);border-radius:9px;background:rgba(201,168,76,0.10);">'
+      + '<div style="margin:14px 0 2px;padding:11px 13px;border:1px solid rgba(201,168,76,0.42);border-radius:9px;background:rgba(201,168,76,0.10);">'
       +   '<div style="font-size:12px;color:#e8dcb8;line-height:1.55;">&#128274; <em>Contact information in this directory (phone numbers, email addresses) may be viewed, saved, or used by other members of this safety network. By appearing here you acknowledge this.</em></div>'
       + '</div>'
-      '<div class="modal-btns">'
-      + '<button class="primary" id="saveFormBtn">Save</button>'
-      + '<button id="cancelFormBtn">Cancel</button>'
+      + '<div class="modal-btns">'
+      + '<button class="primary" id="saveFormBtn">&#10003; Save changes</button>'
+      + '<button id="cancelFormBtn">Close</button>'
       + '</div>';
     document.getElementById('overlay').style.display = 'flex';
-    document.getElementById('cancelFormBtn').addEventListener('click', closeModal);
-    document.getElementById('saveFormBtn').addEventListener('click', function(){
+    var _cf = document.getElementById('cancelFormBtn');
+    var _sf = document.getElementById('saveFormBtn');
+    if(!_sf){ console.error('Contact form: Save button missing - form would be unusable'); }
+    if(_cf) _cf.addEventListener('click', closeModal);
+    if(_sf) _sf.addEventListener('click', function(){
       var name = document.getElementById('f_name').value.trim();
       if(!name){ document.getElementById('f_name').focus(); return; }
       var wantsDSM4 = document.getElementById('f_addDSM4').checked;
