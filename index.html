@@ -2133,10 +2133,6 @@
       + fld('eq_serial', es?'N&uacute;mero de Serie':'Serial Number', e.serial, '',
             es?'El n&uacute;mero de la placa o calcoman&iacute;a de la m&aacute;quina &mdash; as&iacute; la encontrar&aacute;n.'
               :'The number on the machine&rsquo;s plate or sticker &mdash; this is how people will find it.')
-      + fld('eq_company', es?'Socio Comercial (propietario)':'Trade Partner (owner)', e.company,
-            es?'Escriba o elija de la lista...':'Type it, or pick from the list...',
-            es?'Empiece a escribir &mdash; su empresa aparecer&aacute;; o escriba una nueva.'
-              :'Start typing &mdash; the company will appear; or type a new one.', true)
       + '<label for="eq_resp">' + (es?'Persona Responsable':'Person Responsible') + '</label>'
       + eqPersonHtml('eq_resp', e.responsible,
           es?'Escriba un nombre...':'Start typing a name...')
@@ -2147,6 +2143,10 @@
       + fld('eq_phone', es?'Su Tel&eacute;fono Celular':'Their Cell Phone', e.responsiblePhone, '',
             es?'Permite llamar o enviar un mensaje directamente desde la tarjeta.'
               :'Lets anyone call or text them straight from the card.')
+      + fld('eq_company', es?'Nombre de la Empresa (propietaria)':'Name of Company (owner)', e.company,
+            es?'Escriba o elija de la lista...':'Type it, or pick from the list...',
+            es?'Empiece a escribir &mdash; la empresa aparecer&aacute;; o escriba una nueva.'
+              :'Start typing &mdash; the company will appear; or type a new one.', true)
       + fld('eq_loc', es?'Ubicaci&oacute;n Habitual (edificio / piso / &aacute;rea)':'Usual Location (building / floor / area)',
             e.location, 'DSM-4 Ground Floor', '', true)
       + '<label for="eq_status">'+(es?'Estado':'Status')+'</label>'
@@ -5119,7 +5119,7 @@
      Android hands it to Contacts, and desktop downloads it.
      Cards live in /c/<id>.vcf and are regenerated from Firestore.
      --------------------------------------------------------------- */
-  var AURA_BUILD = 'v40b-person-lookup';
+  var AURA_BUILD = 'v41-field-order';
 
   /* ═══ SELF-SERVICE: "this is my record and it is wrong" ═══════════════════
      Anyone looking at a card can ask for it to be corrected or ask to be taken
