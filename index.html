@@ -736,6 +736,27 @@
     color: rgba(255,255,255,0.58); font-size: 13px; cursor: default;
   }
   #modalBody.eq-form .eq-combo-list li.eq-combo-none:hover { background: transparent; }
+  #modalBody.eq-form .eq-person { position: relative; }
+  #modalBody.eq-form .eq-person-list {
+    display: none; position: absolute; z-index: 7; left: 0; right: 0; top: 52px;
+    max-height: 260px; overflow-y: auto; margin: 0; padding: 5px; list-style: none;
+    background: linear-gradient(145deg, rgba(27,32,45,0.995), rgba(12,15,24,0.995));
+    border: 1.5px solid rgba(255,255,255,0.26); border-radius: 12px;
+    box-shadow: 0 18px 46px rgba(0,0,0,0.74), inset 0 1px 0 rgba(255,255,255,0.14);
+  }
+  #modalBody.eq-form .eq-person.open .eq-person-list { display: block; }
+  #modalBody.eq-form .eq-person-list li {
+    padding: 10px 12px; border-radius: 8px; cursor: pointer; display: flex;
+    flex-direction: column; gap: 1px;
+  }
+  #modalBody.eq-form .eq-person-list li:hover { background: rgba(214,180,92,0.20); }
+  #modalBody.eq-form .eq-person-list .p-name { font-size: 15px; font-weight: 700; color: #ffffff; }
+  #modalBody.eq-form .eq-person-list .p-sub  { font-size: 12px; color: rgba(255,255,255,0.60); }
+  #modalBody.eq-form .eq-person-list .p-nophone { color: rgba(255,180,140,0.75); }
+  #modalBody.eq-form .eq-filled-note {
+    margin: 6px 2px 0; font-size: 12.5px; line-height: 1.4;
+    color: #9dffb4;
+  }
   #modalBody.eq-form .eq-enter-hint {
     margin: 12px 0 0;
     text-align: center;
@@ -1829,6 +1850,103 @@
          +   '<ul class="eq-combo-list" id="'+id+'_list"></ul>'
          + '</div>';
   }
+  /* Person look-up. Deliberately NOT the caret dropdown used elsewhere: with
+     392 people a full menu is useless, so nothing shows until you have typed
+     enough to be meaningful, then the list narrows as you keep typing.
+     Picking someone fills their phone and company from the directory, which is
+     the real point - those details already exist and re-typing them is how a
+     record ends up with a stale number. */
+  function eqPersonHtml(id, val, ph){
+    return '<div class="eq-person" id="'+id+'_wrap">'
+         +   '<input id="'+id+'" value="'+escapeHtml(val||'')+'" placeholder="'+(ph||'')+'" autocomplete="off">'
+         +   '<ul class="eq-person-list" id="'+id+'_list"></ul>'
+         + '</div>';
+  }
+
+  function eqWirePersonLookup(id, opts){
+    opts = opts || {};
+    var wrap = document.getElementById(id+'_wrap');
+    var inp  = document.getElementById(id);
+    var list = document.getElementById(id+'_list');
+    if(!wrap || !inp || !list) return;
+    var MIN = 2, MAX = 6;
+
+    function matches(q){
+      q = q.trim().toLowerCase();
+      if(q.length < MIN) return [];
+      var starts = [], contains = [];
+      for(var i = 0; i < contacts.length; i++){
+        var c = contacts[i];
+        var n = (c.name || '').toLowerCase();
+        if(!n) continue;
+        if(n.indexOf(q) === 0) starts.push(c);
+        else if(n.indexOf(q) !== -1 || (c.company||'').toLowerCase().indexOf(q) !== -1) contains.push(c);
+        if(starts.length >= MAX) break;
+      }
+      return starts.concat(contains).slice(0, MAX);
+    }
+
+    function close(){ wrap.classList.remove('open'); }
+
+    function draw(){
+      var found = matches(inp.value);
+      if(!found.length){ close(); return; }
+      list.innerHTML = found.map(function(c){
+        var sub = [c.role, c.company].filter(Boolean).map(escapeHtml).join(' &middot; ');
+        var phone = c.cellPhone || c.officePhone || '';
+        return '<li data-id="'+escapeHtml(c.id)+'">'
+             +   '<span class="p-name">'+escapeHtml(c.name)+'</span>'
+             +   (sub ? '<span class="p-sub">'+sub+'</span>' : '')
+             +   (phone ? '<span class="p-sub">'+escapeHtml(phone)+'</span>'
+                        : '<span class="p-sub p-nophone">'+(uiLang==='es'?'sin tel&eacute;fono':'no phone on file')+'</span>')
+             + '</li>';
+      }).join('');
+      Array.prototype.forEach.call(list.querySelectorAll('li'), function(li){
+        li.addEventListener('mousedown', function(ev){
+          ev.preventDefault();                       // beat the blur
+          var c = null, want = li.getAttribute('data-id');
+          for(var i = 0; i < contacts.length; i++){ if(contacts[i].id === want){ c = contacts[i]; break; } }
+          if(!c) return;
+          inp.value = c.name || '';
+          var filled = [];
+          if(opts.phoneField){
+            var ph = c.cellPhone || c.officePhone || '';
+            var pf = document.getElementById(opts.phoneField);
+            if(pf && ph){ pf.value = ph; filled.push(uiLang==='es'?'tel&eacute;fono':'phone'); }
+          }
+          if(opts.companyField && c.company){
+            var cf = document.getElementById(opts.companyField);
+            if(cf){ cf.value = c.company; filled.push(uiLang==='es'?'empresa':'company'); }
+          }
+          close();
+          var note = document.getElementById(id+'_note');
+          if(note){
+            note.textContent = filled.length
+              ? (uiLang==='es'
+                  ? 'Se completó ' + filled.join(' y ') + ' desde el directorio — puede cambiarlo.'
+                  : 'Filled in their ' + filled.join(' and ') + ' from the directory — you can still change it.')
+              : (uiLang==='es'
+                  ? 'Esta persona no tiene teléfono en el directorio — escríbalo abajo.'
+                  : 'No phone on file for them — type it in below.');
+            note.style.display = 'block';
+          }
+        });
+      });
+      wrap.classList.add('open');
+    }
+
+    inp.addEventListener('input', function(){
+      var note = document.getElementById(id+'_note');
+      if(note) note.style.display = 'none';
+      draw();
+    });
+    inp.addEventListener('focus', draw);
+    inp.addEventListener('blur',  function(){ setTimeout(close, 130); });
+    inp.addEventListener('keydown', function(ev){ if(ev.key === 'Escape') close(); });
+
+    eqOpenCombos.push({ isOpen: function(){ return wrap.classList.contains('open'); }, close: close });
+  }
+
   function eqWireCombo(id, getOptions){
     var wrap = document.getElementById(id+'_wrap');
     var inp  = document.getElementById(id);
@@ -2019,7 +2137,13 @@
             es?'Escriba o elija de la lista...':'Type it, or pick from the list...',
             es?'Empiece a escribir &mdash; su empresa aparecer&aacute;; o escriba una nueva.'
               :'Start typing &mdash; the company will appear; or type a new one.', true)
-      + fld('eq_resp', es?'Persona Responsable':'Person Responsible', e.responsible, '', '')
+      + '<label for="eq_resp">' + (es?'Persona Responsable':'Person Responsible') + '</label>'
+      + eqPersonHtml('eq_resp', e.responsible,
+          es?'Escriba un nombre...':'Start typing a name...')
+      + '<p class="eq-hint">' + (es
+          ? 'Escriba dos letras y aparecer&aacute;n las personas del directorio. Elija una y se completar&aacute;n su tel&eacute;fono y empresa. Si no est&aacute; en el directorio, escriba todo a mano.'
+          : 'Type two letters and people from the directory appear. Pick one and their phone and company fill in by themselves. Not in the directory? Just type it all in.') + '</p>'
+      + '<p class="eq-filled-note" id="eq_resp_note" style="display:none;"></p>'
       + fld('eq_phone', es?'Su Tel&eacute;fono Celular':'Their Cell Phone', e.responsiblePhone, '',
             es?'Permite llamar o enviar un mensaje directamente desde la tarjeta.'
               :'Lets anyone call or text them straight from the card.')
@@ -2102,6 +2226,7 @@
         }).catch(function(err){ alert('Could not delete: ' + err.message); });
       });
     }
+    eqWirePersonLookup('eq_resp', { phoneField: 'eq_phone', companyField: 'eq_company' });
     eqWireCombo('eq_type',    eqTypeOptions);
     eqWireCombo('eq_company', eqCompanyOptions);
     eqWireCombo('eq_loc',     eqLocationOptions);
@@ -4994,7 +5119,7 @@
      Android hands it to Contacts, and desktop downloads it.
      Cards live in /c/<id>.vcf and are regenerated from Firestore.
      --------------------------------------------------------------- */
-  var AURA_BUILD = 'v39-company-cleanup';
+  var AURA_BUILD = 'v40b-person-lookup';
 
   /* ═══ SELF-SERVICE: "this is my record and it is wrong" ═══════════════════
      Anyone looking at a card can ask for it to be corrected or ask to be taken
