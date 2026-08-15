@@ -226,6 +226,12 @@
   select:focus { border-color: var(--cyan-border); }
 
   /* ── Card Grid ── */
+  /* Belt and braces: a single overflowing child used to make the WHOLE page
+     scroll sideways on a phone, which is miserable to use one-handed on a
+     ladder. Clamp it at the root. */
+  html, body { max-width: 100%; overflow-x: hidden; }
+  .wrap { max-width: 100%; box-sizing: border-box; }
+
   .grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
@@ -861,6 +867,30 @@
   }
   .eq-stat b { display: block; font-size: 21px; color: #ffffff; line-height: 1.1; }
   .eq-stat span { font-size: 10.5px; text-transform: uppercase; letter-spacing: .04em; color: var(--text-secondary); }
+  /* .card is display:flex with align-items:center - correct for a contact card
+     where an avatar sits beside the name. An equipment card is STACKED rows, so
+     inheriting that turned every row into a flex item on one horizontal line
+     and pushed the card far wider than the screen. Equipment cards lay out as
+     blocks. */
+  .card.eq-card {
+    display: block;
+    align-items: initial;
+    min-width: 0;
+    overflow: hidden;             /* nothing may escape the card box */
+  }
+  .card.eq-card > * { min-width: 0; max-width: 100%; }
+  /* Serial numbers and locations are free text and can be long; wrap them
+     rather than letting one long token widen the whole page. */
+  .eq-row, .eq-serial, .card.eq-card .card-name, .card.eq-card .card-sub {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    white-space: normal;
+  }
+  .eq-card-head { min-width: 0; }
+  .eq-card-head > div { min-width: 0; }
+  .eq-actions { min-width: 0; }
+  .eq-actions a, .eq-actions button { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+
   .eq-card-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
   .eq-serial { font-family: ui-monospace, Menlo, monospace; font-size: 13px; color: #ffd98a; }
   .eq-row { font-size: 13.5px; color: #ffffff; margin-top: 3px; }
@@ -885,6 +915,19 @@
     border: 1px solid var(--border-dim); background: rgba(255,255,255,0.06); color: var(--text-primary);
   }
   .eq-empty { text-align: center; color: var(--text-secondary); padding: 26px 10px; font-size: 14px; }
+
+  /* Phone: stats two-up instead of five-across, filters stack, actions full
+     width so a thumb can hit them. */
+  @media (max-width: 560px) {
+    .eq-stat { flex: 1 1 44%; min-width: 0; }
+    .eq-stat b { font-size: 19px; }
+    #sectionEquipment .filters { flex-direction: column; align-items: stretch; }
+    #sectionEquipment .filters select,
+    #sectionEquipment .filters button { width: 100%; }
+    #sectionEquipment .count { margin-left: 0; text-align: right; }
+    .eq-actions a, .eq-actions button { flex: 1 1 100%; }
+  }
+
 
   .emergency-top-btn {
     /* Pinned to the top of the screen so the emergency route is reachable at
@@ -2089,7 +2132,7 @@
         + (e.serial ? ' (SN ' + e.serial + ')' : '')
         + (e.location ? ' at ' + e.location : '')
         + ' needs to be moved. Please advise. - Fujifilm Aura HSE');
-      return '<div class="card">'
+      return '<div class="card eq-card">'
         + '<div class="eq-card-head">'
           + '<div><p class="card-name">'+escapeHtml(e.name||'(unnamed)')+'</p>'
           + '<p class="card-sub">'+escapeHtml(e.type||'')+(e.serial?' &middot; <span class="eq-serial">SN '+escapeHtml(e.serial)+'</span>':'')+'</p></div>'
@@ -5119,7 +5162,7 @@
      Android hands it to Contacts, and desktop downloads it.
      Cards live in /c/<id>.vcf and are regenerated from Firestore.
      --------------------------------------------------------------- */
-  var AURA_BUILD = 'v42-save-fix';
+  var AURA_BUILD = 'v43-responsive';
 
   /* ═══ SELF-SERVICE: "this is my record and it is wrong" ═══════════════════
      Anyone looking at a card can ask for it to be corrected or ask to be taken
