@@ -66,7 +66,13 @@ def vcard(p):
     return "\r\n".join(L) + "\r\n"
 
 def main():
-    docs = fetch()
+    try:
+        docs = fetch()
+    except Exception as e:
+        # Firestore busy or daily free quota used up: skip this run quietly.
+        # The cards on the site stay as they are and the next run catches up.
+        print("Could not read the live list this run (%s) - skipping." % e)
+        return
     if not docs:
         print("Live list is empty - leaving the existing cards alone."); return
     os.makedirs(OUT, exist_ok=True)

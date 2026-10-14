@@ -2,9 +2,11 @@ name: ANC-2 contact cards
 
 # Keeps the Save to Contacts cards for the Amgen ANC-2 directory in step with
 # the live list. Only anc2/c is ever changed.
+# Every 2 hours: each run reads every contact once, and the Firebase project's
+# free daily read quota is shared with the other directory.
 on:
   schedule:
-    - cron: "*/15 * * * *"
+    - cron: "17 */2 * * *"
   workflow_dispatch:
 
 permissions:
