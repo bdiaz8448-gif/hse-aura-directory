@@ -146,6 +146,44 @@
   .em-addr{font-size:14px;line-height:1.45;color:var(--text);padding:10px 12px;border-radius:10px;background:var(--surface-1);border:1px solid var(--border-dim);margin-bottom:6px}
   .em-addr a{color:var(--blue-lite)}
 
+
+  .status{text-align:center;font-size:12px;margin:-6px 0 12px;color:var(--text-3)}
+  .status.live{color:#6fcf6f;text-shadow:0 0 8px rgba(111,207,111,0.4)}
+  .status.off{color:#e0a64a}
+  .adminbar{display:none;gap:8px;flex-wrap:wrap;align-items:center;justify-content:center;margin:-4px 0 12px;font-size:13px;color:var(--blue-lite)}
+  .adminbar.on{display:flex}
+  .adminbar button{height:36px;font-size:13px;padding:0 12px;border-radius:8px;border:1px solid var(--border-dim);background:var(--surface-2);color:var(--text);cursor:pointer}
+  .adminbar .pend{border-color:rgba(224,166,74,0.6);color:#ffc773}
+  .addbtn{height:52px;padding:0 18px;font-size:16px;font-weight:700;border-radius:10px;cursor:pointer;color:#fff;
+    background:linear-gradient(135deg,#2f8cff,#1456b8);border:1px solid var(--blue-border)}
+  .tag.vac{color:#ffc773;background:rgba(224,166,74,0.13);border-color:rgba(224,166,74,0.4)}
+  .divider{border-top:1px solid var(--border-dim);margin:14px 0 8px;padding-top:8px;font-size:12px;color:var(--text-3)}
+  .stack{display:grid;gap:8px}
+  .row3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+  .btn.ghost{background:var(--surface-1)}
+  .btn.redline{background:rgba(210,59,44,0.08);border-color:rgba(210,59,44,0.45);color:#ff8a7a;font-size:15px}
+  .btn.del{background:rgba(210,59,44,0.18);border-color:rgba(210,59,44,0.5);color:#ff8a7a;font-weight:600}
+  .btn.plain{font-weight:600;font-size:15px}
+  .btn.vacbtn{background:#fff3dc;color:#5a3a00;border-color:#e8c27a;font-size:15px;margin-top:8px}
+  .btn.small{height:42px;font-size:14px}
+  .note{font-size:12px;color:var(--text-3);margin:6px 0 0;text-align:center}
+  .addph{color:#ffc773;cursor:pointer;text-decoration:underline;text-underline-offset:2px}
+  .f{display:block;margin:0 0 10px}
+  .f span{display:block;font-size:12px;color:var(--text-3);margin-bottom:4px}
+  .f input,.f textarea,.f select{width:100%;height:46px;font-size:16px;padding:0 12px;border-radius:9px;border:1px solid var(--border-dim);
+    background:rgba(255,255,255,0.06);color:var(--text);outline:none;font-family:inherit}
+  .f textarea{height:80px;padding:10px 12px;resize:vertical}
+  .f input:focus,.f textarea:focus{border-color:var(--blue-border)}
+  .checks{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:4px 0 12px}
+  .checks label{display:flex;gap:8px;align-items:center;font-size:14px;padding:8px 10px;border-radius:8px;background:var(--surface-1);border:1px solid var(--border-dim)}
+  .checks input{width:18px;height:18px}
+  .m-sub{font-size:13px;color:var(--text-2);margin:-6px 0 14px}
+  .req{padding:10px 12px;border-radius:10px;background:var(--surface-1);border:1px solid var(--border-dim);margin-bottom:8px;font-size:14px;line-height:1.45}
+  .req b{color:#fff}.req .chg{color:var(--blue-lite)}
+  .req .acts{display:flex;gap:8px;margin-top:8px}
+  .req .acts .btn{height:40px;flex:1;font-size:14px}
+  .toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:#0f2a52;color:#fff;border:1px solid var(--blue-border);padding:10px 16px;border-radius:10px;
+    font-size:14px;z-index:2000;box-shadow:var(--shadow-lg);display:none;max-width:90vw;text-align:center}
   footer{text-align:center;color:var(--text-3);font-size:11px;margin:30px 0 8px;line-height:1.6}
 
   @media (max-width:560px){
@@ -168,7 +206,9 @@
     <h1 data-i="title">Amgen ANC-2 &mdash; HSE Directory</h1>
     <button class="lang" id="langBtn" type="button">ES</button>
   </div>
-  <div class="sub"><b>Bengal</b> &middot; Holly Springs, NC &middot; <span data-i="updated">Updated</span> Oct 13, 2026 &middot; <span id="totalLbl"></span></div>
+  <div class="sub"><b>Bengal</b> &middot; Holly Springs, NC &middot; <span id="totalLbl"></span></div>
+  <div class="status" id="status">Connecting&hellip;</div>
+  <div class="adminbar" id="adminbar"></div>
 
   <button class="hotline-bar" id="emBtn" type="button"><span data-i="emergency">EMERGENCY</span><small data-i="emSub">911 &middot; ATS Site Medic &middot; Amgen Security &middot; Turner Safety</small></button>
 
@@ -177,60 +217,129 @@
 
   <footer>
     <span data-i="foot">For project communication only. Do not forward or post outside the project.</span><br>
-    <span data-i="foot2">Something wrong or someone missing? Tell Turner Safety.</span><br>
-    <span style="opacity:.7">build v1 &middot; Oct 13, 2026</span>
+    <span data-i="foot2">Something wrong? Open the person and tap Suggest a correction.</span><br>
+    <span style="opacity:.7">build v2-live &middot; Oct 14, 2026</span>
   </footer>
 </div>
 
 <div id="overlay"><div id="modal"></div></div>
+<div class="toast" id="toast"></div>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
 
 <script>
 (function(){
 'use strict';
-var PEOPLE = [{"id":"kevin-paugh","name":"Kevin Paugh","company":"Turner","title":"Pipe Superintendent","phone":"(720) 668-0086","email":"kpaugh@tcco.com","tabs":["mfg","tturner","turner"],"covers":["BFPE","Batchelor & Kimball (BKI)"],"phone2":""},{"id":"hayden-miller","name":"Hayden Miller","company":"Turner","phone":"(704) 589-8052","email":"hjmiller@tcco.com","tabs":["tturner","turner"],"title":"","phone2":""},{"id":"shawn-simms","name":"Shawn Simms","company":"Turner","title":"Business Unit Safety Director","phone":"(704) 239-9428","email":"sksimms@tcco.com","tabs":["safety","tturner","turner"],"phone2":""},{"id":"david-welch","name":"David Welch","company":"Turner","title":"Pipe Superintendent","phone":"(720) 670-8109","email":"dlwelch@tcco.com","tabs":["mfg","tturner","turner"],"covers":["UPSI (Ultra Pure Systems)"],"phone2":""},{"id":"vince-myers","name":"Vince Myers","company":"Turner","title":"Superintendent","phone":"(404) 693-3728","email":"vmyers@tcco.com","tabs":["tturner","turner"],"phone2":""},{"id":"matt-galati","name":"Matt Galati","company":"Turner","title":"Duct Superintendent","phone":"(720) 698-0887","email":"mgalati@tcco.com","tabs":["mfg","tturner","turner"],"covers":["Gamewell Mechanical (GMI)"],"phone2":""},{"id":"colin-ramalho","name":"Colin Ramalho","company":"Turner","title":"CSA Superintendent","phone":"(980) 406-9660","email":"mramalho@tcco.com","tabs":["mfg","tturner","turner"],"covers":["Rolling Plains (RPC)","SPS Corporation","Nations Roofing","Tindall","US Shrink Wrap"],"phone2":""},{"id":"wills-crook","name":"Wills Crook","company":"Turner","title":"VDC Coordinator","email":"wcrook@tcco.com","tabs":["tturner","turner"],"phone":"","phone2":""},{"id":"allen-crone","name":"Allen Crone","company":"Turner","title":"MEP Manager","phone":"(201) 407-6398","email":"acrone@tcco.com","tabs":["tturner","turner"],"phone2":""},{"id":"andrew-bowers","name":"Andrew Bowers","company":"Keller","phone":"(336) 668-0884","email":"andrew.bowers@keller-na.com","tabs":["turner"],"title":"","phone2":""},{"id":"brian-dempsey","name":"Brian Dempsey","company":"Turner","title":"WH2 Lead Superintendent","phone":"(704) 506-4687","email":"bdempsey@tcco.com","tabs":["tturner","turner"],"phone2":""},{"id":"growing-cartagena","name":"Growing Cartagena","company":"Turner","title":"Engineer","phone":"(704) 318-5731","email":"gcartagena@tcco.com","tabs":["tturner","turner"],"phone2":""},{"id":"joseph-smiley","name":"Joseph Smiley","company":"Turner","title":"Sr. Superintendent","phone":"(980) 515-8377","email":"jsmiley@tcco.com","tabs":["tturner","turner"],"phone2":""},{"id":"wendy-perozo-diaz","name":"Wendy Perozo Diaz","company":"Turner","title":"Safety Manager","phone":"(980) 506-0082","email":"wperodiaz@tcco.com","tabs":["safety","tturner","turner"],"phone2":""},{"id":"manny-singh","name":"Manny Singh","company":"Turner","phone":"(980) 517-6897","email":"mansingh@tcco.com","tabs":["tturner","turner"],"title":"","phone2":""},{"id":"mike-mullins","name":"Mike Mullins","company":"Turner","title":"CUB2 Lead Superintendent","phone":"(980) 384-6582","email":"mmullins@tcco.com","tabs":["tturner","turner"],"phone2":""},{"id":"jeff-welker","name":"Jeff Welker","company":"Fred Smith Company","phone":"(984) 301-8188","email":"jwelker@fredsmithcompany.net","tabs":["turner"],"title":"","phone2":""},{"id":"lorenzo-uribe","name":"Lorenzo Uribe","company":"Donley's","phone":"(919) 453-3981","email":"luribe@donleyinc.com","tabs":["turner"],"title":"","phone2":""},{"id":"richard-mahany","name":"Richard Mahany","company":"Turner","title":"Senior Controls Manager","phone":"(305) 216-0016","email":"rmahany@tcco.com","tabs":["tturner","turner"],"phone2":""},{"id":"kierston-deck","name":"Kierston Deck","company":"Turner","phone":"(980) 505-9295","email":"kdeck@tcco.com","tabs":["tturner","turner"],"title":"","phone2":""},{"id":"brianna-cumberbatch","name":"Brianna Cumberbatch","company":"Turner","phone":"(980) 502-2957","email":"bcumberbatch@tcco.com","tabs":["tturner","turner"],"title":"","phone2":""},{"id":"greg-peters","name":"Greg Peters","company":"Turner","phone":"(470) 283-9448","email":"gpeters@tcco.com","tabs":["tturner","turner"],"title":"","phone2":""},{"id":"drew-fischer","name":"Drew Fischer","company":"AdvanceTec","title":"Director Of Construction","phone":"(540) 325-0806","email":"drewf@advancetecllc.com","tabs":["turner"],"trade":"Clean room","super":"andrew-koubek","phone2":""},{"id":"eric-hotek","name":"Eric Hotek","company":"AdvanceTec","email":"erich@advancetecllc.com","tabs":["turner"],"trade":"Clean room","super":"andrew-koubek","title":"","phone":"","phone2":""},{"id":"ayden-lopez","name":"Ayden Lopez","company":"Donley's","phone":"(919) 437-8826","email":"alopez@donleyinc.com","tabs":["turner"],"title":"","phone2":""},{"id":"luke-wenger","name":"Luke Wenger","company":"Metrolina","phone":"(980) 240-5308","email":"lwenger@metrolina-inc.com","tabs":["turner"],"title":"","phone2":""},{"id":"frank-reynolds","name":"Frank Reynolds","company":"Code Electric","phone":"(919) 889-2234","email":"freynolds@codeelec.com","tabs":["turner"],"trade":"Electrical","super":"danny-conaway","title":"","phone2":""},{"id":"cory-lingle","name":"Cory Lingle","company":"Gamewell Mechanical (GMI)","title":"Project Manager","phone":"(704) 213-0610","email":"clingle@gamewellmech.com","tabs":["turner"],"trade":"Plumbing / HVAC","super":"matt-galati","phone2":""},{"id":"james-conner","name":"James Conner","company":"Carolina Conduit Systems","phone":"(984) 249-0295","email":"jconnor3044@icloud.com","tabs":["turner"],"title":"","phone2":""},{"id":"anthony-angeles","name":"Anthony Angeles","company":"SteelFab","phone":"(980) 621-2019","email":"anthony@ossteel-pm.com","tabs":["turner"],"trade":"Steel","title":"","phone2":""},{"id":"jason-henard","name":"Jason Henard","company":"AdvanceTec","phone":"(804) 489-7862","email":"jasonh@advancetecllc.com","tabs":["turner"],"trade":"Clean room","super":"andrew-koubek","title":"","phone2":""},{"id":"allen-stevens","name":"Allen Stevens","company":"First Equipment Company","phone":"(512) 568-8440","email":"astevens@fecrent.com","tabs":["turner"],"trade":"Equipment rental","title":"","phone2":""},{"id":"peter-schmidt","name":"Peter Schmidt","company":"Turner","title":"MSB2 Lead Superintendent","phone":"(407) 533-3242","email":"pschmidt@tcco.com","tabs":["tturner","turner"],"phone2":""},{"id":"mike-sofia","name":"Mike Sofia","company":"Gross Electric","phone":"(518) 791-4913","email":"msofia@grosselectricinc.com","tabs":["turner"],"trade":"Electrical","super":"danny-conaway","title":"","phone2":""},{"id":"sandra-patronas","name":"Sandra Patronas","company":"Turner","title":"Superintendent","phone":"(256) 947-1177","email":"spatronas@tcco.com","tabs":["tturner","turner"],"phone2":""},{"id":"hendrik-schroeders","name":"Hendrik (Hein) Schroeders","company":"Turner","title":"MFG Building Lead Superintendent","phone":"(423) 765-3571","email":"hschroeders@tcco.com","tabs":["mfg","tturner","turner"],"phone2":""},{"id":"andrew-koubek","name":"Andrew Koubek","company":"Turner","title":"CSA Superintendent","phone":"(980) 384-4134","email":"akoubek@tcco.com","tabs":["mfg","tturner","turner"],"covers":["AdvanceTec"],"phone2":""},{"id":"jonny-bostok","name":"Jonny Bostok","company":"AdvanceTec","phone":"(704) 430-2170","email":"jonnyb@advancetecllc.com","tabs":["turner"],"trade":"Clean room","super":"andrew-koubek","title":"","phone2":""},{"id":"brad-crabtree","name":"Brad Crabtree","company":"AdvanceTec","phone":"(804) 385-3716","email":"bradc@advancetecllc.com","tabs":["turner"],"trade":"Clean room","super":"andrew-koubek","title":"","phone2":""},{"id":"crystal-martin","name":"Crystal Martin","company":"Turner","title":"EHS Director","phone":"(615) 961-5223","email":"clmartin@tcco.com","tabs":["safety","tturner","turner"],"phone2":""},{"id":"nathan-munton","name":"Nathan Munton","company":"Turner","title":"Safety Manager","phone":"(980) 384-3905","email":"nmunton@tcco.com","tabs":["safety","tturner","turner"],"phone2":""},{"id":"nicole-weedon","name":"Nicole Weedon","company":"Turner","title":"Safety Manager","phone":"(980) 527-4509","email":"nweedon@tcco.com","tabs":["safety","tturner","turner"],"phone2":""},{"id":"greg-painter","name":"Greg Painter","company":"Metrolina","email":"gregpainter63.nc@gmail.com","tabs":["turner"],"title":"","phone":"","phone2":""},{"id":"fernando-rosas","name":"Fernando Rosas","company":"Metrolina","phone":"(980) 328-6180","email":"frosas@metrolina-inc.com","tabs":["turner"],"title":"","phone2":""},{"id":"ransome-grooms","name":"Ransome Grooms","company":"Turner","phone":"(980) 384-6896","email":"rgrooms@tcco.com","tabs":["tturner","turner"],"title":"","phone2":""},{"id":"steven-miller","name":"Steven Miller","company":"Nations Roofing","phone":"(704) 726-8733","email":"smiller@nationsroof.com","tabs":["turner"],"trade":"Roofing","super":"colin-ramalho","title":"","phone2":""},{"id":"david-beals","name":"David Beals","company":"Nations Roofing","phone":"(704) 302-6905","email":"dbeals@nationsroof.com","tabs":["turner"],"trade":"Roofing","super":"colin-ramalho","title":"","phone2":""},{"id":"ross-wicker","name":"Ross Wicker","company":"Nations Roofing","phone":"(704) 589-7633","email":"rwicker@nationsroof.com","tabs":["turner"],"trade":"Roofing","super":"colin-ramalho","title":"","phone2":""},{"id":"joe-thompson","name":"Joe Thompson","company":"Rock Spring Contracting (RSC)","phone":"(571) 439-4687","email":"jthompson@rockspringcontracting.com","tabs":["turner"],"super":"jeremy-piscitelli","title":"","phone2":""},{"id":"billy-ward","name":"Billy Ward","company":"Rock Spring Contracting (RSC)","email":"billy@rockspringcontracting.com","tabs":["turner"],"super":"jeremy-piscitelli","title":"","phone":"","phone2":""},{"id":"brad-richardson","name":"Brad Richardson","company":"Rock Spring Contracting (RSC)","phone":"(301) 857-2702","email":"brad@rockspringcontracting.com","tabs":["turner"],"super":"jeremy-piscitelli","title":"","phone2":""},{"id":"mathew-brantley","name":"Mathew Brantley","company":"Gamewell Mechanical (GMI)","phone":"(919) 812-7572","email":"mbrantley@gamewellmech.com","tabs":["turner"],"trade":"Plumbing / HVAC","super":"matt-galati","title":"","phone2":""},{"id":"tim-locklear","name":"Tim Locklear","company":"Gamewell Mechanical (GMI)","phone":"(843) 536-2983","email":"tlocklear@gamewellmech.com","tabs":["turner"],"trade":"Plumbing / HVAC","super":"matt-galati","title":"","phone2":""},{"id":"david-schroeder","name":"David Schroeder","company":"Turner","title":"Superintendent","phone":"(407) 630-2691","email":"dschroeder@tcco.com","tabs":["tturner","turner"],"phone2":""},{"id":"hellen-madrid","name":"Hellen Madrid","company":"SteelFab","title":"Safety","phone":"(828) 379-4547","email":"helleenmadrid@gmail.com","tabs":["tpsafety","turner"],"trade":"Steel","phone2":""},{"id":"timothy-washington","name":"Timothy Washington","company":"Metrolina","title":"Safety","phone":"(919) 727-0221","email":"timothy.washington@proximitisafety.com","tabs":["tpsafety","turner"],"phone2":""},{"id":"corbin-kazen","name":"Corbin Kazen","company":"Turner","title":"Superintendent","phone":"(980) 529-1882","email":"ckazen@tcco.com","tabs":["tturner","turner"],"phone2":""},{"id":"randy-draughn","name":"Randy Draughn","company":"BFPE","title":"Construction contact","phone":"(919) 369-3924","email":"rdraughn@bfpe.com","tabs":["turner"],"trade":"Fire sprinkler","super":"kevin-paugh","phone2":""},{"id":"alan-sealey","name":"Alan Sealey","company":"BFPE","phone":"(984) 297-6891","email":"alans@bfpe.com","tabs":["turner"],"trade":"Fire sprinkler","super":"kevin-paugh","title":"","phone2":""},{"id":"kendra-juarez","name":"Kendra Juarez","company":"AdvanceTec","phone":"(208) 431-3067","email":"kendraj@advancetecllc.com","tabs":["turner"],"trade":"Clean room","super":"andrew-koubek","title":"","phone2":""},{"id":"jackson-flores","name":"Jackson Flores","company":"Fred Smith Company","title":"Safety","phone":"(984) 225-5271","email":"jflores@allinsafetyprofessionals.com","tabs":["tpsafety","turner"],"phone2":""},{"id":"michael-hughes","name":"Michael Hughes","company":"Gross Electric","phone":"(518) 974-2253","email":"mhughes@grosselectricinc.com","tabs":["turner"],"trade":"Electrical","super":"danny-conaway","title":"","phone2":""},{"id":"wyatt-young","name":"Wyatt Young","company":"Gamewell Mechanical (GMI)","title":"HVAC","phone":"(704) 633-1030","email":"wyoung@gamewellmech.com","tabs":["turner"],"trade":"Plumbing / HVAC","super":"matt-galati","phone2":""},{"id":"donavan-staley","name":"Donavan Staley","company":"Gamewell Mechanical (GMI)","title":"HVAC","phone":"(704) 797-6078","email":"dstaley@gamewellmech.com","tabs":["turner"],"trade":"Plumbing / HVAC","super":"matt-galati","phone2":""},{"id":"bo-eagle","name":"Bo Eagle","company":"Gamewell Mechanical (GMI)","title":"HVAC","email":"beagle@gamewellmech.com","tabs":["turner"],"trade":"Plumbing / HVAC","super":"matt-galati","phone":"","phone2":""},{"id":"jose-ordonez","name":"Jose Ordonez","company":"Donley's","phone":"(919) 441-9526","email":"jordonez@donleyinc.com","tabs":["turner"],"title":"","phone2":""},{"id":"hector-silvestri","name":"Hector Silvestri","company":"Carolina Conduit Systems","email":"hsilvestrini@carolinaconduit.com","tabs":["turner"],"title":"","phone":"","phone2":""},{"id":"jaime-reyes","name":"Jaime Reyes","company":"Nations Roofing","phone":"(704) 641-3090","email":"jereyes@nationsroof.com","tabs":["turner"],"trade":"Roofing","super":"colin-ramalho","title":"","phone2":""},{"id":"cole-anz","name":"Cole Anz","company":"Gamewell Mechanical (GMI)","title":"HSE","phone":"(704) 798-0547","email":"canz@gamewellmech.com","tabs":["tpsafety","turner"],"trade":"Plumbing / HVAC","super":"matt-galati","phone2":""},{"id":"william-rivera","name":"William Rivera","company":"UPSI (Ultra Pure Systems)","phone":"(939) 640-6482","email":"wrivera@upsipr.com","tabs":["turner"],"trade":"Process piping","super":"david-welch","title":"","phone2":""},{"id":"emanuel-v-zquez","name":"Emanuel Vázquez","company":"UPSI (Ultra Pure Systems)","title":"Construction contact","phone":"(787) 557-3472","email":"evazquez@upsipr.com","tabs":["turner"],"trade":"Process piping","super":"david-welch","phone2":""},{"id":"carlos-rodriguez","name":"Carlos Rodriguez","company":"UPSI (Ultra Pure Systems)","phone":"(787) 224-9184","email":"crodriguez@upsipr.com","tabs":["turner"],"trade":"Process piping","super":"david-welch","title":"","phone2":""},{"id":"josue-camacho","name":"Josue Camacho","company":"Batchelor & Kimball (BKI)","phone":"(919) 316-0868","email":"jcamacho@bkimechanical.com","tabs":["turner"],"super":"kevin-paugh","title":"","phone2":""},{"id":"clinton-johnson","name":"Clinton Johnson","company":"Batchelor & Kimball (BKI)","phone":"(919) 698-0026","email":"cjohnson@bkimechanical.com","tabs":["turner"],"super":"kevin-paugh","title":"","phone2":""},{"id":"daniel-milano","name":"Daniel Milano","company":"Gamewell Mechanical (GMI)","phone":"(704) 787-5558","email":"dmilano@gamewellmech.com","tabs":["turner"],"trade":"Plumbing / HVAC","super":"matt-galati","title":"","phone2":""},{"id":"austin-freyberger","name":"Austin Freyberger","company":"Turner","title":"Superintendent","phone":"(980) 259-0957","email":"afreyberger@tcco.com","tabs":["tturner","turner"],"phone2":""},{"id":"jose-contreras","name":"Jose Contreras","company":"Rolling Plains (RPC)","phone":"(219) 885-8255","email":"jose.contreras@rollingplains.com","tabs":["turner"],"super":"colin-ramalho","title":"","phone2":""},{"id":"addison-emory","name":"Addison Emory","company":"Rolling Plains (RPC)","phone":"(602) 715-4981","email":"addison.emory@rollingplains.com","tabs":["turner"],"super":"colin-ramalho","title":"","phone2":""},{"id":"nicholas-torres","name":"Nicholas Torres","company":"Rolling Plains (RPC)","phone":"(562) 215-8906","email":"nicholas.torres@rollingplains.com","tabs":["turner"],"super":"colin-ramalho","title":"","phone2":""},{"id":"ben-gauthier","name":"Ben Gauthier","company":"Rolling Plains (RPC)","title":"Safety","phone":"(815) 307-2134","email":"ben.gauthier@rollingplains.com","tabs":["tpsafety","turner"],"super":"colin-ramalho","phone2":""},{"id":"zack-brown","name":"Zack Brown","company":"Rock Spring Contracting (RSC)","phone":"(804) 836-4066","email":"zack@rockspringcontracting.com","tabs":["turner"],"super":"jeremy-piscitelli","title":"","phone2":""},{"id":"chris-mady","name":"Chris Mady","company":"Rock Spring Contracting (RSC)","phone":"(804) 987-4683","email":"cmady@rockspringcontracting.com","tabs":["turner"],"super":"jeremy-piscitelli","title":"","phone2":""},{"id":"enrique-castellano","name":"Enrique Castellano","company":"Rock Spring Contracting (RSC)","email":"enrique@rockspringcontracting.com","tabs":["turner"],"super":"jeremy-piscitelli","title":"","phone":"","phone2":""},{"id":"enrique-castellanos-jr","name":"Enrique Castellanos Jr.","company":"Rock Spring Contracting (RSC)","phone":"(540) 217-1292","email":"ecastellano@rockspringcontracting.com","tabs":["turner"],"super":"jeremy-piscitelli","title":"","phone2":""},{"id":"ryan-williamson","name":"Ryan Williamson","company":"SPS Corporation","phone":"(919) 801-7897","email":"ryan.williamson@spscorporation.com","tabs":["turner"],"trade":"Insulated metal panels","super":"colin-ramalho","title":"","phone2":""},{"id":"chaz-gleghorn","name":"Chaz Gleghorn","company":"SPS Corporation","phone":"(602) 717-7861","email":"chaz.gleghorn@spscorporation.com","tabs":["turner"],"trade":"Insulated metal panels","super":"colin-ramalho","title":"","phone2":""},{"id":"scott-fedash","name":"Scott Fedash","company":"SPS Corporation","phone":"(919) 625-9957","email":"scott.fedash@spscorporation.com","tabs":["turner"],"trade":"Insulated metal panels","super":"colin-ramalho","title":"","phone2":""},{"id":"dock-cowgill","name":"Dock Cowgill","company":"Nations Roofing","phone":"(704) 578-7664","email":"dcowgill@nationsroof.com","tabs":["turner"],"trade":"Roofing","super":"colin-ramalho","title":"","phone2":""},{"id":"ricky-leiva","name":"Ricky Leiva","company":"Rock Spring Contracting (RSC)","phone":"(301) 712-5907","email":"rleiva@rockspringcontracting.com","tabs":["turner"],"super":"jeremy-piscitelli","title":"","phone2":""},{"id":"john-fuente","name":"John Fuente","company":"Turner","phone":"(610) 290-2487","email":"jfuente@tcco.com","tabs":["tturner","turner"],"title":"","phone2":""},{"id":"david-gibson","name":"David Gibson","company":"Southern Industrial (SIC)","phone":"(919) 897-9318","email":"gibsond797@gmail.com","tabs":["turner"],"title":"","phone2":""},{"id":"david-waller","name":"David Waller","company":"Southern Industrial (SIC)","phone":"(919) 972-9077","email":"david.walker@southernindustrial.com","tabs":["turner"],"title":"","phone2":""},{"id":"tim-annino","name":"Tim Annino","company":"Turner","title":"Superintendent","phone":"(978) 337-3716","phone2":"(857) 289-4250","email":"tannino@tcco.com","tabs":["mfg","tturner","turner"],"covers":["Desco"]},{"id":"chris-petrie","name":"Chris Petrie","company":"Southern Industrial (SIC)","title":"Safety","phone":"(919) 623-2649","email":"chris.petrie@southernindustrial.com","tabs":["tpsafety","turner"],"phone2":""},{"id":"david-blanno","name":"David Blanno","company":"Turner","title":"Safety","phone":"(336) 267-8897","email":"dmblanno@tcco.com","tabs":["safety","tturner","turner"],"phone2":""},{"id":"albert-arrey","name":"Albert Arrey","company":"Turner","title":"Project Safety & Environmental Manager","phone":"(980) 527-5941","email":"aarrey@tcco.com","tabs":["safety","tturner","turner"],"phone2":""},{"id":"william-nieves","name":"William Nieves","company":"UPSI (Ultra Pure Systems)","title":"Safety","email":"wnieves@upsipr.com","tabs":["tpsafety","turner"],"trade":"Process piping","super":"david-welch","phone":"","phone2":""},{"id":"anthony-pichardo","name":"Anthony Pichardo","company":"Gross Electric","email":"apichardo@grosselectricinc.com","tabs":["turner"],"trade":"Electrical","super":"danny-conaway","title":"","phone":"","phone2":""},{"id":"chad-brogden","name":"Chad Brogden","company":"BFPE","phone":"(919) 625-2816","email":"cbrogden@bfpe.com","tabs":["turner"],"trade":"Fire sprinkler","super":"kevin-paugh","title":"","phone2":""},{"id":"majith-deleon","name":"Majith Deleon","company":"Rock Spring Contracting (RSC)","phone":"(804) 592-7073","email":"majith@rockspringcontracting.com","tabs":["turner"],"super":"jeremy-piscitelli","title":"","phone2":""},{"id":"alexander-wendt","name":"Alexander Wendt","company":"BFPE","phone":"(984) 366-8916","email":"awendt@bfpe.com","tabs":["turner"],"trade":"Fire sprinkler","super":"kevin-paugh","title":"","phone2":""},{"id":"barry-perrow","name":"Barry Perrow","company":"Batchelor & Kimball (BKI)","phone":"(919) 370-8530","email":"bperrow@bkimechanical.com","tabs":["turner"],"super":"kevin-paugh","title":"","phone2":""},{"id":"louis-mouhteros","name":"Louis Mouhteros","company":"Batchelor & Kimball (BKI)","phone":"(803) 514-3055","email":"louismouhteros@gmail.com","tabs":["turner"],"super":"kevin-paugh","title":"","phone2":""},{"id":"chris-james","name":"Chris James","company":"Batchelor & Kimball (BKI)","title":"Safety","email":"cjames@bkimechanical.com","tabs":["tpsafety","turner"],"super":"kevin-paugh","phone":"","phone2":""},{"id":"josh-radford","name":"Josh Radford","company":"Gross Electric","title":"Construction contact","phone":"(518) 791-1432","email":"jradford@grosselectricinc.com","tabs":["turner"],"trade":"Electrical","super":"danny-conaway","phone2":""},{"id":"jorge-euseda","name":"Jorge Euseda","company":"Sunbelt Rentals","phone":"(919) 649-2576","email":"jorge.euseda@icloud.com","tabs":["turner"],"trade":"Equipment rental","super":"jeremy-piscitelli","title":"","phone2":""},{"id":"joshua-carmichael","name":"Joshua Carmichael","company":"Batchelor & Kimball (BKI)","email":"joshua.carmichael@bkimechanical.com","tabs":["turner"],"super":"kevin-paugh","title":"","phone":"","phone2":""},{"id":"jose-morales","name":"Jose Morales","company":"Donley's","title":"Safety","phone":"(919) 740-4049","email":"jmorales@donleyinc.com","tabs":["tpsafety","turner"],"phone2":""},{"id":"jack-moore","name":"Jack Moore","company":"Batchelor & Kimball (BKI)","email":"jackmoore@bkimechanical.com","tabs":["turner"],"super":"kevin-paugh","title":"","phone":"","phone2":""},{"id":"alan-brown","name":"Alan Brown","company":"Turner","title":"Superintendent","phone":"(470) 817-2054","email":"stabrown@tcco.com","tabs":["tturner","turner"],"phone2":""},{"id":"jorge-alanis","name":"Jorge Alanis","company":"Gamewell Mechanical (GMI)","title":"General Foreman","phone":"(252) 205-7255","email":"jorgealanis.1178@gmail.com","tabs":["turner"],"trade":"Plumbing / HVAC","super":"matt-galati","phone2":""},{"id":"melvin-perez","name":"Melvin Perez","company":"Turner","phone":"(980) 403-1396","email":"meperez@tcco.com","tabs":["tturner","turner"],"title":"","phone2":""},{"id":"adam-clark","name":"Adam Clark","company":"BFPE","phone":"(984) 766-1547","email":"aclark@bfpe.com","tabs":["turner"],"trade":"Fire sprinkler","super":"kevin-paugh","title":"","phone2":""},{"id":"gary-sharpe","name":"Gary Sharpe","company":"Batchelor & Kimball (BKI)","phone":"(980) 259-9519","email":"auhound@yahoo.com","tabs":["turner"],"super":"kevin-paugh","title":"","phone2":""},{"id":"tito-argueta","name":"Tito Argueta","company":"SPS Corporation","title":"Superintendent","phone":"(919) 609-9194","email":"tito.argueta@spscorporation.com","tabs":["turner"],"trade":"Insulated metal panels","super":"colin-ramalho","phone2":""},{"id":"caleb-deleon","name":"Caleb DeLeon","company":"SPS Corporation","phone":"(984) 364-9942","email":"caleb.deleon@spscorporation.com","tabs":["turner"],"trade":"Insulated metal panels","super":"colin-ramalho","title":"","phone2":""},{"id":"david-parios","name":"David Parios","company":"Turner","title":"Superintendent","phone":"(571) 305-0671","email":"dparios@tcco.com","tabs":["tturner","turner"],"phone2":""},{"id":"greg-argetsinger","name":"Greg Argetsinger","company":"Scaffolding Solutions","phone":"(704) 305-9682","email":"gargetsinger@scaffoldingsolutions.com","tabs":["turner"],"trade":"Scaffolding","super":"jeremy-piscitelli","title":"","phone2":""},{"id":"kevin-santibanez","name":"Kevin Santibanez","company":"Carolina Welding Solutions","title":"Foreman","phone":"(561) 714-2697","email":"kevinluviano89@gmail.com","tabs":["turner"],"trade":"Welding","phone2":""},{"id":"jamin-rodriguez","name":"Jamin Rodriguez","company":"Carolina Welding Solutions","phone":"(980) 226-4571","email":"jaminbanegas@gmail.com","tabs":["turner"],"trade":"Welding","title":"","phone2":""},{"id":"kevin-luviano","name":"Kevin Luviano","company":"Carolina Welding Solutions","email":"carolinasweldingsolutionsllc@outlook.com","tabs":["turner"],"trade":"Welding","title":"","phone":"","phone2":""},{"id":"michael-petty","name":"Michael Petty","company":"US Shrink Wrap","phone":"(430) 202-1916","email":"mike@usshrinkwrapinc.com","tabs":["turner"],"trade":"Shrink wrap","super":"colin-ramalho","title":"","phone2":""},{"id":"gary-cills","name":"Gary Cills","company":"US Shrink Wrap","phone":"(215) 431-4279","email":"gary@usswinc.com","tabs":["turner"],"trade":"Shrink wrap","super":"colin-ramalho","title":"","phone2":""},{"id":"ross-barnhill","name":"Ross Barnhill","company":"Turner","title":"Safety","phone":"(910) 840-5104","email":"wbarnhill@tcco.com","tabs":["safety","tturner","turner"],"phone2":""},{"id":"josue-sandoval-barajas","name":"Josue Sandoval Barajas","company":"Sunbelt Rentals","phone":"(919) 909-5535","email":"josue.sandoval@sunbeltrentals.com","tabs":["turner"],"trade":"Equipment rental","super":"jeremy-piscitelli","title":"","phone2":""},{"id":"jacob-rhymer","name":"Jacob Rhymer","company":"S&ME","phone":"(919) 731-8033","email":"jrhymer@smeinc.com","tabs":["turner"],"title":"","phone2":""},{"id":"clay-boggs","name":"Clay Boggs","company":"Batchelor & Kimball (BKI)","phone":"(678) 588-6494","email":"clay.boggs@bkimechanical.com","tabs":["turner"],"super":"kevin-paugh","title":"","phone2":""},{"id":"erin-mangan","name":"Erin Mangan","company":"Turner","title":"HSE / Rigging SME","phone":"(980) 416-4712","email":"emangan@tcco.com","tabs":["mfg","safety","tturner","turner"],"phone2":""},{"id":"erik-herrera","name":"Erik Herrera","company":"Southern Industrial (SIC)","phone":"(984) 351-4628","email":"erik.herreracortez@southernindustrial.com","tabs":["turner"],"title":"","phone2":""},{"id":"shane-fetterolf","name":"Shane Fetterolf","company":"Batchelor & Kimball (BKI)","email":"shane.fetterolf@bkimechanical.com","tabs":["turner"],"super":"kevin-paugh","title":"","phone":"","phone2":""},{"id":"jeremy-leblanc","name":"Jeremy LeBlanc","company":"Turner","title":"Superintendent","email":"jjleblanc@tcco.com","tabs":["tturner","turner"],"phone":"","phone2":""},{"id":"johnnie-parrish","name":"Johnnie Parrish","company":"Batchelor & Kimball (BKI)","email":"johnnie.parrish@bkimechanical.com","tabs":["turner"],"super":"kevin-paugh","title":"","phone":"","phone2":""},{"id":"kevin-blue","name":"Kevin Blue","company":"Batchelor & Kimball (BKI)","email":"kevin.blue@bkimechanical.com","tabs":["turner"],"super":"kevin-paugh","title":"","phone":"","phone2":""},{"id":"rod-hargrave","name":"Rod Hargrave","company":"Batchelor & Kimball (BKI)","email":"rod.hargrave@bkimechanical.com","tabs":["turner"],"super":"kevin-paugh","title":"","phone":"","phone2":""},{"id":"sarah-whalen","name":"Sarah Whalen","company":"SPS Corporation","phone":"(984) 388-7964","email":"sarah.whalen@spscorporation.com","tabs":["turner"],"trade":"Insulated metal panels","super":"colin-ramalho","title":"","phone2":""},{"id":"schaun-russel","name":"Schaun Russel","company":"Scaffolding Solutions","phone":"(919) 901-3703","email":"schaunr1647@gmail.com","tabs":["turner"],"trade":"Scaffolding","super":"jeremy-piscitelli","title":"","phone2":""},{"id":"jaime-garcia","name":"Jaime Garcia","company":"Fred Smith Company","title":"Safety","email":"jgarcia@allinsafetyprofessionals.com","tabs":["tpsafety","turner"],"phone":"","phone2":""},{"id":"sam-ceparano","name":"Sam Ceparano","company":"Fred Smith Company","title":"Safety","email":"sceparano@allinsafetyprofessionals.com","tabs":["tpsafety","turner"],"phone":"","phone2":""},{"id":"jeremy-piscitelli","name":"Jeremy Piscitelli","company":"Turner","title":"Superintendent","phone":"(857) 268-3654","email":"jpiscitelli@tcco.com","tabs":["mfg","tturner","turner"],"covers":["Sunbelt Rentals","Scaffolding Solutions","Rock Spring Contracting (RSC)"],"phone2":""},{"id":"brent-neer","name":"Brent Neer","company":"Cooper Electric","title":"General Superintendent","phone":"(919) 437-0158","email":"brent.neer@coopereic.com","tabs":["turner"],"trade":"Electrical","phone2":""},{"id":"andrew-bennett","name":"Andrew Bennett","company":"AdvanceTec","email":"andrewb@advancetecllc.com","tabs":["turner"],"trade":"Clean room","super":"andrew-koubek","title":"","phone":"","phone2":""},{"id":"jason-morrison","name":"Jason Morrison","company":"Southern Industrial (SIC)","phone":"(910) 465-3603","email":"jason.morrison@southernindustrial.com","tabs":["turner"],"title":"","phone2":""},{"id":"mark-millinor","name":"Mark Millinor","company":"Southern Industrial (SIC)","title":"General Foreman","phone":"(984) 303-7843","email":"mark.millinor@southernindustrial.com","tabs":["turner"],"phone2":""},{"id":"travis-pelles","name":"Travis Pelles","company":"Sunbelt Rentals","phone":"(919) 610-9539","email":"travis.pelles@sunbeltrentals.com","tabs":["turner"],"trade":"Equipment rental","super":"jeremy-piscitelli","title":"","phone2":""},{"id":"chris-thornsbury","name":"Chris Thornsbury","company":"Gamewell Mechanical (GMI)","title":"HVAC","email":"cthornsburry@gamewellmech.com","tabs":["turner"],"trade":"Plumbing / HVAC","super":"matt-galati","phone":"","phone2":""},{"id":"isaac-bare","name":"Isaac Bare","company":"Tindall","phone":"(864) 978-3020","email":"isaacbare@tindallcorp.com","tabs":["turner"],"super":"colin-ramalho","title":"","phone2":""},{"id":"deacon-hughes","name":"Deacon Hughes","company":"Turner","title":"Superintendent","phone":"(470) 597-6097","email":"pahughes@tcco.com","tabs":["tturner","turner"],"phone2":""},{"id":"sun-choi","name":"Sun Choi","company":"AdvanceTec","title":"Construction contact","phone":"(804) 836-7272","phone2":"(804) 836-1212","email":"sunc@advancetecllc.com","tabs":["turner"],"trade":"Clean room","super":"andrew-koubek"},{"id":"todd-edwards","name":"Todd Edwards","company":"Cooper Electric","email":"todd.edwards@coopereic.com","tabs":["turner"],"trade":"Electrical","title":"","phone":"","phone2":""},{"id":"damian-robertson","name":"Damian Robertson","company":"Cooper Electric","email":"damian.robertson@coopereic.com","tabs":["turner"],"trade":"Electrical","title":"","phone":"","phone2":""},{"id":"bruce-williams","name":"Bruce Williams","company":"Tindall","title":"Safety","phone":"(804) 721-7958","email":"bwilliams@prioritysafetyconsultation.com","tabs":["tpsafety","turner"],"super":"colin-ramalho","phone2":""},{"id":"thomas-fowler","name":"Thomas Fowler","company":"Southern Industrial (SIC)","email":"tj.fowler@southernindustrial.com","tabs":["turner"],"title":"","phone":"","phone2":""},{"id":"william-martinez","name":"William Martinez","company":"Turner","phone":"(919) 605-9735","email":"williammartinez665@gmail.com","tabs":["tturner","turner"],"title":"","phone2":""},{"id":"juan-gonzalez","name":"Juan Gonzalez","company":"Southern Industrial (SIC)","phone":"(984) 278-2364","email":"juan.gonzalezbello@southernindustrial.com","tabs":["turner"],"title":"","phone2":""},{"id":"gp-bassi","name":"GP Bassi","company":"First Equipment Company","phone":"(256) 585-5709","email":"gpbassi@fecrent.com","tabs":["turner"],"trade":"Equipment rental","title":"","phone2":""},{"id":"olawale-osile","name":"Olawale Osile","company":"Tindall","title":"Safety","phone":"(470) 855-1164","email":"osileolawaleus@gmail.com","tabs":["tpsafety","turner"],"super":"colin-ramalho","phone2":""},{"id":"paul-dodge","name":"Paul Dodge","company":"Southern Industrial (SIC)","phone":"(984) 340-6424","email":"paul.dodge@southernindustrial.com","tabs":["turner"],"title":"","phone2":""},{"id":"adam-donato","name":"Adam Donato","company":"First Equipment Company","phone":"(843) 607-4993","email":"adam.donato@equipmentshare.com","tabs":["turner"],"trade":"Equipment rental","title":"","phone2":""},{"id":"george-dooley","name":"George Dooley","company":"BFPE","phone":"(919) 550-2699","email":"gdooley@bfpe.com","tabs":["turner"],"trade":"Fire sprinkler","super":"kevin-paugh","title":"","phone2":""},{"id":"david-montano","name":"David Montano","company":"Rock Spring Contracting (RSC)","title":"Sr. Safety Coordinator","phone":"(336) 460-2369","email":"dgarcia@rockspringcontracting.com","tabs":["tpsafety","turner"],"super":"jeremy-piscitelli","phone2":""},{"id":"jacob-meadows","name":"Jacob Meadows","company":"Goettle","title":"Foreman","phone":"(681) 203-1507","email":"bbqwv54@yahoo.com","tabs":["turner"],"phone2":""},{"id":"jesus-cruz","name":"Jesus Cruz","company":"Desco","email":"jesus@descofloors.com","tabs":["turner"],"trade":"Flooring","super":"tim-annino","title":"","phone":"","phone2":""},{"id":"aurora-marichal","name":"Aurora Marichal","company":"Batchelor & Kimball (BKI)","email":"amarichal213@gmail.com","tabs":["turner"],"super":"kevin-paugh","title":"","phone":"","phone2":""},{"id":"jay-pilarczyk","name":"Jay Pilarczyk","company":"Nations Roofing","phone":"(704) 609-0451","email":"jpilarczyk@nationsroof.com","tabs":["turner"],"trade":"Roofing","super":"colin-ramalho","title":"","phone2":""},{"id":"thomas-holland","name":"Thomas Holland","company":"Gross Electric","email":"tholland@grosselectricinc.com","tabs":["turner"],"trade":"Electrical","super":"danny-conaway","title":"","phone":"","phone2":""},{"id":"jeremy-robinson","name":"Jeremy Robinson","company":"Desco","phone":"(317) 677-6114","email":"jeremy@descofloors.com","tabs":["turner"],"trade":"Flooring","super":"tim-annino","title":"","phone2":""},{"id":"linville-hodgin","name":"Linville Hodgin","company":"Batchelor & Kimball (BKI)","phone":"(336) 635-8352","email":"linville.hodgin@bkimechanical.com","tabs":["turner"],"super":"kevin-paugh","title":"","phone2":""},{"id":"chris-groen","name":"Chris Groen","company":"Hallam ICS","title":"Sr. PM","phone":"(802) 963-2974","email":"cgroen@hallam-ics.com","tabs":["turner"],"phone2":""},{"id":"dwight-tedder","name":"Dwight Tedder","company":"Hallam ICS","title":"PM","phone":"(336) 963-2974","email":"dtedder@hallam-ics.com","tabs":["turner"],"phone2":""},{"id":"brooks-griffin","name":"Brooks Griffin","company":"Hallam ICS","title":"Safety Director","email":"bgriffin@freedomind.us","tabs":["tpsafety","turner"],"phone":"","phone2":""},{"id":"eric-johnson","name":"Eric Johnson","company":"Hallam ICS","title":"Sr. PM","phone":"(252) 955-0299","email":"ejohnson@freedomind.us","tabs":["turner"],"phone2":""},{"id":"kyle-bisson","name":"Kyle Bisson","company":"Hallam ICS","phone":"(252) 908-7264","email":"kbisson@freedomind.us","tabs":["turner"],"title":"","phone2":""},{"id":"quinn-gagnon","name":"Quinn Gagnon","company":"Donley's","phone":"(919) 437-9764","email":"qgagnon@donleyinc.com","tabs":["turner"],"title":"","phone2":""},{"id":"stephanie-morrisroe","name":"Stephanie Morrisroe","company":"AdvanceTec","email":"stephaniem@advancetecllc.com","tabs":["turner"],"trade":"Clean room","super":"andrew-koubek","title":"","phone":"","phone2":""},{"id":"deon-yancey","name":"Deon Yancey","company":"Gross Electric","title":"Safety","email":"dyancey@grosselectricinc.com","tabs":["tpsafety","turner"],"trade":"Electrical","super":"danny-conaway","phone":"","phone2":""},{"id":"tim-faircloth","name":"Tim Faircloth","company":"Southern Industrial (SIC)","email":"riggin101@outlook.com","tabs":["turner"],"title":"","phone":"","phone2":""},{"id":"john-wilson","name":"John Wilson","company":"Siemens","phone":"(919) 943-8948","email":"johnwilson@bwilsonelec.com","tabs":["turner"],"super":"danny-conaway","title":"","phone2":""},{"id":"elvira-sanchez","name":"Elvira Sanchez","company":"Donley's","title":"Safety","phone":"(919) 906-6401","email":"esanchez@donleyinc.com","tabs":["tpsafety","turner"],"phone2":""},{"id":"mike-cash","name":"Mike Cash","company":"Southern Industrial (SIC)","phone":"(984) 368-0968","email":"michael.cash@southernindustrial.com","tabs":["turner"],"title":"","phone2":""},{"id":"mohammed-musleh","name":"Mohammed Musleh","company":"Southern Industrial (SIC)","phone":"(984) 480-9446","email":"mohammed.musleh@southernindustrial.com","tabs":["turner"],"title":"","phone2":""},{"id":"jillian-willis","name":"Jillian Willis","company":"Southern Industrial (SIC)","phone":"(919) 530-9348","email":"jillian.willis@southernindustrial.com","tabs":["turner"],"title":"","phone2":""},{"id":"thomas-zakerski","name":"Thomas Zakerski","company":"Southern Industrial (SIC)","phone":"(919) 527-3347","email":"tkzkris@yahoo.com","tabs":["turner"],"title":"","phone2":""},{"id":"jorge-o-aranda","name":"Jorge O. Aranda","company":"Southern Industrial (SIC)","email":"jorge.ocampoarand@southernindustrial.com","tabs":["turner"],"title":"","phone":"","phone2":""},{"id":"gabriel-b-martinez","name":"Gabriel B. Martinez","company":"Southern Industrial (SIC)","email":"gabriel.bahenamartinez@southernindustrial.com","tabs":["turner"],"title":"","phone":"","phone2":""},{"id":"jorge-ocmpoaranda","name":"Jorge Ocmpoaranda","company":"Southern Industrial (SIC)","title":"Rigging Foreman","phone":"(919) 616-1388","email":"jorge.ocmpoaranda@southernindustrial.com","tabs":["turner"],"phone2":""},{"id":"jeronimo-hernandez","name":"Jeronimo Hernandez","company":"Southern Industrial (SIC)","phone":"(919) 817-2516","email":"jeronimo.hernandez@southernindustrial.com","tabs":["turner"],"title":"","phone2":""},{"id":"wayne-spell","name":"Wayne Spell","company":"Freedom Industries","phone":"(252) 889-0380","email":"wspell@freedomind.us","tabs":["turner"],"title":"","phone2":""},{"id":"baldemar-diaz","name":"Baldemar Diaz","company":"Turner","title":"Project EHS Director","phone":"(980) 287-1999","email":"badiaz@tcco.com","tabs":["mfg","safety","tturner","turner"],"phone2":""},{"id":"steven-hampton","name":"Steven Hampton","company":"Kemco Electric","phone":"(661) 477-9373","email":"steven@kemcoelectric.com","tabs":["turner"],"trade":"Electrical","title":"","phone2":""},{"id":"rob-jones","name":"Rob Jones","company":"Fred Smith Company","phone":"(984) 390-2630","email":"jojones@fredsmithcompany.net","tabs":["turner"],"title":"","phone2":""},{"id":"liz-letourneau","name":"Liz Letourneau","company":"Turner","title":"Safety","phone":"(404) 916-7510","email":"eletourneau@tcco.com","tabs":["safety","tturner","turner"],"phone2":""},{"id":"luke-eggers","name":"Luke Eggers","company":"Desco","title":"Construction contact","phone":"(317) 441-8998","email":"luke.eggers@descofloors.com","tabs":["turner"],"trade":"Flooring","super":"tim-annino","phone2":""},{"id":"hunter-sheets","name":"Hunter Sheets","company":"BFPE","email":"hunterm.sheets@gmail.com","tabs":["turner"],"trade":"Fire sprinkler","super":"kevin-paugh","title":"","phone":"","phone2":""},{"id":"erick-tabora","name":"Erick Tabora","company":"Southern Industrial (SIC)","title":"Foreman","phone":"(984) 332-0234","email":"erick.taboratabora@southernindustrial.com","tabs":["turner"],"phone2":""},{"id":"kevin-hammond","name":"Kevin Hammond","company":"AdvanceTec","email":"kevinh@advancetecllc.com","tabs":["turner"],"trade":"Clean room","super":"andrew-koubek","title":"","phone":"","phone2":""},{"id":"jimmy-watts","name":"Jimmy Watts","company":"Scaffolding Solutions","title":"Operations Manager","phone":"(336) 804-2685","email":"jwatts@scaffoldingsolutions.com","tabs":["turner"],"trade":"Scaffolding","super":"jeremy-piscitelli","phone2":""},{"id":"eric-soto","name":"Eric Soto","company":"Scaffolding Solutions","title":"Safety Manager","phone":"(434) 484-0019","email":"esoto@scaffoldingsolutions.com","tabs":["tpsafety","turner"],"trade":"Scaffolding","super":"jeremy-piscitelli","phone2":""},{"id":"justin-lamb","name":"Justin Lamb","company":"Turner","title":"Project Executive","phone":"(984) 366-1994","email":"jlamb@tcco.com","tabs":["tturner","turner"],"phone2":""},{"id":"luther-williams","name":"Luther Williams","company":"Turner","title":"Safety Manager - Site Lead","phone":"(919) 427-9547","email":"lwilliams@tcco.com","tabs":["safety","tturner","turner"],"phone2":""},{"id":"david-patton","name":"David Patton","company":"Turner","title":"Safety Manager","phone":"(980) 527-1694","email":"dapatton@tcco.com","tabs":["safety","tturner","turner"],"phone2":""},{"id":"richard-crowder","name":"Richard Crowder","company":"Turner","title":"Lead Site Superintendent","phone":"(901) 713-2331","email":"richcrowder@tcco.com","tabs":["tturner","turner"],"phone2":""},{"id":"danny-conaway","name":"Danny Conaway","company":"Turner","title":"Electrical Superintendent","phone":"(256) 519-5669","tabs":["mfg","tturner","turner"],"covers":["Gross Electric","Code Electric","Siemens"],"email":"","phone2":""},{"id":"larry-whitman","name":"Larry Whitman","company":"Gamewell Mechanical (GMI)","title":"Construction contact","phone":"(704) 797-6884","tabs":["turner"],"trade":"Plumbing / HVAC","super":"matt-galati","email":"","phone2":""},{"id":"epifanio-albattan","name":"Epifanio Albattan","company":"Gamewell Mechanical (GMI)","title":"Safety","email":"ealbattan@gamewellmech.com","tabs":["tpsafety","turner"],"trade":"Plumbing / HVAC","super":"matt-galati","phone":"","phone2":""},{"id":"brett-richardson","name":"Brett Richardson","company":"Goettle","title":"Safety","email":"brettrich1987@gmail.com","tabs":["tpsafety","turner"],"phone":"","phone2":""},{"id":"travis-yates","name":"Travis Yates","company":"MSE","title":"Safety","email":"tyates798@gmail.com","tabs":["tpsafety","turner"],"phone":"","phone2":""},{"id":"tommy-malena","name":"Tommy Malena","company":"Scaffolding Solutions","title":"Safety","email":"tommy@esr-safety.com","tabs":["tpsafety","turner"],"trade":"Scaffolding","super":"jeremy-piscitelli","phone":"","phone2":""},{"id":"celestino-gonzalez","name":"Celestino Gonzalez","company":"Southern Industrial (SIC)","title":"Safety","email":"celestino.gonzalez@southernindustrial.com","tabs":["tpsafety","turner"],"phone":"","phone2":""},{"id":"antonio-cooper","name":"Antonio Cooper","company":"SPS Corporation","title":"Safety","email":"hardworks1@gmail.com","tabs":["tpsafety","turner"],"trade":"Insulated metal panels","super":"colin-ramalho","phone":"","phone2":""},{"id":"travis-zinn","name":"Travis Zinn","company":"SteelFab","title":"Safety","email":"travis@esr-safety.com","tabs":["tpsafety","turner"],"trade":"Steel","phone":"","phone2":""},{"id":"drew-martin","name":"Drew Martin","company":"Amgen","title":"EHS","email":"amarti62@amgen.com","tabs":["amgen"],"phone":"","phone2":""},{"id":"amgen-security","name":"Amgen Security","company":"Amgen","title":"Site Security","phone":"(984) 343-2122","tabs":["amgen"],"email":"","phone2":""},{"id":"ats-on-site-medic","name":"ATS On-site Medic","company":"ATS","title":"Site emergency contact - on-site medic","phone":"(336) 736-4512","tabs":["amgen"],"email":"","phone2":""},{"id":"sydney-holland","name":"Sydney Holland","company":"ATS","title":"On-site Medic","email":"sholland@atshws.com","tabs":["amgen"],"phone":"","phone2":""}];
-var BY = {}; PEOPLE.forEach(function(p){ BY[p.id] = p; });
+var EMBED = [{"id":"kevin-paugh","name":"Kevin Paugh","company":"Turner","title":"Pipe Superintendent","phone":"(720) 668-0086","email":"kpaugh@tcco.com","tabs":["mfg","turner"],"covers":["BFPE","Batchelor & Kimball (BKI)"]},{"id":"hayden-miller","name":"Hayden Miller","company":"Turner","phone":"(704) 589-8052","email":"hjmiller@tcco.com","tabs":["turner"]},{"id":"shawn-simms","name":"Shawn Simms","company":"Turner","title":"Business Unit Safety Director","phone":"(704) 239-9428","email":"sksimms@tcco.com","tabs":["safety","turner"]},{"id":"david-welch","name":"David Welch","company":"Turner","title":"Pipe Superintendent","phone":"(720) 670-8109","email":"dlwelch@tcco.com","tabs":["mfg","turner"],"covers":["UPSI (Ultra Pure Systems)"]},{"id":"vince-myers","name":"Vince Myers","company":"Turner","title":"Superintendent","phone":"(404) 693-3728","email":"vmyers@tcco.com","tabs":["turner"]},{"id":"matt-galati","name":"Matt Galati","company":"Turner","title":"Duct Superintendent","phone":"(720) 698-0887","email":"mgalati@tcco.com","tabs":["mfg","turner"],"covers":["Gamewell Mechanical (GMI)"]},{"id":"colin-ramalho","name":"Colin Ramalho","company":"Turner","title":"CSA Superintendent","phone":"(980) 406-9660","email":"mramalho@tcco.com","tabs":["mfg","turner"],"covers":["Rolling Plains (RPC)","SPS Corporation","Nations Roofing","Tindall","US Shrink Wrap"]},{"id":"wills-crook","name":"Wills Crook","company":"Turner","title":"VDC Coordinator","email":"wcrook@tcco.com","tabs":["turner"]},{"id":"allen-crone","name":"Allen Crone","company":"Turner","title":"MEP Manager","phone":"(201) 407-6398","email":"acrone@tcco.com","tabs":["turner"]},{"id":"andrew-bowers","name":"Andrew Bowers","company":"Keller","phone":"(336) 668-0884","email":"andrew.bowers@keller-na.com","tabs":[]},{"id":"brian-dempsey","name":"Brian Dempsey","company":"Turner","title":"WH2 Lead Superintendent","phone":"(704) 506-4687","email":"bdempsey@tcco.com","tabs":["turner"]},{"id":"growing-cartagena","name":"Growing Cartagena","company":"Turner","title":"Engineer","phone":"(704) 318-5731","email":"gcartagena@tcco.com","tabs":["turner"]},{"id":"joseph-smiley","name":"Joseph Smiley","company":"Turner","title":"Sr. Superintendent","phone":"(980) 515-8377","email":"jsmiley@tcco.com","tabs":["turner"]},{"id":"wendy-perozo-diaz","name":"Wendy Perozo Diaz","company":"Turner","title":"Safety Manager","phone":"(980) 506-0082","email":"wperodiaz@tcco.com","tabs":["safety","turner"]},{"id":"manny-singh","name":"Manny Singh","company":"Turner","phone":"(980) 517-6897","email":"mansingh@tcco.com","tabs":["turner"]},{"id":"mike-mullins","name":"Mike Mullins","company":"Turner","title":"CUB2 Lead Superintendent","phone":"(980) 384-6582","email":"mmullins@tcco.com","tabs":["turner"]},{"id":"jeff-welker","name":"Jeff Welker","company":"Fred Smith Company","phone":"(984) 301-8188","email":"jwelker@fredsmithcompany.net","tabs":[]},{"id":"lorenzo-uribe","name":"Lorenzo Uribe","company":"Donley's","phone":"(919) 453-3981","email":"luribe@donleyinc.com","tabs":[]},{"id":"richard-mahany","name":"Richard Mahany","company":"Turner","title":"Senior Controls Manager","phone":"(305) 216-0016","email":"rmahany@tcco.com","tabs":["turner"]},{"id":"kierston-deck","name":"Kierston Deck","company":"Turner","phone":"(980) 505-9295","email":"kdeck@tcco.com","tabs":["turner"]},{"id":"brianna-cumberbatch","name":"Brianna Cumberbatch","company":"Turner","phone":"(980) 502-2957","email":"bcumberbatch@tcco.com","tabs":["turner"]},{"id":"greg-peters","name":"Greg Peters","company":"Turner","phone":"(470) 283-9448","email":"gpeters@tcco.com","tabs":["turner"]},{"id":"drew-fischer","name":"Drew Fischer","company":"AdvanceTec","title":"Director Of Construction","phone":"(540) 325-0806","email":"drewf@advancetecllc.com","tabs":[],"trade":"Clean room","super":"andrew-koubek"},{"id":"eric-hotek","name":"Eric Hotek","company":"AdvanceTec","email":"erich@advancetecllc.com","tabs":[],"trade":"Clean room","super":"andrew-koubek"},{"id":"ayden-lopez","name":"Ayden Lopez","company":"Donley's","phone":"(919) 437-8826","email":"alopez@donleyinc.com","tabs":[]},{"id":"luke-wenger","name":"Luke Wenger","company":"Metrolina","phone":"(980) 240-5308","email":"lwenger@metrolina-inc.com","tabs":[]},{"id":"frank-reynolds","name":"Frank Reynolds","company":"Code Electric","phone":"(919) 889-2234","email":"freynolds@codeelec.com","tabs":[],"trade":"Electrical","super":"danny-conaway"},{"id":"cory-lingle","name":"Cory Lingle","company":"Gamewell Mechanical (GMI)","title":"Project Manager","phone":"(704) 213-0610","email":"clingle@gamewellmech.com","tabs":[],"trade":"Plumbing / HVAC","super":"matt-galati"},{"id":"james-conner","name":"James Conner","company":"Carolina Conduit Systems","phone":"(984) 249-0295","email":"jconnor3044@icloud.com","tabs":[]},{"id":"anthony-angeles","name":"Anthony Angeles","company":"SteelFab","phone":"(980) 621-2019","email":"anthony@ossteel-pm.com","tabs":[],"trade":"Steel"},{"id":"jason-henard","name":"Jason Henard","company":"AdvanceTec","phone":"(804) 489-7862","email":"jasonh@advancetecllc.com","tabs":[],"trade":"Clean room","super":"andrew-koubek"},{"id":"allen-stevens","name":"Allen Stevens","company":"First Equipment Company","phone":"(512) 568-8440","email":"astevens@fecrent.com","tabs":[],"trade":"Equipment rental"},{"id":"peter-schmidt","name":"Peter Schmidt","company":"Turner","title":"MSB2 Lead Superintendent","phone":"(407) 533-3242","email":"pschmidt@tcco.com","tabs":["turner"]},{"id":"mike-sofia","name":"Mike Sofia","company":"Gross Electric","phone":"(518) 791-4913","email":"msofia@grosselectricinc.com","tabs":[],"trade":"Electrical","super":"danny-conaway"},{"id":"sandra-patronas","name":"Sandra Patronas","company":"Turner","title":"Superintendent","phone":"(256) 947-1177","email":"spatronas@tcco.com","tabs":["turner"]},{"id":"hendrik-schroeders","name":"Hendrik (Hein) Schroeders","company":"Turner","title":"MFG Building Lead Superintendent","phone":"(423) 765-3571","email":"hschroeders@tcco.com","tabs":["mfg","turner"]},{"id":"andrew-koubek","name":"Andrew Koubek","company":"Turner","title":"CSA Superintendent","phone":"(980) 384-4134","email":"akoubek@tcco.com","tabs":["mfg","turner"],"covers":["AdvanceTec"]},{"id":"jonny-bostok","name":"Jonny Bostok","company":"AdvanceTec","phone":"(704) 430-2170","email":"jonnyb@advancetecllc.com","tabs":[],"trade":"Clean room","super":"andrew-koubek"},{"id":"brad-crabtree","name":"Brad Crabtree","company":"AdvanceTec","phone":"(804) 385-3716","email":"bradc@advancetecllc.com","tabs":[],"trade":"Clean room","super":"andrew-koubek"},{"id":"crystal-martin","name":"Crystal Martin","company":"Turner","title":"EHS Director","phone":"(615) 961-5223","email":"clmartin@tcco.com","tabs":["safety","turner"]},{"id":"nathan-munton","name":"Nathan Munton","company":"Turner","title":"Safety Manager","phone":"(980) 384-3905","email":"nmunton@tcco.com","tabs":["safety","turner"]},{"id":"nicole-weedon","name":"Nicole Weedon","company":"Turner","title":"Safety Manager","phone":"(980) 527-4509","email":"nweedon@tcco.com","tabs":["safety","turner"]},{"id":"greg-painter","name":"Greg Painter","company":"Metrolina","email":"gregpainter63.nc@gmail.com","tabs":[]},{"id":"fernando-rosas","name":"Fernando Rosas","company":"Metrolina","phone":"(980) 328-6180","email":"frosas@metrolina-inc.com","tabs":[]},{"id":"ransome-grooms","name":"Ransome Grooms","company":"Turner","phone":"(980) 384-6896","email":"rgrooms@tcco.com","tabs":["turner"]},{"id":"steven-miller","name":"Steven Miller","company":"Nations Roofing","phone":"(704) 726-8733","email":"smiller@nationsroof.com","tabs":[],"trade":"Roofing","super":"colin-ramalho"},{"id":"david-beals","name":"David Beals","company":"Nations Roofing","phone":"(704) 302-6905","email":"dbeals@nationsroof.com","tabs":[],"trade":"Roofing","super":"colin-ramalho"},{"id":"ross-wicker","name":"Ross Wicker","company":"Nations Roofing","phone":"(704) 589-7633","email":"rwicker@nationsroof.com","tabs":[],"trade":"Roofing","super":"colin-ramalho"},{"id":"joe-thompson","name":"Joe Thompson","company":"Rock Spring Contracting (RSC)","phone":"(571) 439-4687","email":"jthompson@rockspringcontracting.com","tabs":[],"super":"jeremy-piscitelli"},{"id":"billy-ward","name":"Billy Ward","company":"Rock Spring Contracting (RSC)","email":"billy@rockspringcontracting.com","tabs":[],"super":"jeremy-piscitelli"},{"id":"brad-richardson","name":"Brad Richardson","company":"Rock Spring Contracting (RSC)","phone":"(301) 857-2702","email":"brad@rockspringcontracting.com","tabs":[],"super":"jeremy-piscitelli"},{"id":"mathew-brantley","name":"Mathew Brantley","company":"Gamewell Mechanical (GMI)","phone":"(919) 812-7572","email":"mbrantley@gamewellmech.com","tabs":[],"trade":"Plumbing / HVAC","super":"matt-galati"},{"id":"tim-locklear","name":"Tim Locklear","company":"Gamewell Mechanical (GMI)","phone":"(843) 536-2983","email":"tlocklear@gamewellmech.com","tabs":[],"trade":"Plumbing / HVAC","super":"matt-galati"},{"id":"david-schroeder","name":"David Schroeder","company":"Turner","title":"Superintendent","phone":"(407) 630-2691","email":"dschroeder@tcco.com","tabs":["turner"]},{"id":"hellen-madrid","name":"Hellen Madrid","company":"SteelFab","title":"Safety","phone":"(828) 379-4547","email":"helleenmadrid@gmail.com","tabs":["tpsafety"],"trade":"Steel"},{"id":"timothy-washington","name":"Timothy Washington","company":"Metrolina","title":"Safety","phone":"(919) 727-0221","email":"timothy.washington@proximitisafety.com","tabs":["tpsafety"]},{"id":"corbin-kazen","name":"Corbin Kazen","company":"Turner","title":"Superintendent","phone":"(980) 529-1882","email":"ckazen@tcco.com","tabs":["turner"]},{"id":"randy-draughn","name":"Randy Draughn","company":"BFPE","title":"Construction contact","phone":"(919) 369-3924","email":"rdraughn@bfpe.com","tabs":[],"trade":"Fire sprinkler","super":"kevin-paugh"},{"id":"alan-sealey","name":"Alan Sealey","company":"BFPE","phone":"(984) 297-6891","email":"alans@bfpe.com","tabs":[],"trade":"Fire sprinkler","super":"kevin-paugh"},{"id":"kendra-juarez","name":"Kendra Juarez","company":"AdvanceTec","phone":"(208) 431-3067","email":"kendraj@advancetecllc.com","tabs":[],"trade":"Clean room","super":"andrew-koubek"},{"id":"jackson-flores","name":"Jackson Flores","company":"Fred Smith Company","title":"Safety","phone":"(984) 225-5271","email":"jflores@allinsafetyprofessionals.com","tabs":["tpsafety"]},{"id":"michael-hughes","name":"Michael Hughes","company":"Gross Electric","phone":"(518) 974-2253","email":"mhughes@grosselectricinc.com","tabs":[],"trade":"Electrical","super":"danny-conaway"},{"id":"wyatt-young","name":"Wyatt Young","company":"Gamewell Mechanical (GMI)","title":"HVAC","phone":"(704) 633-1030","email":"wyoung@gamewellmech.com","tabs":[],"trade":"Plumbing / HVAC","super":"matt-galati"},{"id":"donavan-staley","name":"Donavan Staley","company":"Gamewell Mechanical (GMI)","title":"HVAC","phone":"(704) 797-6078","email":"dstaley@gamewellmech.com","tabs":[],"trade":"Plumbing / HVAC","super":"matt-galati"},{"id":"bo-eagle","name":"Bo Eagle","company":"Gamewell Mechanical (GMI)","title":"HVAC","email":"beagle@gamewellmech.com","tabs":[],"trade":"Plumbing / HVAC","super":"matt-galati"},{"id":"jose-ordonez","name":"Jose Ordonez","company":"Donley's","phone":"(919) 441-9526","email":"jordonez@donleyinc.com","tabs":[]},{"id":"hector-silvestri","name":"Hector Silvestri","company":"Carolina Conduit Systems","email":"hsilvestrini@carolinaconduit.com","tabs":[]},{"id":"jaime-reyes","name":"Jaime Reyes","company":"Nations Roofing","phone":"(704) 641-3090","email":"jereyes@nationsroof.com","tabs":[],"trade":"Roofing","super":"colin-ramalho"},{"id":"cole-anz","name":"Cole Anz","company":"Gamewell Mechanical (GMI)","title":"HSE","phone":"(704) 798-0547","email":"canz@gamewellmech.com","tabs":["tpsafety"],"trade":"Plumbing / HVAC","super":"matt-galati"},{"id":"william-rivera","name":"William Rivera","company":"UPSI (Ultra Pure Systems)","phone":"(939) 640-6482","email":"wrivera@upsipr.com","tabs":[],"trade":"Process piping","super":"david-welch"},{"id":"emanuel-v-zquez","name":"Emanuel Vázquez","company":"UPSI (Ultra Pure Systems)","title":"Construction contact","phone":"(787) 557-3472","email":"evazquez@upsipr.com","tabs":[],"trade":"Process piping","super":"david-welch"},{"id":"carlos-rodriguez","name":"Carlos Rodriguez","company":"UPSI (Ultra Pure Systems)","phone":"(787) 224-9184","email":"crodriguez@upsipr.com","tabs":[],"trade":"Process piping","super":"david-welch"},{"id":"josue-camacho","name":"Josue Camacho","company":"Batchelor & Kimball (BKI)","phone":"(919) 316-0868","email":"jcamacho@bkimechanical.com","tabs":[],"super":"kevin-paugh"},{"id":"clinton-johnson","name":"Clinton Johnson","company":"Batchelor & Kimball (BKI)","phone":"(919) 698-0026","email":"cjohnson@bkimechanical.com","tabs":[],"super":"kevin-paugh"},{"id":"daniel-milano","name":"Daniel Milano","company":"Gamewell Mechanical (GMI)","phone":"(704) 787-5558","email":"dmilano@gamewellmech.com","tabs":[],"trade":"Plumbing / HVAC","super":"matt-galati"},{"id":"austin-freyberger","name":"Austin Freyberger","company":"Turner","title":"Superintendent","phone":"(980) 259-0957","email":"afreyberger@tcco.com","tabs":["turner"]},{"id":"jose-contreras","name":"Jose Contreras","company":"Rolling Plains (RPC)","phone":"(219) 885-8255","email":"jose.contreras@rollingplains.com","tabs":[],"super":"colin-ramalho"},{"id":"addison-emory","name":"Addison Emory","company":"Rolling Plains (RPC)","phone":"(602) 715-4981","email":"addison.emory@rollingplains.com","tabs":[],"super":"colin-ramalho"},{"id":"nicholas-torres","name":"Nicholas Torres","company":"Rolling Plains (RPC)","phone":"(562) 215-8906","email":"nicholas.torres@rollingplains.com","tabs":[],"super":"colin-ramalho"},{"id":"ben-gauthier","name":"Ben Gauthier","company":"Rolling Plains (RPC)","title":"Safety","phone":"(815) 307-2134","email":"ben.gauthier@rollingplains.com","tabs":["tpsafety"],"super":"colin-ramalho"},{"id":"zack-brown","name":"Zack Brown","company":"Rock Spring Contracting (RSC)","phone":"(804) 836-4066","email":"zack@rockspringcontracting.com","tabs":[],"super":"jeremy-piscitelli"},{"id":"chris-mady","name":"Chris Mady","company":"Rock Spring Contracting (RSC)","phone":"(804) 987-4683","email":"cmady@rockspringcontracting.com","tabs":[],"super":"jeremy-piscitelli"},{"id":"enrique-castellano","name":"Enrique Castellano","company":"Rock Spring Contracting (RSC)","email":"enrique@rockspringcontracting.com","tabs":[],"super":"jeremy-piscitelli"},{"id":"enrique-castellanos-jr","name":"Enrique Castellanos Jr.","company":"Rock Spring Contracting (RSC)","phone":"(540) 217-1292","email":"ecastellano@rockspringcontracting.com","tabs":[],"super":"jeremy-piscitelli"},{"id":"ryan-williamson","name":"Ryan Williamson","company":"SPS Corporation","phone":"(919) 801-7897","email":"ryan.williamson@spscorporation.com","tabs":[],"trade":"Insulated metal panels","super":"colin-ramalho"},{"id":"chaz-gleghorn","name":"Chaz Gleghorn","company":"SPS Corporation","phone":"(602) 717-7861","email":"chaz.gleghorn@spscorporation.com","tabs":[],"trade":"Insulated metal panels","super":"colin-ramalho"},{"id":"scott-fedash","name":"Scott Fedash","company":"SPS Corporation","phone":"(919) 625-9957","email":"scott.fedash@spscorporation.com","tabs":[],"trade":"Insulated metal panels","super":"colin-ramalho"},{"id":"dock-cowgill","name":"Dock Cowgill","company":"Nations Roofing","phone":"(704) 578-7664","email":"dcowgill@nationsroof.com","tabs":[],"trade":"Roofing","super":"colin-ramalho"},{"id":"ricky-leiva","name":"Ricky Leiva","company":"Rock Spring Contracting (RSC)","phone":"(301) 712-5907","email":"rleiva@rockspringcontracting.com","tabs":[],"super":"jeremy-piscitelli"},{"id":"john-fuente","name":"John Fuente","company":"Turner","phone":"(610) 290-2487","email":"jfuente@tcco.com","tabs":["turner"]},{"id":"david-gibson","name":"David Gibson","company":"Southern Industrial (SIC)","phone":"(919) 897-9318","email":"gibsond797@gmail.com","tabs":[]},{"id":"david-waller","name":"David Waller","company":"Southern Industrial (SIC)","phone":"(919) 972-9077","email":"david.walker@southernindustrial.com","tabs":[]},{"id":"tim-annino","name":"Tim Annino","company":"Turner","title":"Superintendent","phone":"(978) 337-3716","phone2":"(857) 289-4250","email":"tannino@tcco.com","tabs":["mfg","turner"],"covers":["Desco"]},{"id":"chris-petrie","name":"Chris Petrie","company":"Southern Industrial (SIC)","title":"Safety","phone":"(919) 623-2649","email":"chris.petrie@southernindustrial.com","tabs":["tpsafety"]},{"id":"david-blanno","name":"David Blanno","company":"Turner","title":"Safety","phone":"(336) 267-8897","email":"dmblanno@tcco.com","tabs":["safety","turner"]},{"id":"albert-arrey","name":"Albert Arrey","company":"Turner","title":"Project Safety & Environmental Manager","phone":"(980) 527-5941","email":"aarrey@tcco.com","tabs":["safety","turner"]},{"id":"william-nieves","name":"William Nieves","company":"UPSI (Ultra Pure Systems)","title":"Safety","email":"wnieves@upsipr.com","tabs":["tpsafety"],"trade":"Process piping","super":"david-welch"},{"id":"anthony-pichardo","name":"Anthony Pichardo","company":"Gross Electric","email":"apichardo@grosselectricinc.com","tabs":[],"trade":"Electrical","super":"danny-conaway"},{"id":"chad-brogden","name":"Chad Brogden","company":"BFPE","phone":"(919) 625-2816","email":"cbrogden@bfpe.com","tabs":[],"trade":"Fire sprinkler","super":"kevin-paugh"},{"id":"majith-deleon","name":"Majith Deleon","company":"Rock Spring Contracting (RSC)","phone":"(804) 592-7073","email":"majith@rockspringcontracting.com","tabs":[],"super":"jeremy-piscitelli"},{"id":"alexander-wendt","name":"Alexander Wendt","company":"BFPE","phone":"(984) 366-8916","email":"awendt@bfpe.com","tabs":[],"trade":"Fire sprinkler","super":"kevin-paugh"},{"id":"barry-perrow","name":"Barry Perrow","company":"Batchelor & Kimball (BKI)","phone":"(919) 370-8530","email":"bperrow@bkimechanical.com","tabs":[],"super":"kevin-paugh"},{"id":"louis-mouhteros","name":"Louis Mouhteros","company":"Batchelor & Kimball (BKI)","phone":"(803) 514-3055","email":"louismouhteros@gmail.com","tabs":[],"super":"kevin-paugh"},{"id":"chris-james","name":"Chris James","company":"Batchelor & Kimball (BKI)","title":"Safety","email":"cjames@bkimechanical.com","tabs":["tpsafety"],"super":"kevin-paugh"},{"id":"josh-radford","name":"Josh Radford","company":"Gross Electric","title":"Construction contact","phone":"(518) 791-1432","email":"jradford@grosselectricinc.com","tabs":[],"trade":"Electrical","super":"danny-conaway"},{"id":"jorge-euseda","name":"Jorge Euseda","company":"Sunbelt Rentals","phone":"(919) 649-2576","email":"jorge.euseda@icloud.com","tabs":[],"trade":"Equipment rental","super":"jeremy-piscitelli"},{"id":"joshua-carmichael","name":"Joshua Carmichael","company":"Batchelor & Kimball (BKI)","email":"joshua.carmichael@bkimechanical.com","tabs":[],"super":"kevin-paugh"},{"id":"jose-morales","name":"Jose Morales","company":"Donley's","title":"Safety","phone":"(919) 740-4049","email":"jmorales@donleyinc.com","tabs":["tpsafety"]},{"id":"jack-moore","name":"Jack Moore","company":"Batchelor & Kimball (BKI)","email":"jackmoore@bkimechanical.com","tabs":[],"super":"kevin-paugh"},{"id":"alan-brown","name":"Alan Brown","company":"Turner","title":"Superintendent","phone":"(470) 817-2054","email":"stabrown@tcco.com","tabs":["turner"]},{"id":"jorge-alanis","name":"Jorge Alanis","company":"Gamewell Mechanical (GMI)","title":"General Foreman","phone":"(252) 205-7255","email":"jorgealanis.1178@gmail.com","tabs":[],"trade":"Plumbing / HVAC","super":"matt-galati"},{"id":"melvin-perez","name":"Melvin Perez","company":"Turner","phone":"(980) 403-1396","email":"meperez@tcco.com","tabs":["turner"]},{"id":"adam-clark","name":"Adam Clark","company":"BFPE","phone":"(984) 766-1547","email":"aclark@bfpe.com","tabs":[],"trade":"Fire sprinkler","super":"kevin-paugh"},{"id":"gary-sharpe","name":"Gary Sharpe","company":"Batchelor & Kimball (BKI)","phone":"(980) 259-9519","email":"auhound@yahoo.com","tabs":[],"super":"kevin-paugh"},{"id":"tito-argueta","name":"Tito Argueta","company":"SPS Corporation","title":"Superintendent","phone":"(919) 609-9194","email":"tito.argueta@spscorporation.com","tabs":[],"trade":"Insulated metal panels","super":"colin-ramalho"},{"id":"caleb-deleon","name":"Caleb DeLeon","company":"SPS Corporation","phone":"(984) 364-9942","email":"caleb.deleon@spscorporation.com","tabs":[],"trade":"Insulated metal panels","super":"colin-ramalho"},{"id":"david-parios","name":"David Parios","company":"Turner","title":"Superintendent","phone":"(571) 305-0671","email":"dparios@tcco.com","tabs":["turner"]},{"id":"greg-argetsinger","name":"Greg Argetsinger","company":"Scaffolding Solutions","phone":"(704) 305-9682","email":"gargetsinger@scaffoldingsolutions.com","tabs":[],"trade":"Scaffolding","super":"jeremy-piscitelli"},{"id":"kevin-santibanez","name":"Kevin Santibanez","company":"Carolina Welding Solutions","title":"Foreman","phone":"(561) 714-2697","email":"kevinluviano89@gmail.com","tabs":[],"trade":"Welding"},{"id":"jamin-rodriguez","name":"Jamin Rodriguez","company":"Carolina Welding Solutions","phone":"(980) 226-4571","email":"jaminbanegas@gmail.com","tabs":[],"trade":"Welding"},{"id":"kevin-luviano","name":"Kevin Luviano","company":"Carolina Welding Solutions","email":"carolinasweldingsolutionsllc@outlook.com","tabs":[],"trade":"Welding"},{"id":"michael-petty","name":"Michael Petty","company":"US Shrink Wrap","phone":"(430) 202-1916","email":"mike@usshrinkwrapinc.com","tabs":[],"trade":"Shrink wrap","super":"colin-ramalho"},{"id":"gary-cills","name":"Gary Cills","company":"US Shrink Wrap","phone":"(215) 431-4279","email":"gary@usswinc.com","tabs":[],"trade":"Shrink wrap","super":"colin-ramalho"},{"id":"ross-barnhill","name":"Ross Barnhill","company":"Turner","title":"Safety","phone":"(910) 840-5104","email":"wbarnhill@tcco.com","tabs":["safety","turner"]},{"id":"josue-sandoval-barajas","name":"Josue Sandoval Barajas","company":"Sunbelt Rentals","phone":"(919) 909-5535","email":"josue.sandoval@sunbeltrentals.com","tabs":[],"trade":"Equipment rental","super":"jeremy-piscitelli"},{"id":"jacob-rhymer","name":"Jacob Rhymer","company":"S&ME","phone":"(919) 731-8033","email":"jrhymer@smeinc.com","tabs":[]},{"id":"clay-boggs","name":"Clay Boggs","company":"Batchelor & Kimball (BKI)","phone":"(678) 588-6494","email":"clay.boggs@bkimechanical.com","tabs":[],"super":"kevin-paugh"},{"id":"erin-mangan","name":"Erin Mangan","company":"Turner","title":"HSE / Rigging SME","phone":"(980) 416-4712","email":"emangan@tcco.com","tabs":["mfg","safety","turner"]},{"id":"erik-herrera","name":"Erik Herrera","company":"Southern Industrial (SIC)","phone":"(984) 351-4628","email":"erik.herreracortez@southernindustrial.com","tabs":[]},{"id":"shane-fetterolf","name":"Shane Fetterolf","company":"Batchelor & Kimball (BKI)","email":"shane.fetterolf@bkimechanical.com","tabs":[],"super":"kevin-paugh"},{"id":"jeremy-leblanc","name":"Jeremy LeBlanc","company":"Turner","title":"Superintendent","email":"jjleblanc@tcco.com","tabs":["turner"]},{"id":"johnnie-parrish","name":"Johnnie Parrish","company":"Batchelor & Kimball (BKI)","email":"johnnie.parrish@bkimechanical.com","tabs":[],"super":"kevin-paugh"},{"id":"kevin-blue","name":"Kevin Blue","company":"Batchelor & Kimball (BKI)","email":"kevin.blue@bkimechanical.com","tabs":[],"super":"kevin-paugh"},{"id":"rod-hargrave","name":"Rod Hargrave","company":"Batchelor & Kimball (BKI)","email":"rod.hargrave@bkimechanical.com","tabs":[],"super":"kevin-paugh"},{"id":"sarah-whalen","name":"Sarah Whalen","company":"SPS Corporation","phone":"(984) 388-7964","email":"sarah.whalen@spscorporation.com","tabs":[],"trade":"Insulated metal panels","super":"colin-ramalho"},{"id":"schaun-russel","name":"Schaun Russel","company":"Scaffolding Solutions","phone":"(919) 901-3703","email":"schaunr1647@gmail.com","tabs":[],"trade":"Scaffolding","super":"jeremy-piscitelli"},{"id":"jaime-garcia","name":"Jaime Garcia","company":"Fred Smith Company","title":"Safety","email":"jgarcia@allinsafetyprofessionals.com","tabs":["tpsafety"]},{"id":"sam-ceparano","name":"Sam Ceparano","company":"Fred Smith Company","title":"Safety","email":"sceparano@allinsafetyprofessionals.com","tabs":["tpsafety"]},{"id":"jeremy-piscitelli","name":"Jeremy Piscitelli","company":"Turner","title":"Superintendent","phone":"(857) 268-3654","email":"jpiscitelli@tcco.com","tabs":["mfg","turner"],"covers":["Sunbelt Rentals","Scaffolding Solutions","Rock Spring Contracting (RSC)"]},{"id":"brent-neer","name":"Brent Neer","company":"Cooper Electric","title":"General Superintendent","phone":"(919) 437-0158","email":"brent.neer@coopereic.com","tabs":[],"trade":"Electrical"},{"id":"andrew-bennett","name":"Andrew Bennett","company":"AdvanceTec","email":"andrewb@advancetecllc.com","tabs":[],"trade":"Clean room","super":"andrew-koubek"},{"id":"jason-morrison","name":"Jason Morrison","company":"Southern Industrial (SIC)","phone":"(910) 465-3603","email":"jason.morrison@southernindustrial.com","tabs":[]},{"id":"mark-millinor","name":"Mark Millinor","company":"Southern Industrial (SIC)","title":"General Foreman","phone":"(984) 303-7843","email":"mark.millinor@southernindustrial.com","tabs":[]},{"id":"travis-pelles","name":"Travis Pelles","company":"Sunbelt Rentals","phone":"(919) 610-9539","email":"travis.pelles@sunbeltrentals.com","tabs":[],"trade":"Equipment rental","super":"jeremy-piscitelli"},{"id":"chris-thornsbury","name":"Chris Thornsbury","company":"Gamewell Mechanical (GMI)","title":"HVAC","email":"cthornsburry@gamewellmech.com","tabs":[],"trade":"Plumbing / HVAC","super":"matt-galati"},{"id":"isaac-bare","name":"Isaac Bare","company":"Tindall","phone":"(864) 978-3020","email":"isaacbare@tindallcorp.com","tabs":[],"super":"colin-ramalho"},{"id":"deacon-hughes","name":"Deacon Hughes","company":"Turner","title":"Superintendent","phone":"(470) 597-6097","email":"pahughes@tcco.com","tabs":["turner"]},{"id":"sun-choi","name":"Sun Choi","company":"AdvanceTec","title":"Construction contact","phone":"(804) 836-7272","phone2":"(804) 836-1212","email":"sunc@advancetecllc.com","tabs":[],"trade":"Clean room","super":"andrew-koubek"},{"id":"todd-edwards","name":"Todd Edwards","company":"Cooper Electric","email":"todd.edwards@coopereic.com","tabs":[],"trade":"Electrical"},{"id":"damian-robertson","name":"Damian Robertson","company":"Cooper Electric","email":"damian.robertson@coopereic.com","tabs":[],"trade":"Electrical"},{"id":"bruce-williams","name":"Bruce Williams","company":"Tindall","title":"Safety","phone":"(804) 721-7958","email":"bwilliams@prioritysafetyconsultation.com","tabs":["tpsafety"],"super":"colin-ramalho"},{"id":"thomas-fowler","name":"Thomas Fowler","company":"Southern Industrial (SIC)","email":"tj.fowler@southernindustrial.com","tabs":[]},{"id":"william-martinez","name":"William Martinez","company":"Turner","phone":"(919) 605-9735","email":"williammartinez665@gmail.com","tabs":["turner"]},{"id":"juan-gonzalez","name":"Juan Gonzalez","company":"Southern Industrial (SIC)","phone":"(984) 278-2364","email":"juan.gonzalezbello@southernindustrial.com","tabs":[]},{"id":"gp-bassi","name":"GP Bassi","company":"First Equipment Company","phone":"(256) 585-5709","email":"gpbassi@fecrent.com","tabs":[],"trade":"Equipment rental"},{"id":"olawale-osile","name":"Olawale Osile","company":"Tindall","title":"Safety","phone":"(470) 855-1164","email":"osileolawaleus@gmail.com","tabs":["tpsafety"],"super":"colin-ramalho"},{"id":"paul-dodge","name":"Paul Dodge","company":"Southern Industrial (SIC)","phone":"(984) 340-6424","email":"paul.dodge@southernindustrial.com","tabs":[]},{"id":"adam-donato","name":"Adam Donato","company":"First Equipment Company","phone":"(843) 607-4993","email":"adam.donato@equipmentshare.com","tabs":[],"trade":"Equipment rental"},{"id":"george-dooley","name":"George Dooley","company":"BFPE","phone":"(919) 550-2699","email":"gdooley@bfpe.com","tabs":[],"trade":"Fire sprinkler","super":"kevin-paugh"},{"id":"david-montano","name":"David Montano","company":"Rock Spring Contracting (RSC)","title":"Sr. Safety Coordinator","phone":"(336) 460-2369","email":"dgarcia@rockspringcontracting.com","tabs":["tpsafety"],"super":"jeremy-piscitelli"},{"id":"jacob-meadows","name":"Jacob Meadows","company":"Goettle","title":"Foreman","phone":"(681) 203-1507","email":"bbqwv54@yahoo.com","tabs":[]},{"id":"jesus-cruz","name":"Jesus Cruz","company":"Desco","email":"jesus@descofloors.com","tabs":[],"trade":"Flooring","super":"tim-annino"},{"id":"aurora-marichal","name":"Aurora Marichal","company":"Batchelor & Kimball (BKI)","email":"amarichal213@gmail.com","tabs":[],"super":"kevin-paugh"},{"id":"jay-pilarczyk","name":"Jay Pilarczyk","company":"Nations Roofing","phone":"(704) 609-0451","email":"jpilarczyk@nationsroof.com","tabs":[],"trade":"Roofing","super":"colin-ramalho"},{"id":"thomas-holland","name":"Thomas Holland","company":"Gross Electric","email":"tholland@grosselectricinc.com","tabs":[],"trade":"Electrical","super":"danny-conaway"},{"id":"jeremy-robinson","name":"Jeremy Robinson","company":"Desco","phone":"(317) 677-6114","email":"jeremy@descofloors.com","tabs":[],"trade":"Flooring","super":"tim-annino"},{"id":"linville-hodgin","name":"Linville Hodgin","company":"Batchelor & Kimball (BKI)","phone":"(336) 635-8352","email":"linville.hodgin@bkimechanical.com","tabs":[],"super":"kevin-paugh"},{"id":"chris-groen","name":"Chris Groen","company":"Hallam ICS","title":"Sr. PM","phone":"(802) 963-2974","email":"cgroen@hallam-ics.com","tabs":[]},{"id":"dwight-tedder","name":"Dwight Tedder","company":"Hallam ICS","title":"PM","phone":"(336) 963-2974","email":"dtedder@hallam-ics.com","tabs":[]},{"id":"brooks-griffin","name":"Brooks Griffin","company":"Hallam ICS","title":"Safety Director","email":"bgriffin@freedomind.us","tabs":["tpsafety"]},{"id":"eric-johnson","name":"Eric Johnson","company":"Hallam ICS","title":"Sr. PM","phone":"(252) 955-0299","email":"ejohnson@freedomind.us","tabs":[]},{"id":"kyle-bisson","name":"Kyle Bisson","company":"Hallam ICS","phone":"(252) 908-7264","email":"kbisson@freedomind.us","tabs":[]},{"id":"quinn-gagnon","name":"Quinn Gagnon","company":"Donley's","phone":"(919) 437-9764","email":"qgagnon@donleyinc.com","tabs":[]},{"id":"stephanie-morrisroe","name":"Stephanie Morrisroe","company":"AdvanceTec","email":"stephaniem@advancetecllc.com","tabs":[],"trade":"Clean room","super":"andrew-koubek"},{"id":"deon-yancey","name":"Deon Yancey","company":"Gross Electric","title":"Safety","email":"dyancey@grosselectricinc.com","tabs":["tpsafety"],"trade":"Electrical","super":"danny-conaway"},{"id":"tim-faircloth","name":"Tim Faircloth","company":"Southern Industrial (SIC)","email":"riggin101@outlook.com","tabs":[]},{"id":"john-wilson","name":"John Wilson","company":"Siemens","phone":"(919) 943-8948","email":"johnwilson@bwilsonelec.com","tabs":[],"super":"danny-conaway"},{"id":"elvira-sanchez","name":"Elvira Sanchez","company":"Donley's","title":"Safety","phone":"(919) 906-6401","email":"esanchez@donleyinc.com","tabs":["tpsafety"]},{"id":"mike-cash","name":"Mike Cash","company":"Southern Industrial (SIC)","phone":"(984) 368-0968","email":"michael.cash@southernindustrial.com","tabs":[]},{"id":"mohammed-musleh","name":"Mohammed Musleh","company":"Southern Industrial (SIC)","phone":"(984) 480-9446","email":"mohammed.musleh@southernindustrial.com","tabs":[]},{"id":"jillian-willis","name":"Jillian Willis","company":"Southern Industrial (SIC)","phone":"(919) 530-9348","email":"jillian.willis@southernindustrial.com","tabs":[]},{"id":"thomas-zakerski","name":"Thomas Zakerski","company":"Southern Industrial (SIC)","phone":"(919) 527-3347","email":"tkzkris@yahoo.com","tabs":[]},{"id":"jorge-o-aranda","name":"Jorge O. Aranda","company":"Southern Industrial (SIC)","email":"jorge.ocampoarand@southernindustrial.com","tabs":[]},{"id":"gabriel-b-martinez","name":"Gabriel B. Martinez","company":"Southern Industrial (SIC)","email":"gabriel.bahenamartinez@southernindustrial.com","tabs":[]},{"id":"jorge-ocmpoaranda","name":"Jorge Ocmpoaranda","company":"Southern Industrial (SIC)","title":"Rigging Foreman","phone":"(919) 616-1388","email":"jorge.ocmpoaranda@southernindustrial.com","tabs":[]},{"id":"jeronimo-hernandez","name":"Jeronimo Hernandez","company":"Southern Industrial (SIC)","phone":"(919) 817-2516","email":"jeronimo.hernandez@southernindustrial.com","tabs":[]},{"id":"wayne-spell","name":"Wayne Spell","company":"Freedom Industries","phone":"(252) 889-0380","email":"wspell@freedomind.us","tabs":[]},{"id":"baldemar-diaz","name":"Baldemar Diaz","company":"Turner","title":"Project EHS Director","phone":"(980) 287-1999","email":"badiaz@tcco.com","tabs":["mfg","safety","turner"]},{"id":"steven-hampton","name":"Steven Hampton","company":"Kemco Electric","phone":"(661) 477-9373","email":"steven@kemcoelectric.com","tabs":[],"trade":"Electrical"},{"id":"rob-jones","name":"Rob Jones","company":"Fred Smith Company","phone":"(984) 390-2630","email":"jojones@fredsmithcompany.net","tabs":[]},{"id":"liz-letourneau","name":"Liz Letourneau","company":"Turner","title":"Safety","phone":"(404) 916-7510","email":"eletourneau@tcco.com","tabs":["safety","turner"]},{"id":"luke-eggers","name":"Luke Eggers","company":"Desco","title":"Construction contact","phone":"(317) 441-8998","email":"luke.eggers@descofloors.com","tabs":[],"trade":"Flooring","super":"tim-annino"},{"id":"hunter-sheets","name":"Hunter Sheets","company":"BFPE","email":"hunterm.sheets@gmail.com","tabs":[],"trade":"Fire sprinkler","super":"kevin-paugh"},{"id":"erick-tabora","name":"Erick Tabora","company":"Southern Industrial (SIC)","title":"Foreman","phone":"(984) 332-0234","email":"erick.taboratabora@southernindustrial.com","tabs":[]},{"id":"kevin-hammond","name":"Kevin Hammond","company":"AdvanceTec","email":"kevinh@advancetecllc.com","tabs":[],"trade":"Clean room","super":"andrew-koubek"},{"id":"jimmy-watts","name":"Jimmy Watts","company":"Scaffolding Solutions","title":"Operations Manager","phone":"(336) 804-2685","email":"jwatts@scaffoldingsolutions.com","tabs":[],"trade":"Scaffolding","super":"jeremy-piscitelli"},{"id":"eric-soto","name":"Eric Soto","company":"Scaffolding Solutions","title":"Safety Manager","phone":"(434) 484-0019","email":"esoto@scaffoldingsolutions.com","tabs":["tpsafety"],"trade":"Scaffolding","super":"jeremy-piscitelli"},{"id":"justin-lamb","name":"Justin Lamb","company":"Turner","title":"Project Executive","phone":"(984) 366-1994","email":"jlamb@tcco.com","tabs":["turner"]},{"id":"luther-williams","name":"Luther Williams","company":"Turner","title":"Safety Manager - Site Lead","phone":"(919) 427-9547","email":"lwilliams@tcco.com","tabs":["safety","turner"]},{"id":"david-patton","name":"David Patton","company":"Turner","title":"Safety Manager","phone":"(980) 527-1694","email":"dapatton@tcco.com","tabs":["safety","turner"]},{"id":"richard-crowder","name":"Richard Crowder","company":"Turner","title":"Lead Site Superintendent","phone":"(901) 713-2331","email":"richcrowder@tcco.com","tabs":["turner"]},{"id":"danny-conaway","name":"Danny Conaway","company":"Turner","title":"Electrical Superintendent","phone":"(256) 519-5669","tabs":["mfg","turner"],"covers":["Gross Electric","Code Electric","Siemens"]},{"id":"larry-whitman","name":"Larry Whitman","company":"Gamewell Mechanical (GMI)","title":"Construction contact","phone":"(704) 797-6884","tabs":[],"trade":"Plumbing / HVAC","super":"matt-galati"},{"id":"epifanio-albattan","name":"Epifanio Albattan","company":"Gamewell Mechanical (GMI)","title":"Safety","email":"ealbattan@gamewellmech.com","tabs":["tpsafety"],"trade":"Plumbing / HVAC","super":"matt-galati"},{"id":"brett-richardson","name":"Brett Richardson","company":"Goettle","title":"Safety","email":"brettrich1987@gmail.com","tabs":["tpsafety"]},{"id":"travis-yates","name":"Travis Yates","company":"MSE","title":"Safety","email":"tyates798@gmail.com","tabs":["tpsafety"]},{"id":"tommy-malena","name":"Tommy Malena","company":"Scaffolding Solutions","title":"Safety","email":"tommy@esr-safety.com","tabs":["tpsafety"],"trade":"Scaffolding","super":"jeremy-piscitelli"},{"id":"celestino-gonzalez","name":"Celestino Gonzalez","company":"Southern Industrial (SIC)","title":"Safety","email":"celestino.gonzalez@southernindustrial.com","tabs":["tpsafety"]},{"id":"antonio-cooper","name":"Antonio Cooper","company":"SPS Corporation","title":"Safety","email":"hardworks1@gmail.com","tabs":["tpsafety"],"trade":"Insulated metal panels","super":"colin-ramalho"},{"id":"travis-zinn","name":"Travis Zinn","company":"SteelFab","title":"Safety","email":"travis@esr-safety.com","tabs":["tpsafety"],"trade":"Steel"},{"id":"drew-martin","name":"Drew Martin","company":"Amgen","title":"EHS","email":"amarti62@amgen.com","tabs":["amgen"]},{"id":"amgen-security","name":"Amgen Security","company":"Amgen","title":"Site Security","phone":"(984) 343-2122","tabs":["amgen"]},{"id":"ats-on-site-medic","name":"ATS On-site Medic","company":"ATS","title":"Site emergency contact - on-site medic","phone":"(336) 736-4512","tabs":["amgen"]},{"id":"sydney-holland","name":"Sydney Holland","company":"ATS","title":"On-site Medic","email":"sholland@atshws.com","tabs":["amgen"]}];
+var COLL = 'anc2Contacts', CHG = 'anc2ChangeRequests', REM = 'anc2RemovalRequests';
+
+/* Same Firebase project as the owner's other directory, but a NAMED app so sign-in
+   here never signs the other page in or out, and separate anc2* collections so the
+   two directories never share data. Only the owner account can write. */
+var FB = typeof firebase!=='undefined';
+/* If the Firebase CDN is blocked, the built-in list still shows - the directory must never be blank. */
+var app = FB && firebase.initializeApp({
+  apiKey: "AIzaSyDXrrjaKSgrMvUbJ_w2kmkiWD_n3R35ufM",
+  authDomain: "aura-hse-directory.firebaseapp.com",
+  projectId: "aura-hse-directory",
+  messagingSenderId: "704236309471",
+  appId: "1:704236309471:web:e2c6a0da5940f94528d26a"
+}, 'anc2');
+var db = FB ? app.firestore() : null, auth = FB ? app.auth() : null;
+if(FB) auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(function(){});
+var TS = FB ? firebase.firestore.FieldValue.serverTimestamp : function(){ return null; };
+
+var PEOPLE = EMBED.slice(), BY = {}, liveEmpty = null, liveSeen = false, seeding = null;
+var ownerAcct = null, pendChg = [], pendRem = [], unsubReq = [];
+var MANIFEST = null;
 
 var TABS = [
   {id:'all',     en:'Contacts',             es:'Contactos',
-   hintEn:'Everyone on the project: Turner, trade partners, Amgen and the on-site medic. Tap a card to call, text, email or save the contact.',
-   hintEs:'Todos en el proyecto: Turner, contratistas, Amgen y el médico en sitio. Toque una tarjeta para llamar, enviar texto, correo o guardar el contacto.'},
-  {id:'turner',  en:'Turner Contacts',      es:'Contactos de Turner', grouped:true,
-   hintEn:'Turner and every trade partner, grouped by company. The blue name under each trade is the Turner MFG superintendent for that company.',
-   hintEs:'Turner y todos los contratistas, agrupados por compañía. El nombre azul debajo de cada compañía es el superintendente de Turner en MFG.'},
+   hintEn:'Everyone on the project \u2014 Turner, every trade partner, Amgen and the medic. Tap a card to call, text, email or save the contact.',
+   hintEs:'Todos en el proyecto \u2014 Turner, contratistas, Amgen y el m\u00e9dico. Toque una tarjeta para llamar, enviar texto, correo o guardar el contacto.'},
+  {id:'turner',  en:'Turner Contacts',      es:'Contactos de Turner',
+   hintEn:'Turner personnel on the project.', hintEs:'Personal de Turner en el proyecto.'},
   {id:'mfg',     en:'MFG Building Team',    es:'Equipo Edificio MFG',
    hintEn:'MFG building lead, superintendents and the trades each one covers, plus HSE.',
    hintEs:'Líder del edificio MFG, superintendentes y los contratistas que cubre cada uno, más HSE.'},
   {id:'safety',  en:'Turner Safety Team',   es:'Equipo de Seguridad Turner',
-   hintEn:'Turner safety and environmental team for the project.',
-   hintEs:'Equipo de seguridad y medio ambiente de Turner para el proyecto.'},
+   hintEn:'Turner safety and environmental team for the project.', hintEs:'Equipo de seguridad y medio ambiente de Turner para el proyecto.'},
   {id:'tpsafety',en:'Trade Partner Safety', es:'Seguridad Contratistas',
    hintEn:'Each trade partner\'s safety contact — for walks, incidents and stand-downs.',
    hintEs:'El contacto de seguridad de cada contratista — para recorridos, incidentes y paros de seguridad.'},
   {id:'amgen',   en:'Amgen EHS / Medic',    es:'Amgen EHS / Médico',
-   hintEn:'Amgen EHS, Amgen Security and ATS \u2014 the on-site medic and site emergency contact.',
-   hintEs:'Amgen EHS, Seguridad de Amgen y el médico de ATS en sitio.'}
+   hintEn:'Amgen EHS, Amgen Security and ATS — the on-site medic and site emergency contact.',
+   hintEs:'Amgen EHS, Seguridad de Amgen y ATS — el médico en sitio y contacto de emergencia del sitio.'}
 ];
+var ROSTERS = ['turner','mfg','safety','tpsafety','amgen'];
 
 var T = {
- en:{title:'Amgen ANC-2 — HSE Directory',updated:'Updated',people:'people',emergency:'EMERGENCY',emSub:'911 · Amgen Security · Medic · Turner Safety',
+ en:{title:'Amgen ANC-2 — HSE Directory',people:'people',emergency:'EMERGENCY',emSub:'911 · ATS Site Medic · Amgen Security · Turner Safety',
      search:'Search name, company, role or phone...',allRoles:'All roles',allCos:'All companies',of:'of',none:'No one found.',
-     foot:'For project communication only. Do not forward or post outside the project.',foot2:'Something wrong or someone missing? Tell Turner Safety.',
-     call:'Call',text:'Text',email:'Email',save:'Save to Contacts',close:'Close',phone:'Cell',phone2:'Other',company:'Company',trade:'Trade',
-     super:'Turner MFG super',covers:'Covers',safety:'Safety',turner:'Turner',members:'people',noPhone:'No phone listed',
+     foot:'For project communication only. Do not forward or post outside the project.',foot2:'Something wrong? Open the person and tap Suggest a correction.',
+     call:'Call',text:'Text',email:'Email',save:'Save to Contacts',close:'Close',phone:'Cell',phone2:'Office',company:'Company',trade:'Trade',
+     super:'Turner MFG super',covers:'Covers',safety:'Safety',members:'people',noPhone:'No phone listed',addPhone:'+ Add phone number',
+     trailer:'Trailer / office',vacation:'Time off',backup:'Backup',
+     isYou:'Is this you? Something not right?',suggest:'✎ Suggest a correction',askRemove:'🗑 Ask to be removed from the directory',
+     edit:'Edit',del:'Delete',vacBtn:'🏝 My vacation / time off status',add:'+ Add person',
+     live:'Live — syncing across all devices',offline:'Offline — showing the last saved copy',connecting:'Connecting…',
+     starting:'Starting list — goes live the first time the owner unlocks',
+     unlocked:'🔓 Edit mode',lock:'Lock',pending:'Pending',
+     pinTitle:'Enter edit PIN',pinSub:'Needed to add, edit or delete.',unlock:'Unlock',badPin:'Incorrect PIN.',tooMany:'Too many tries. Wait a few minutes and try again.',
+     notOwner:'That PIN does not have edit rights on this directory.',
+     editTitle:'Edit person',addTitle:'Add person',fName:'Full name',fTitle:'Job title / role',fCo:'Company',fTrade:'Trade (optional)',
+     fCell:'Cell phone',fOffice:'Office / other phone',fEmail:'Email',fTrailer:'Trailer / office location',rosters:'Show in these tabs',
+     rTurner:'Turner Contacts',rMfg:'MFG Building Team',rSafety:'Turner Safety Team',rTp:'Trade Partner Safety',rAmgen:'Amgen EHS / Medic',
+     privacy:'🔒 Contact information in this directory (phone numbers, email addresses) may be viewed, saved, or used by other members of this project. By appearing here you acknowledge this.',
+     saveChanges:'✓ Save changes',saved:'Saved — everyone sees it now.',needName:'Full name and company are required.',
+     confirmDel:'Delete {n} from the directory? This removes them for everyone.',deleted:'Deleted.',
+     sugTitle:'Suggest a correction',sugSub:'Change what is wrong. Turner Safety reviews it before it goes live.',sugNote:'Anything else? (optional)',send:'Send',
+     sent:'Sent. Turner Safety will review it.',noChange:'Nothing was changed.',
+     remTitle:'Ask to be removed',remSub:'Turner Safety reviews removal requests.',remReason:'Reason (optional)',
+     vacTitle:'Vacation / time off',vacSub:'Type your full name exactly as shown to confirm it is you.',vacName:'Your full name',vacStart:'First day off',vacEnd:'Back on',
+     vacBackup:'Backup while out (name / phone)',vacClear:'Clear my time off',vacBadName:'Name does not match this card.',vacSaved:'Saved.',
+     notLive:'The live list is not published yet. Ask Turner Safety.',offUntil:'Off until',offFrom:'Off',
+     cardWait:'New info reaches Save to Contacts within about 15 minutes.',cardNew:'Contact card is being created — try again in about 15 minutes.',
+     pendTitle:'Pending requests',noPend:'Nothing pending.',apply:'Apply',dismiss:'Dismiss',removePerson:'Remove person',wantsRemoved:'asks to be removed',
+     publishing:'Publishing the contact list to the live database…',published:'Contact list is live.',
      emTitle:'EMERGENCY',life:'Life-threatening',lifeSub:'Call 911 first, then Turner Safety',sec:'Amgen Security',secSub:'Meets EMS and directs them through the North Gate',
-     medic:'ATS \u2014 Site Emergency',medicSub:'On-site medic \u00b7 any injury or medical emergency',hot:'Turner Crisis Hotline',hotSub:'1-866-3-TURNER · or AlertMedia app',
+     medic:'ATS — Site Emergency',medicSub:'On-site medic · any injury or medical emergency',hot:'Turner Crisis Hotline',hotSub:'1-866-3-TURNER · or AlertMedia app',
      addr:'Site address — give this to 911',muster:'Muster points',m1:'Muster Point 1 — Break Tent (also the lightning shelter)',
      m2:'Muster Point 2 — Trade Partner parking lot, by the bathrooms',mustNote:'Foremen report headcount to the Turner superintendent.',
      safeLead:'Turner Safety',hosp:'Hospital & clinic',er:'Emergency Room',clinic:'Occupational clinic',other:'Other numbers',
      police:'Holly Springs Police (non-emergency)',fire:'Holly Springs Fire (non-emergency)',poison:'Poison Control',
      map:'Map',hours:'M–F 7:30a–8p · Sat–Sun 8a–5p',seeAll:'See the full Turner Safety Team'},
- es:{title:'Amgen ANC-2 — Directorio HSE',updated:'Actualizado',people:'personas',emergency:'EMERGENCIA',emSub:'911 · Seguridad Amgen · Médico · Seguridad Turner',
+ es:{title:'Amgen ANC-2 — Directorio HSE',people:'personas',emergency:'EMERGENCIA',emSub:'911 · Médico ATS · Seguridad Amgen · Seguridad Turner',
      search:'Buscar nombre, compañía, puesto o teléfono...',allRoles:'Todos los puestos',allCos:'Todas las compañías',of:'de',none:'No se encontró a nadie.',
-     foot:'Solo para comunicación del proyecto. No reenviar ni publicar fuera del proyecto.',foot2:'¿Algo está mal o falta alguien? Avísele a Seguridad de Turner.',
-     call:'Llamar',text:'Texto',email:'Correo',save:'Guardar en Contactos',close:'Cerrar',phone:'Celular',phone2:'Otro',company:'Compañía',trade:'Oficio',
-     super:'Superintendente Turner MFG',covers:'Cubre',safety:'Seguridad',turner:'Turner',members:'personas',noPhone:'Sin teléfono',
+     foot:'Solo para comunicación del proyecto. No reenviar ni publicar fuera del proyecto.',foot2:'¿Algo está mal? Abra a la persona y toque Sugerir una corrección.',
+     call:'Llamar',text:'Texto',email:'Correo',save:'Guardar en Contactos',close:'Cerrar',phone:'Celular',phone2:'Oficina',company:'Compañía',trade:'Oficio',
+     super:'Superintendente Turner MFG',covers:'Cubre',safety:'Seguridad',members:'personas',noPhone:'Sin teléfono',addPhone:'+ Agregar teléfono',
+     trailer:'Tráiler / oficina',vacation:'Ausencia',backup:'Reemplazo',
+     isYou:'¿Es usted? ¿Algo no está bien?',suggest:'✎ Sugerir una corrección',askRemove:'🗑 Pedir que me quiten del directorio',
+     edit:'Editar',del:'Borrar',vacBtn:'🏝 Mis vacaciones / días libres',add:'+ Agregar persona',
+     live:'En vivo — sincronizado en todos los dispositivos',offline:'Sin conexión — mostrando la última copia',connecting:'Conectando…',
+     starting:'Lista inicial — se publica la primera vez que el dueño desbloquea',
+     unlocked:'🔓 Modo edición',lock:'Bloquear',pending:'Pendientes',
+     pinTitle:'Ingrese el PIN',pinSub:'Necesario para agregar, editar o borrar.',unlock:'Desbloquear',badPin:'PIN incorrecto.',tooMany:'Demasiados intentos. Espere unos minutos.',
+     notOwner:'Ese PIN no tiene permiso de edición en este directorio.',
+     editTitle:'Editar persona',addTitle:'Agregar persona',fName:'Nombre completo',fTitle:'Puesto',fCo:'Compañía',fTrade:'Oficio (opcional)',
+     fCell:'Celular',fOffice:'Oficina / otro teléfono',fEmail:'Correo',fTrailer:'Tráiler / oficina',rosters:'Mostrar en estas pestañas',
+     rTurner:'Contactos de Turner',rMfg:'Equipo Edificio MFG',rSafety:'Equipo de Seguridad Turner',rTp:'Seguridad Contratistas',rAmgen:'Amgen EHS / Médico',
+     privacy:'🔒 La información de contacto (teléfonos, correos) puede ser vista, guardada o usada por otros miembros del proyecto. Al aparecer aquí usted lo acepta.',
+     saveChanges:'✓ Guardar cambios',saved:'Guardado — todos lo ven ahora.',needName:'El nombre y la compañía son obligatorios.',
+     confirmDel:'¿Borrar a {n} del directorio? Se borra para todos.',deleted:'Borrado.',
+     sugTitle:'Sugerir una corrección',sugSub:'Cambie lo que está mal. Seguridad de Turner lo revisa antes de publicarlo.',sugNote:'¿Algo más? (opcional)',send:'Enviar',
+     sent:'Enviado. Seguridad de Turner lo revisará.',noChange:'No se cambió nada.',
+     remTitle:'Pedir que me quiten',remSub:'Seguridad de Turner revisa las solicitudes.',remReason:'Motivo (opcional)',
+     vacTitle:'Vacaciones / días libres',vacSub:'Escriba su nombre completo tal como aparece para confirmar.',vacName:'Su nombre completo',vacStart:'Primer día libre',vacEnd:'Regresa el',
+     vacBackup:'Reemplazo (nombre / teléfono)',vacClear:'Borrar mis días libres',vacBadName:'El nombre no coincide con esta tarjeta.',vacSaved:'Guardado.',
+     notLive:'La lista en vivo aún no está publicada. Avise a Seguridad de Turner.',offUntil:'Ausente hasta',offFrom:'Ausente',
+     cardWait:'La información nueva llega a Guardar en Contactos en unos 15 minutos.',cardNew:'La tarjeta se está creando — intente en unos 15 minutos.',
+     pendTitle:'Solicitudes pendientes',noPend:'Nada pendiente.',apply:'Aplicar',dismiss:'Descartar',removePerson:'Quitar persona',wantsRemoved:'pide que lo quiten',
+     publishing:'Publicando la lista…',published:'La lista está en vivo.',
      emTitle:'EMERGENCIA',life:'Peligro de muerte',lifeSub:'Llame al 911 primero, luego a Seguridad de Turner',sec:'Seguridad de Amgen',secSub:'Recibe a EMS y los dirige por la Puerta Norte',
-     medic:'Médico de ATS en sitio',medicSub:'Lesiones que no ponen en peligro la vida',hot:'Línea de Crisis Turner',hotSub:'1-866-3-TURNER · o la app AlertMedia',
+     medic:'ATS — Emergencia del Sitio',medicSub:'Médico en sitio · cualquier lesión o emergencia médica',hot:'Línea de Crisis Turner',hotSub:'1-866-3-TURNER · o la app AlertMedia',
      addr:'Dirección del sitio — désela al 911',muster:'Puntos de reunión',m1:'Punto 1 — Carpa de descanso (también refugio contra rayos)',
      m2:'Punto 2 — Estacionamiento de contratistas, junto a los baños',mustNote:'Los capataces reportan el conteo al superintendente de Turner.',
      safeLead:'Seguridad Turner',hosp:'Hospital y clínica',er:'Sala de Emergencias',clinic:'Clínica ocupacional',other:'Otros números',
@@ -243,15 +352,30 @@ function t(k){ return (T[lang] && T[lang][k]) || T.en[k] || k; }
 
 function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
 function digits(s){ return String(s||'').replace(/\D/g,''); }
+function fmtPhone(s){ var d=digits(s); if(d.length===11&&d[0]==='1') d=d.slice(1); return d.length===10?'('+d.slice(0,3)+') '+d.slice(3,6)+'-'+d.slice(6):String(s||'').trim(); }
 function initials(n){ var w=String(n||'').replace(/\(.*?\)/g,' ').trim().split(/\s+/); return ((w[0]||'')[0]||'').toUpperCase()+((w.length>1?w[w.length-1][0]:'')||'').toUpperCase(); }
 function kind(p){ return p.company==='Turner'?'turner':(p.company==='Amgen'||p.company==='ATS')?'amgen':''; }
-function lastName(p){ var w=p.name.replace(/\(.*?\)/g,' ').trim().split(/\s+/); return (w[w.length-1]+' '+w[0]).toLowerCase(); }
+function lastName(p){ var w=String(p.name||'').replace(/\(.*?\)/g,' ').trim().split(/\s+/); return (w[w.length-1]+' '+w[0]).toLowerCase(); }
 function byName(a,b){ return lastName(a)<lastName(b)?-1:lastName(a)>lastName(b)?1:0; }
-
-function inTab(p,tab){ return tab==='all' ? true : p.tabs.indexOf(tab)>=0; }
+function normName(s){ return String(s||'').toLowerCase().replace(/\(.*?\)/g,' ').replace(/[^a-zÀ-ɏ ]/g,'').replace(/\s+/g,' ').trim(); }
+function slug(s){ return String(s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'') || 'person'; }
+function tabsOf(p){ return Array.isArray(p.tabs)?p.tabs:[]; }
+function inTab(p,tab){ return tab==='all' ? true : tabsOf(p).indexOf(tab)>=0; }
 function tabPeople(tab){ return PEOPLE.filter(function(p){ return inTab(p,tab); }); }
+function today(){ var d=new Date(); return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2); }
+function fmtDate(s){ if(!s) return ''; var p=s.split('-'); var m=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][+p[1]-1]; return m+' '+(+p[2]); }
+function vacState(p){
+  if(!p.vacationEnd && !p.vacationStart) return null;
+  var td=today(), s=p.vacationStart||td, e=p.vacationEnd||s;
+  if(e < td) return null;
+  if(s <= td) return {now:true, text:t('offUntil')+' '+fmtDate(e)};
+  return {now:false, text:t('offFrom')+' '+fmtDate(s)+(e!==s?'–'+fmtDate(e):'')};
+}
+function updMs(p){ var u=p.updatedAt; return u&&u.toMillis?u.toMillis():(typeof u==='number'?u:0); }
 
-/* ---------- build tabs + sections ---------- */
+function toast(msg){ var el=document.getElementById('toast'); el.textContent=msg; el.style.display='block'; clearTimeout(toast._t); toast._t=setTimeout(function(){ el.style.display='none'; },3200); }
+
+/* ---------- tabs + sections ---------- */
 var state = {tab:'all'};
 try{ var st=localStorage.getItem('anc2tab'); if(st && TABS.some(function(x){return x.id===st;})) state.tab=st; }catch(e){}
 var tabsEl=document.getElementById('tabs'), secEl=document.getElementById('sections');
@@ -259,7 +383,7 @@ TABS.forEach(function(tb){
   var b=document.createElement('button'); b.type='button'; b.className='tab-btn'; b.dataset.tab=tb.id; tabsEl.appendChild(b);
   var s=document.createElement('div'); s.className='section'; s.id='sec_'+tb.id;
   s.innerHTML='<p class="hint"></p>'
-    +'<div class="toolbar"><input class="search" type="search" autocomplete="off"></div>'
+    +'<div class="toolbar"><input class="search" type="search" autocomplete="off"><button class="addbtn" type="button" data-add="'+tb.id+'"></button></div>'
     +'<div class="filters"><select class="f-role"></select><select class="f-co"></select><span class="count"></span></div>'
     +'<div class="grid-host"></div>';
   secEl.appendChild(s);
@@ -267,7 +391,6 @@ TABS.forEach(function(tb){
   s.querySelector('.f-role').addEventListener('change',function(){ render(tb.id); });
   s.querySelector('.f-co').addEventListener('change',function(){ render(tb.id); });
 });
-
 function fillSelect(sel,vals,allLabel){
   var cur=sel.value; sel.innerHTML='';
   var o=document.createElement('option'); o.value=''; o.textContent=allLabel; sel.appendChild(o);
@@ -276,6 +399,10 @@ function fillSelect(sel,vals,allLabel){
 }
 function uniq(a){ var s={}; a.forEach(function(v){ if(v) s[v]=1; }); return Object.keys(s).sort(function(x,y){ return x.toLowerCase()<y.toLowerCase()?-1:1; }); }
 
+function rebuild(){
+  BY={}; PEOPLE.forEach(function(p){ BY[p.id]=p; });
+  applyLang();
+}
 function applyLang(){
   document.documentElement.lang=lang;
   document.getElementById('langBtn').textContent = lang==='en'?'ES':'EN';
@@ -283,17 +410,18 @@ function applyLang(){
   document.title = t('title');
   document.getElementById('totalLbl').textContent = PEOPLE.length+' '+t('people');
   TABS.forEach(function(tb){
-    var n=tabPeople(tb.id).length;
     var b=tabsEl.querySelector('[data-tab="'+tb.id+'"]');
-    b.innerHTML=esc(lang==='en'?tb.en:tb.es)+'<span class="n">'+n+'</span>';
+    b.innerHTML=esc(lang==='en'?tb.en:tb.es)+'<span class="n">'+tabPeople(tb.id).length+'</span>';
     var s=document.getElementById('sec_'+tb.id);
     s.querySelector('.hint').textContent = lang==='en'?tb.hintEn:tb.hintEs;
     s.querySelector('.search').placeholder = t('search');
-    var list=tabPeople(tb.id);
+    s.querySelector('.addbtn').textContent = t('add');
+    var list=tabPeople(tb.id), cos=uniq(list.map(function(p){return p.company;}));
     fillSelect(s.querySelector('.f-role'), uniq(list.map(function(p){return p.title;})), t('allRoles'));
-    fillSelect(s.querySelector('.f-co'), uniq(list.map(function(p){return p.company;})), t('allCos'));
-    if(uniq(list.map(function(p){return p.company;})).length<2) s.querySelector('.f-co').style.display='none';
+    fillSelect(s.querySelector('.f-co'), cos, t('allCos'));
+    s.querySelector('.f-co').style.display = cos.length<2?'none':'';
   });
+  renderStatus(); renderAdminBar();
   setTab(state.tab);
 }
 function setTab(id){
@@ -307,90 +435,321 @@ tabsEl.addEventListener('click',function(e){ var b=e.target.closest('.tab-btn');
 
 function matches(p,q){
   if(!q) return true;
-  var hay=(p.name+' '+p.title+' '+p.company+' '+(p.trade||'')+' '+p.email+' '+(p.covers||[]).join(' ')).toLowerCase();
+  var hay=(p.name+' '+(p.title||'')+' '+p.company+' '+(p.trade||'')+' '+(p.email||'')+' '+(p.covers||[]).join(' ')).toLowerCase();
   var qd=digits(q);
   return q.split(/\s+/).every(function(w){ return hay.indexOf(w)>=0; }) || (qd.length>=3 && (digits(p.phone).indexOf(qd)>=0 || digits(p.phone2).indexOf(qd)>=0));
 }
+function shortCo(c){ var m=String(c).match(/\(([^)]+)\)/); return m?m[1]:c; }
 function cardHtml(p,tab){
-  var k=kind(p), tags='';
-  if(p.tabs.indexOf('safety')>=0 || p.tabs.indexOf('tpsafety')>=0) tags+='<span class="tag safe">'+esc(t('safety'))+'</span>';
+  var k=kind(p), tags='', v=vacState(p);
+  if(v) tags+='<span class="tag vac">'+esc(v.text)+'</span>';
+  if(tabsOf(p).indexOf('safety')>=0 || tabsOf(p).indexOf('tpsafety')>=0) tags+='<span class="tag safe">'+esc(t('safety'))+'</span>';
   if(tab==='mfg' && p.covers) tags+=p.covers.map(function(c){ return '<span class="tag">'+esc(shortCo(c))+'</span>'; }).join('');
-  if(k==='amgen') tags+='<span class="tag amg">'+esc(p.company)+'</span>';
-  var sub = p.title || '';
-  var sub2 = (tab==='turner') ? '' : (k==='amgen' ? '' : p.company);
+    var sub2 = (tab==='turner') ? '' : p.company;
   return '<div class="card '+k+'" data-id="'+esc(p.id)+'" role="button" tabindex="0">'
     +'<div class="avatar '+k+'">'+esc(initials(p.name))+'</div>'
     +'<div class="card-body"><p class="card-name">'+esc(p.name)+'</p>'
-    +(sub?'<p class="card-sub">'+esc(sub)+'</p>':'')
+    +(p.title?'<p class="card-sub">'+esc(p.title)+'</p>':'')
     +(sub2?'<p class="card-sub">'+esc(sub2)+'</p>':'')
     +(tags?'<div class="tags">'+tags+'</div>':'')
     +'</div></div>';
 }
-function shortCo(c){ var m=c.match(/\(([^)]+)\)/); return m?m[1]:c; }
-
 function render(id){
   var s=document.getElementById('sec_'+id); if(!s) return;
   var q=s.querySelector('.search').value.trim().toLowerCase();
   var role=s.querySelector('.f-role').value, co=s.querySelector('.f-co').value;
   var all=tabPeople(id);
   var list=all.filter(function(p){ return matches(p,q) && (!role||p.title===role) && (!co||p.company===co); });
-  if(id==='mfg'){
-    list.sort(function(a,b){ var ra=rankMfg(a), rb=rankMfg(b); return ra-rb || byName(a,b); });
-  } else if(id==='tpsafety'){
-    list.sort(function(a,b){ return a.company.toLowerCase()<b.company.toLowerCase()?-1:a.company.toLowerCase()>b.company.toLowerCase()?1:byName(a,b); });
-  } else list.sort(byName);
+  if(id==='mfg') list.sort(function(a,b){ return rankMfg(a)-rankMfg(b) || byName(a,b); });
+  else if(id==='tpsafety') list.sort(function(a,b){ var x=a.company.toLowerCase(), y=b.company.toLowerCase(); return x<y?-1:x>y?1:byName(a,b); });
+  else list.sort(byName);
   s.querySelector('.count').textContent = list.length+' '+t('of')+' '+all.length+' '+t('people');
   var host=s.querySelector('.grid-host');
   if(!list.length){ host.innerHTML='<div class="empty">'+esc(t('none'))+'</div>'; return; }
   if(TABS.filter(function(x){return x.id===id;})[0].grouped){
     var groups={}; list.forEach(function(p){ (groups[p.company]=groups[p.company]||[]).push(p); });
-    var names=Object.keys(groups).sort(function(a,b){ if(a==='Turner') return -1; if(b==='Turner') return 1; return a.toLowerCase()<b.toLowerCase()?-1:1; });
+    var order=function(c){ return c==='Turner'?0:(c==='Amgen'||c==='ATS')?2:1; };
+    var names=Object.keys(groups).sort(function(a,b){ return order(a)-order(b) || (a.toLowerCase()<b.toLowerCase()?-1:1); });
     host.innerHTML=names.map(function(c){
-      var g=groups[c], f=g[0], sup=f.super&&BY[f.super];
+      var g=groups[c], f=g.filter(function(p){return p.trade;})[0]||g[0], sp=g.filter(function(p){return p.super;})[0], sup=sp&&BY[sp.super];
       return '<div class="group '+(c==='Turner'?'':'contractor')+'"><h2>'+esc(c)+'</h2>'
         +'<span class="meta">'+(f.trade?esc(f.trade)+' · ':'')+g.length+' '+esc(t('members'))+'</span>'
         +(sup?'<span class="sup" data-id="'+esc(sup.id)+'">'+esc(t('super'))+': '+esc(sup.name)+'</span>':'')
         +'</div><div class="grid">'+g.map(function(p){return cardHtml(p,id);}).join('')+'</div>';
     }).join('');
-  } else {
-    host.innerHTML='<div class="grid">'+list.map(function(p){return cardHtml(p,id);}).join('')+'</div>';
-  }
+  } else host.innerHTML='<div class="grid">'+list.map(function(p){return cardHtml(p,id);}).join('')+'</div>';
 }
-function rankMfg(p){
-  if(/Building Lead/.test(p.title)) return 0;
-  if(/HSE|EHS/.test(p.title)) return 3;
-  return p.covers ? 1 : 2;
+function rankMfg(p){ var ti=p.title||''; if(/Building Lead/.test(ti)) return 0; if(/HSE|EHS/.test(ti)) return 3; return p.covers?1:2; }
+
+/* ---------- live data ---------- */
+function renderStatus(){
+  var el=document.getElementById('status');
+  if(liveEmpty===true){ el.className='status off'; el.textContent=t('starting'); return; }
+  if(!liveSeen){ el.className='status'; el.textContent=t('connecting'); return; }
+  el.className='status '+(renderStatus.cache?'off':'live'); el.textContent=renderStatus.cache?t('offline'):t('live');
+}
+if(FB){
+try{ db.enablePersistence({synchronizeTabs:true}).catch(function(){}); }catch(e){}
+db.collection(COLL).onSnapshot({includeMetadataChanges:true}, function(s){
+  renderStatus.cache = s.metadata.fromCache;
+  if(s.empty){
+    if(!s.metadata.fromCache){ liveEmpty=true; liveSeen=true; }
+    PEOPLE=EMBED.slice();
+  } else {
+    liveEmpty=false; liveSeen=true;
+    PEOPLE=s.docs.map(function(d){ var o=d.data(); o.id=d.id; return o; });
+  }
+  rebuild(); ensureSeeded();
+}, function(err){ renderStatus.cache=true; renderStatus(); console.warn(err); });
+
+db.collection('authAdmins').get().then(function(s){
+  s.forEach(function(d){ var o=d.data()||{}; if(o.role==='owner'){ ownerAcct=o; ownerAcct.uid=d.id; } });
+  renderAdminBar(); ensureSeeded();
+}).catch(function(){});
+auth.onAuthStateChanged(function(){ renderAdminBar(); watchRequests(); ensureSeeded(); });
+} else { renderStatus.cache=true; liveSeen=true; }
+function isUnlocked(){ return !!(FB && auth.currentUser && ownerAcct && auth.currentUser.uid===ownerAcct.uid); }
+
+fetch('c/manifest.json',{cache:'no-store'}).then(function(r){ return r.ok?r.json():null; }).then(function(m){ MANIFEST=m; }).catch(function(){});
+
+/* First unlock publishes the built-in list so every later edit has a document to change. */
+function ensureSeeded(){
+  if(!(isUnlocked() && liveEmpty===true)) return Promise.resolve();
+  if(seeding) return seeding;
+  toast(t('publishing'));
+  var b=db.batch();
+  EMBED.forEach(function(p){ var o=clean(p); delete o.id; b.set(db.collection(COLL).doc(p.id), o); });
+  seeding=b.commit().then(function(){ toast(t('published')); }).catch(function(e){ seeding=null; alert('Could not publish: '+e.message); throw e; });
+  return seeding;
+}
+function clean(p){
+  var o={};
+  ['id','name','title','company','trade','phone','phone2','email','trailer','super','covers','tabs','vacationStart','vacationEnd','vacationBackup'].forEach(function(k){
+    if(p[k]!==undefined && p[k]!==null) o[k]=p[k];
+  });
+  return o;
+}
+
+/* ---------- unlock (owner only) ---------- */
+function requireUnlock(action){
+  if(!FB){ alert(t('offline')); return; }
+  if(isUnlocked()){ ensureSeeded().then(action); return; }
+  openModal('<p class="m-name">'+esc(t('pinTitle'))+'</p><p class="m-sub" style="margin-top:4px">'+esc(t('pinSub'))+'</p>'
+    +'<label class="f"><input id="pinInp" type="password" inputmode="numeric" autocomplete="off"></label>'
+    +'<div class="actions"><a class="btn call" href="#" id="pinGo">'+esc(t('unlock'))+'</a><a class="btn" href="#" data-close="1">'+esc(t('close'))+'</a></div>');
+  var inp=document.getElementById('pinInp'); setTimeout(function(){ inp.focus(); },50);
+  function go(e){
+    if(e) e.preventDefault();
+    var pin=inp.value.trim(); if(!pin) return;
+    if(!ownerAcct){ alert(t('badPin')); return; }
+    var email=ownerAcct.email||'owner@aura-hse.local';
+    auth.signInWithEmailAndPassword(email,'aura!'+pin).then(function(){
+      if(!isUnlocked()){ auth.signOut(); alert(t('notOwner')); return; }
+      closeModal(); ensureSeeded().then(action);
+    }).catch(function(err){ alert(err.code==='auth/too-many-requests'?t('tooMany'):t('badPin')); inp.value=''; inp.focus(); });
+  }
+  document.getElementById('pinGo').addEventListener('click',go);
+  inp.addEventListener('keydown',function(e){ if(e.key==='Enter') go(e); });
+}
+function renderAdminBar(){
+  var el=document.getElementById('adminbar');
+  if(!isUnlocked()){ el.className='adminbar'; el.innerHTML=''; return; }
+  var n=pendChg.length+pendRem.length;
+  el.className='adminbar on';
+  el.innerHTML='<span>'+esc(t('unlocked'))+'</span>'
+    +'<button type="button" class="'+(n?'pend':'')+'" id="pendBtn">'+esc(t('pending'))+' ('+n+')</button>'
+    +'<button type="button" id="lockBtn">'+esc(t('lock'))+'</button>';
+  document.getElementById('pendBtn').onclick=openPending;
+  document.getElementById('lockBtn').onclick=function(){ auth.signOut(); };
+}
+function watchRequests(){
+  unsubReq.forEach(function(u){ try{u();}catch(e){} }); unsubReq=[]; pendChg=[]; pendRem=[];
+  if(!isUnlocked()) return;
+  unsubReq.push(db.collection(CHG).where('status','==','pending').onSnapshot(function(s){ pendChg=s.docs.map(function(d){ var o=d.data(); o._id=d.id; return o; }); renderAdminBar(); }, function(){}));
+  unsubReq.push(db.collection(REM).where('status','==','pending').onSnapshot(function(s){ pendRem=s.docs.map(function(d){ var o=d.data(); o._id=d.id; return o; }); renderAdminBar(); }, function(){}));
 }
 
 /* ---------- modal ---------- */
 var overlay=document.getElementById('overlay'), modal=document.getElementById('modal');
 function openModal(html){ modal.innerHTML='<button class="x" type="button" aria-label="'+esc(t('close'))+'">×</button>'+html; overlay.classList.add('open'); modal.scrollTop=0; }
 function closeModal(){ overlay.classList.remove('open'); modal.innerHTML=''; }
-overlay.addEventListener('click',function(e){ if(e.target===overlay || e.target.closest('.x')) closeModal(); });
+overlay.addEventListener('click',function(e){ if(e.target===overlay || e.target.closest('.x') || e.target.closest('[data-close]')){ e.preventDefault(); closeModal(); } });
 document.addEventListener('keydown',function(e){ if(e.key==='Escape') closeModal(); });
 
-function telRow(label,num){
-  if(!num) return '';
-  return '<tr><td class="lbl">'+esc(label)+'</td><td class="val"><a href="tel:'+digits(num)+'">'+esc(num)+'</a></td></tr>';
-}
+function telRow(label,num){ return num?'<tr><td class="lbl">'+esc(label)+'</td><td class="val"><a href="tel:'+digits(num)+'">'+esc(num)+'</a></td></tr>':''; }
 function openPerson(id){
   var p=BY[id]; if(!p) return;
-  var k=kind(p), sup=p.super&&BY[p.super];
+  var k=kind(p), sup=p.super&&BY[p.super], v=vacState(p);
   var rows='<tr><td class="lbl">'+esc(t('company'))+'</td><td class="val">'+esc(p.company)+'</td></tr>'
     +(p.trade?'<tr><td class="lbl">'+esc(t('trade'))+'</td><td class="val">'+esc(p.trade)+'</td></tr>':'')
-    +telRow(t('phone'),p.phone)+telRow(t('phone2'),p.phone2)
+    +(p.phone?telRow(t('phone'),p.phone):'<tr><td class="lbl">'+esc(t('phone'))+'</td><td class="val"><span class="addph" data-act="edit">'+esc(t('addPhone'))+'</span></td></tr>')
+    +telRow(t('phone2'),p.phone2)
     +(p.email?'<tr><td class="lbl">'+esc(t('email'))+'</td><td class="val"><a href="mailto:'+esc(p.email)+'">'+esc(p.email)+'</a></td></tr>':'')
+    +(p.trailer?'<tr><td class="lbl">'+esc(t('trailer'))+'</td><td class="val">'+esc(p.trailer)+'</td></tr>':'')
     +(sup?'<tr><td class="lbl">'+esc(t('super'))+'</td><td class="val"><span class="lnk" data-id="'+esc(sup.id)+'">'+esc(sup.name)+'</span></td></tr>':'')
-    +(p.covers?'<tr><td class="lbl">'+esc(t('covers'))+'</td><td class="val">'+esc(p.covers.join(', '))+'</td></tr>':'');
+    +(p.covers?'<tr><td class="lbl">'+esc(t('covers'))+'</td><td class="val">'+esc(p.covers.join(', '))+'</td></tr>':'')
+    +(v?'<tr><td class="lbl">'+esc(t('vacation'))+'</td><td class="val" style="color:#ffc773">'+esc(v.text)+(p.vacationBackup?'<br><span style="color:var(--text-2)">'+esc(t('backup'))+': '+esc(p.vacationBackup)+'</span>':'')+'</td></tr>':'');
   var tel=digits(p.phone||p.phone2);
-  var acts='<a class="btn call'+(tel?'':' disabled')+'" href="'+(tel?'tel:'+tel:'#')+'">'+esc(tel?t('call'):t('noPhone'))+'</a>'
-    +'<a class="btn'+(tel?'':' disabled')+'" href="'+(tel?'sms:'+tel:'#')+'">'+esc(t('text'))+'</a>'
-    +(p.email?'<a class="btn full" href="mailto:'+esc(p.email)+'">'+esc(t('email'))+'</a>':'')
-    +'<a class="btn save" data-save="1" href="c/'+encodeURIComponent(p.id)+'.vcf">'+esc(t('save'))+'</a>';
+  // Save to Contacts: static card file. Flag cards that are new or older than the latest edit.
+  var cardTime = MANIFEST && MANIFEST.cards ? MANIFEST.cards[p.id] : undefined;
+  var noCard = MANIFEST && MANIFEST.cards && cardTime===undefined;
+  var stale = !noCard && MANIFEST && updMs(p) > (cardTime||0);
+  var saveBtn = noCard ? '<a class="btn save disabled" href="#">'+esc(t('save'))+'</a><p class="note">'+esc(t('cardNew'))+'</p>'
+    : '<a class="btn save" data-save="1" href="c/'+encodeURIComponent(p.id)+'.vcf">'+esc(t('save'))+'</a>'+(stale?'<p class="note">'+esc(t('cardWait'))+'</p>':'');
   openModal('<div class="m-head"><div class="avatar '+k+'">'+esc(initials(p.name))+'</div><div><p class="m-name">'+esc(p.name)+'</p>'
-    +(p.title?'<p class="m-title">'+esc(p.title)+'</p>':'')+'</div></div><table>'+rows+'</table><div class="actions">'+acts+'</div>');
+    +(p.title?'<p class="m-title">'+esc(p.title)+'</p>':'')+'</div></div><table>'+rows+'</table>'
+    +'<div class="actions">'
+    +(tel?'<a class="btn call" href="tel:'+tel+'">'+esc(t('call'))+'</a><a class="btn" href="sms:'+tel+'">'+esc(t('text'))+'</a>':'')
+    +(p.email?'<a class="btn full" href="mailto:'+esc(p.email)+'">'+esc(t('email'))+'</a>':'')
+    +'<div style="grid-column:1/-1">'+saveBtn+'</div></div>'
+    +'<div class="divider">'+esc(t('isYou'))+'</div>'
+    +'<div class="stack"><a class="btn ghost plain" href="#" data-act="suggest">'+esc(t('suggest'))+'</a>'
+    +'<a class="btn redline" href="#" data-act="remove">'+esc(t('askRemove'))+'</a></div>'
+    +'<div class="row3"><a class="btn plain" href="#" data-act="edit">'+esc(t('edit'))+'</a><a class="btn del" href="#" data-act="delete">'+esc(t('del'))+'</a><a class="btn plain" href="#" data-close="1">'+esc(t('close'))+'</a></div>'
+    +'<a class="btn vacbtn" href="#" data-act="vacation">'+esc(t('vacBtn'))+'</a>');
+  modal.dataset.pid=p.id;
 }
+
+/* ---------- forms ---------- */
+function fld(id,label,val,type,extra){ return '<label class="f"><span>'+esc(label)+'</span><input id="'+id+'" type="'+(type||'text')+'" value="'+esc(val||'')+'"'+(extra||'')+'></label>'; }
+function companies(){ return uniq(PEOPLE.map(function(p){return p.company;})); }
+function openEdit(p, presetTab){
+  var isNew=!p; p=p||{name:'',title:'',company:'',phone:'',phone2:'',email:'',trailer:'',trade:'',tabs:presetTab&&presetTab!=='all'?[presetTab]:[]};
+  var tb=tabsOf(p);
+  var labels={turner:t('rTurner'),mfg:t('rMfg'),safety:t('rSafety'),tpsafety:t('rTp'),amgen:t('rAmgen')};
+  openModal('<p class="m-name" style="margin-bottom:14px">'+esc(isNew?t('addTitle'):t('editTitle'))+'</p>'
+    +fld('e_name',t('fName'),p.name)+fld('e_title',t('fTitle'),p.title)
+    +fld('e_co',t('fCo'),p.company,'text',' list="coList"')+'<datalist id="coList">'+companies().map(function(c){return '<option value="'+esc(c)+'">';}).join('')+'</datalist>'
+    +fld('e_trade',t('fTrade'),p.trade)
+    +fld('e_cell',t('fCell'),p.phone,'tel',' inputmode="tel"')+fld('e_office',t('fOffice'),p.phone2,'tel',' inputmode="tel"')
+    +fld('e_email',t('fEmail'),p.email,'email')+fld('e_trailer',t('fTrailer'),p.trailer)
+    +'<div class="f"><span>'+esc(t('rosters'))+'</span></div><div class="checks">'
+    +ROSTERS.map(function(r){ return '<label><input type="checkbox" value="'+r+'"'+(tb.indexOf(r)>=0?' checked':'')+'>'+esc(labels[r])+'</label>'; }).join('')+'</div>'
+    +'<div class="em-addr" style="font-size:12px;color:#e8d9a8;background:rgba(224,166,74,0.08);border-color:rgba(224,166,74,0.3)">'+esc(t('privacy'))+'</div>'
+    +'<div class="actions" style="margin-top:12px"><a class="btn call" href="#" id="e_save">'+esc(t('saveChanges'))+'</a><a class="btn" href="#" data-close="1">'+esc(t('close'))+'</a></div>');
+  var coIn=document.getElementById('e_co');
+  coIn.addEventListener('change',function(){  // new Turner person -> tick Turner Contacts
+    var box=modal.querySelector('.checks input[value="turner"]'); if(coIn.value.trim().toLowerCase()==='turner') box.checked=true;
+  });
+  document.getElementById('e_save').addEventListener('click',function(e){
+    e.preventDefault();
+    var g=function(id){ return document.getElementById(id).value.trim(); };
+    var name=g('e_name'), co=g('e_co');
+    if(!name||!co){ alert(t('needName')); return; }
+    var match=companies().filter(function(c){ return c.toLowerCase()===co.toLowerCase(); })[0]; if(match) co=match;
+    var peers=PEOPLE.filter(function(x){ return x.company===co && x.id!==p.id; });
+    var np=Object.assign({}, p, {name:name, title:g('e_title'), company:co, trade:g('e_trade') || (peers.filter(function(x){return x.trade;})[0]||{}).trade || '',
+      phone:fmtPhone(g('e_cell')), phone2:fmtPhone(g('e_office')), email:g('e_email').toLowerCase(), trailer:g('e_trailer'),
+      tabs:[].slice.call(modal.querySelectorAll('.checks input:checked')).map(function(x){return x.value;})});
+    if(!np.super){ var sp=peers.filter(function(x){return x.super;})[0]; if(sp) np.super=sp.super; }
+    if(isNew){ var base=slug(name), id=base, i=2; while(BY[id]) id=base+'-'+(i++); np.id=id; }
+    var data=clean(np); delete data.id; data.updatedAt=TS();
+    db.collection(COLL).doc(np.id).set(data).then(function(){ closeModal(); toast(t('saved')); })
+      .catch(function(err){ alert('Could not save: '+err.message); });
+  });
+}
+function doDelete(p){
+  if(!confirm(t('confirmDel').replace('{n}',p.name))) return;
+  db.collection(COLL).doc(p.id).delete().then(function(){ closeModal(); toast(t('deleted')); }).catch(function(err){ alert('Could not delete: '+err.message); });
+}
+function openSuggest(p){
+  openModal('<p class="m-name">'+esc(t('sugTitle'))+'</p><p class="m-sub" style="margin-top:4px">'+esc(p.name)+' · '+esc(t('sugSub'))+'</p>'
+    +fld('s_title',t('fTitle'),p.title)+fld('s_co',t('fCo'),p.company)+fld('s_cell',t('fCell'),p.phone,'tel',' inputmode="tel"')
+    +fld('s_office',t('fOffice'),p.phone2,'tel',' inputmode="tel"')+fld('s_email',t('fEmail'),p.email,'email')
+    +'<label class="f"><span>'+esc(t('sugNote'))+'</span><textarea id="s_note"></textarea></label>'
+    +'<div class="actions"><a class="btn call" href="#" id="s_send">'+esc(t('send'))+'</a><a class="btn" href="#" data-close="1">'+esc(t('close'))+'</a></div>');
+  document.getElementById('s_send').addEventListener('click',function(e){
+    e.preventDefault();
+    if(!FB){ alert(t('offline')); return; }
+    if(liveEmpty){ alert(t('notLive')); return; }
+    var map={title:'s_title',company:'s_co',phone:'s_cell',phone2:'s_office',email:'s_email'}, req={};
+    Object.keys(map).forEach(function(k){ var v=document.getElementById(map[k]).value.trim(); if(k.indexOf('phone')===0) v=fmtPhone(v); if(v!==(p[k]||'')) req[k]=v; });
+    var note=document.getElementById('s_note').value.trim().slice(0,500);
+    if(!Object.keys(req).length && !note){ alert(t('noChange')); return; }
+    db.collection(CHG).add({contactId:p.id, personName:p.name.slice(0,120), requested:req, note:note, status:'pending', submittedAt:TS()})
+      .then(function(){ closeModal(); toast(t('sent')); }).catch(function(err){ alert('Could not send: '+err.message); });
+  });
+}
+function openRemove(p){
+  openModal('<p class="m-name">'+esc(t('remTitle'))+'</p><p class="m-sub" style="margin-top:4px">'+esc(p.name)+' · '+esc(t('remSub'))+'</p>'
+    +'<label class="f"><span>'+esc(t('remReason'))+'</span><textarea id="r_reason"></textarea></label>'
+    +'<div class="actions"><a class="btn red" href="#" id="r_send">'+esc(t('send'))+'</a><a class="btn" href="#" data-close="1">'+esc(t('close'))+'</a></div>');
+  document.getElementById('r_send').addEventListener('click',function(e){
+    e.preventDefault();
+    if(!FB){ alert(t('offline')); return; }
+    if(liveEmpty){ alert(t('notLive')); return; }
+    db.collection(REM).add({contactId:p.id, name:p.name.slice(0,120), company:String(p.company||'').slice(0,120), reason:document.getElementById('r_reason').value.trim().slice(0,500), status:'pending', submittedAt:TS()})
+      .then(function(){ closeModal(); toast(t('sent')); }).catch(function(err){ alert('Could not send: '+err.message); });
+  });
+}
+/* The only edit that needs no PIN: a person sets their own time off, confirmed by typing their own name. */
+function openVacation(p){
+  openModal('<p class="m-name">'+esc(t('vacTitle'))+'</p><p class="m-sub" style="margin-top:4px">'+esc(t('vacSub'))+'</p>'
+    +fld('v_name',t('vacName'),'')+fld('v_start',t('vacStart'),p.vacationStart,'date')+fld('v_end',t('vacEnd'),p.vacationEnd,'date')
+    +fld('v_backup',t('vacBackup'),p.vacationBackup)
+    +'<div class="actions"><a class="btn call" href="#" id="v_save">'+esc(t('saveChanges'))+'</a><a class="btn" href="#" data-close="1">'+esc(t('close'))+'</a>'
+    +((p.vacationStart||p.vacationEnd)?'<a class="btn full" href="#" id="v_clear">'+esc(t('vacClear'))+'</a>':'')+'</div>');
+  function write(vals){
+    if(!FB){ alert(t('offline')); return; }
+    if(liveEmpty){ alert(t('notLive')); return; }
+    var typed=normName(document.getElementById('v_name').value), want=normName(p.name), want2=normName(String(p.name).replace(/\((.*?)\)/,' $1 '));
+    if(!typed || (typed!==want && typed!==want2 && typed!==normName(String(p.name).replace(/^.*?\((.*?)\)\s*/,'$1 ')))){ alert(t('vacBadName')); return; }
+    db.collection(COLL).doc(p.id).update(vals).then(function(){ closeModal(); toast(t('vacSaved')); }).catch(function(err){ alert('Could not save: '+err.message); });
+  }
+  document.getElementById('v_save').addEventListener('click',function(e){ e.preventDefault();
+    var s=document.getElementById('v_start').value, en=document.getElementById('v_end').value;
+    if(s&&en&&en<s){ var x=s; s=en; en=x; }
+    write({vacationStart:s, vacationEnd:en, vacationBackup:document.getElementById('v_backup').value.trim().slice(0,120)}); });
+  var c=document.getElementById('v_clear'); if(c) c.addEventListener('click',function(e){ e.preventDefault(); write({vacationStart:'',vacationEnd:'',vacationBackup:''}); });
+}
+function openPending(){
+  var fields={title:t('fTitle'),company:t('fCo'),phone:t('fCell'),phone2:t('fOffice'),email:t('fEmail')};
+  var html='<p class="m-name" style="margin-bottom:12px">'+esc(t('pendTitle'))+'</p>';
+  if(!pendChg.length && !pendRem.length) html+='<p class="m-sub">'+esc(t('noPend'))+'</p>';
+  pendChg.forEach(function(r){
+    var p=BY[r.contactId]||{};
+    html+='<div class="req"><b>'+esc(r.personName)+'</b>'+Object.keys(r.requested||{}).map(function(k){
+      return '<br>'+esc(fields[k]||k)+': <span style="color:var(--text-3)">'+esc(p[k]||'—')+'</span> → <span class="chg">'+esc(r.requested[k]||'—')+'</span>'; }).join('')
+      +(r.note?'<br><i>'+esc(r.note)+'</i>':'')
+      +'<div class="acts"><a class="btn call" href="#" data-apply="'+esc(r._id)+'">'+esc(t('apply'))+'</a><a class="btn" href="#" data-dismiss="c:'+esc(r._id)+'">'+esc(t('dismiss'))+'</a></div></div>';
+  });
+  pendRem.forEach(function(r){
+    html+='<div class="req"><b>'+esc(r.name)+'</b> ('+esc(r.company)+') '+esc(t('wantsRemoved'))+(r.reason?'<br><i>'+esc(r.reason)+'</i>':'')
+      +'<div class="acts"><a class="btn red" href="#" data-remove="'+esc(r._id)+'">'+esc(t('removePerson'))+'</a><a class="btn" href="#" data-dismiss="r:'+esc(r._id)+'">'+esc(t('dismiss'))+'</a></div></div>';
+  });
+  html+='<div class="actions" style="margin-top:8px"><a class="btn full" href="#" data-close="1">'+esc(t('close'))+'</a></div>';
+  openModal(html);
+}
+modal.addEventListener('click',function(e){
+  var a=e.target.closest('[data-apply],[data-dismiss],[data-remove]'); if(!a) return;
+  e.preventDefault();
+  var done=function(){ setTimeout(openPending,400); };
+  if(a.dataset.apply){
+    var r=pendChg.filter(function(x){return x._id===a.dataset.apply;})[0]; if(!r) return;
+    var upd=Object.assign({}, r.requested, {updatedAt:TS()});
+    db.collection(COLL).doc(r.contactId).update(upd).then(function(){ return db.collection(CHG).doc(r._id).delete(); }).then(done).catch(function(err){ alert(err.message); });
+  } else if(a.dataset.remove){
+    var q=pendRem.filter(function(x){return x._id===a.dataset.remove;})[0]; if(!q) return;
+    if(!confirm(t('confirmDel').replace('{n}',q.name))) return;
+    db.collection(COLL).doc(q.contactId).delete().then(function(){ return db.collection(REM).doc(q._id).delete(); }).then(done).catch(function(err){ alert(err.message); });
+  } else {
+    var parts=a.dataset.dismiss.split(':');
+    db.collection(parts[0]==='c'?CHG:REM).doc(parts[1]).delete().then(done).catch(function(err){ alert(err.message); });
+  }
+});
+
+/* ---------- clicks ---------- */
 document.addEventListener('click',function(e){
+  var add=e.target.closest('[data-add]'); if(add){ requireUnlock(function(){ openEdit(null, add.dataset.add); }); return; }
+  var act=e.target.closest('[data-act]');
+  if(act){ e.preventDefault(); var p=BY[modal.dataset.pid]; if(!p) return;
+    var k=act.dataset.act;
+    if(k==='edit') requireUnlock(function(){ openEdit(BY[p.id]||p); });
+    else if(k==='delete') requireUnlock(function(){ doDelete(p); });
+    else if(k==='suggest') openSuggest(p);
+    else if(k==='remove') openRemove(p);
+    else if(k==='vacation') openVacation(p);
+    return; }
   var c=e.target.closest('.card,.sup,.lnk,.em-person');
   if(c && c.dataset.id){ openPerson(c.dataset.id); return; }
   var s=e.target.closest('a[data-save]'); if(s) return saveContact(s,e);
@@ -398,9 +757,9 @@ document.addEventListener('click',function(e){
 });
 document.addEventListener('keydown',function(e){ if(e.key==='Enter'){ var c=e.target.closest&&e.target.closest('.card'); if(c) openPerson(c.dataset.id); } });
 
-/* Save to Contacts: a real .vcf file at a real https address is the only thing that
-   works on every phone. Embedded browsers (Gmail, Messages, Outlook, Teams) hand the
-   file to a preview with no "Add to Contacts", so hop out to the real browser first. */
+/* Save to Contacts: a real .vcf file at a real https address is the only thing that works on
+   every phone. Embedded browsers (Gmail, Messages, Outlook, Teams) hand the file to a preview
+   with no "Add to Contacts", so hop out to the real browser first. */
 function isEmbedded(){
   var ua=navigator.userAgent||'';
   if(/iPad|iPhone|iPod/.test(ua)){
@@ -449,11 +808,9 @@ function openEmergency(){
     +'<p class="em-sec">'+esc(t('hosp'))+'</p>'
     +'<div class="em-addr"><b>'+esc(t('er'))+'</b> — Rex Holly Springs Hospital<br>850 S. Main Street, Holly Springs, NC 27540 · <a href="'+maps('Rex Holly Springs Hospital, 850 S Main St, Holly Springs, NC 27540')+'" target="_blank" rel="noopener">'+esc(t('map'))+'</a></div>'
     +'<div class="em-addr"><b>'+esc(t('clinic'))+'</b> — AFC Urgent Care<br>1298 N. Main Street, Fuquay-Varina, NC 27526 · <a href="'+maps('AFC Urgent Care, 1298 N Main St, Fuquay-Varina, NC 27526')+'" target="_blank" rel="noopener">'+esc(t('map'))+'</a><br><span style="color:var(--text-2)">'+esc(t('hours'))+'</span></div>'
-    +emRow('AFC Urgent Care','', '(919) 590-4099')
+    +emRow('AFC Urgent Care','','(919) 590-4099')
     +'<p class="em-sec">'+esc(t('other'))+'</p>'
-    +emRow(t('poison'),'','(800) 222-1222')
-    +emRow(t('police'),'','(919) 552-7110')
-    +emRow(t('fire'),'','(919) 567-4733'));
+    +emRow(t('poison'),'','(800) 222-1222')+emRow(t('police'),'','(919) 552-7110')+emRow(t('fire'),'','(919) 567-4733'));
 }
 document.getElementById('emBtn').addEventListener('click',openEmergency);
 document.getElementById('langBtn').addEventListener('click',function(){
@@ -461,8 +818,7 @@ document.getElementById('langBtn').addEventListener('click',function(){
   try{ localStorage.setItem('anc2lang',lang); }catch(e){}
   applyLang();
 });
-
-applyLang();
+rebuild();
 })();
 </script>
 </body>

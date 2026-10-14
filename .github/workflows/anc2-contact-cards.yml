@@ -1,0 +1,31 @@
+name: ANC-2 contact cards
+
+# Keeps the Save to Contacts cards for the Amgen ANC-2 directory in step with
+# the live list. Only anc2/c is ever changed.
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: anc2-cards
+  cancel-in-progress: false
+
+jobs:
+  cards:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Rebuild cards from the live list
+        run: python3 .github/scripts/anc2_cards.py
+      - name: Commit if anything changed
+        run: |
+          git add anc2/c
+          if git diff --cached --quiet; then echo "No changes"; exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "ANC-2: refresh contact cards from the live directory"
+          git push
