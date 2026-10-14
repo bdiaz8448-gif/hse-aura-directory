@@ -784,7 +784,7 @@ function saveContact(a,ev){
 /* ---------- emergency panel ---------- */
 function emRow(title,sub,num,big,alt){
   return '<div class="em-row'+(big?' big':'')+'"><div class="t"><b>'+esc(title)+'</b>'+(sub?'<span>'+esc(sub)+'</span>':'')
-    +(alt?'<span>or <a href="tel:'+digits(alt)+'" style="color:var(--blue-lite)">'+esc(alt)+'</a></span>':'')+'</div>'
+    +(alt?'<span style="display:block">or <a href="tel:'+digits(alt)+'" style="color:var(--blue-lite)">'+esc(alt)+'</a></span>':'')+'</div>'
     +'<a class="dial" href="tel:'+digits(num)+'">'+esc(num)+'</a></div>';
 }
 /* Emergency numbers come from the live cards, so fixing a number with Edit fixes the panel too. */
