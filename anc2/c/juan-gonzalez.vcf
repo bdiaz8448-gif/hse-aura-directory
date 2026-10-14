@@ -1,0 +1,9 @@
+BEGIN:VCARD
+VERSION:3.0
+N:Gonzalez;Juan;;;
+FN:Juan Gonzalez
+ORG:Southern Industrial (SIC)
+TEL;TYPE=CELL,VOICE:9842782364
+EMAIL;TYPE=INTERNET,WORK:juan.gonzalezbello@southernindustrial.com
+NOTE:Amgen ANC-2 (Bengal)
+END:VCARD

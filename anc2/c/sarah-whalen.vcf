@@ -1,0 +1,9 @@
+BEGIN:VCARD
+VERSION:3.0
+N:Whalen;Sarah;;;
+FN:Sarah Whalen
+ORG:SPS Corporation
+TEL;TYPE=CELL,VOICE:9843887964
+EMAIL;TYPE=INTERNET,WORK:sarah.whalen@spscorporation.com
+NOTE:Amgen ANC-2 (Bengal)
+END:VCARD

@@ -1,0 +1,9 @@
+BEGIN:VCARD
+VERSION:3.0
+N:Rodriguez;Carlos;;;
+FN:Carlos Rodriguez
+ORG:UPSI (Ultra Pure Systems)
+TEL;TYPE=CELL,VOICE:7872249184
+EMAIL;TYPE=INTERNET,WORK:crodriguez@upsipr.com
+NOTE:Amgen ANC-2 (Bengal)
+END:VCARD

@@ -1,0 +1,9 @@
+BEGIN:VCARD
+VERSION:3.0
+N:Peters;Greg;;;
+FN:Greg Peters
+ORG:Turner
+TEL;TYPE=CELL,VOICE:4702839448
+EMAIL;TYPE=INTERNET,WORK:gpeters@tcco.com
+NOTE:Amgen ANC-2 (Bengal)
+END:VCARD

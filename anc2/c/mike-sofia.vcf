@@ -1,0 +1,9 @@
+BEGIN:VCARD
+VERSION:3.0
+N:Sofia;Mike;;;
+FN:Mike Sofia
+ORG:Gross Electric
+TEL;TYPE=CELL,VOICE:5187914913
+EMAIL;TYPE=INTERNET,WORK:msofia@grosselectricinc.com
+NOTE:Amgen ANC-2 (Bengal)
+END:VCARD

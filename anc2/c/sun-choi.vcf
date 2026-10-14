@@ -1,0 +1,11 @@
+BEGIN:VCARD
+VERSION:3.0
+N:Choi;Sun;;;
+FN:Sun Choi
+ORG:AdvanceTec
+TITLE:Construction contact
+TEL;TYPE=CELL,VOICE:8048367272
+TEL;TYPE=WORK,VOICE:8048361212
+EMAIL;TYPE=INTERNET,WORK:sunc@advancetecllc.com
+NOTE:Amgen ANC-2 (Bengal)
+END:VCARD

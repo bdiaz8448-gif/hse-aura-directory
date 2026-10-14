@@ -1,0 +1,9 @@
+BEGIN:VCARD
+VERSION:3.0
+N:Reynolds;Frank;;;
+FN:Frank Reynolds
+ORG:Code Electric
+TEL;TYPE=CELL,VOICE:9198892234
+EMAIL;TYPE=INTERNET,WORK:freynolds@codeelec.com
+NOTE:Amgen ANC-2 (Bengal)
+END:VCARD

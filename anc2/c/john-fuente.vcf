@@ -1,0 +1,9 @@
+BEGIN:VCARD
+VERSION:3.0
+N:Fuente;John;;;
+FN:John Fuente
+ORG:Turner
+TEL;TYPE=CELL,VOICE:6102902487
+EMAIL;TYPE=INTERNET,WORK:jfuente@tcco.com
+NOTE:Amgen ANC-2 (Bengal)
+END:VCARD

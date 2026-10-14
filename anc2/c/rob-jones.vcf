@@ -1,0 +1,9 @@
+BEGIN:VCARD
+VERSION:3.0
+N:Jones;Rob;;;
+FN:Rob Jones
+ORG:Fred Smith Company
+TEL;TYPE=CELL,VOICE:9843902630
+EMAIL;TYPE=INTERNET,WORK:jojones@fredsmithcompany.net
+NOTE:Amgen ANC-2 (Bengal)
+END:VCARD

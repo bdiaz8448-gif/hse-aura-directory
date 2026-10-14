@@ -1,0 +1,9 @@
+BEGIN:VCARD
+VERSION:3.0
+N:Wilson;John;;;
+FN:John Wilson
+ORG:Siemens
+TEL;TYPE=CELL,VOICE:9199438948
+EMAIL;TYPE=INTERNET,WORK:johnwilson@bwilsonelec.com
+NOTE:Amgen ANC-2 (Bengal)
+END:VCARD

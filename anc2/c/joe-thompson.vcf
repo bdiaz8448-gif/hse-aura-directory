@@ -1,0 +1,9 @@
+BEGIN:VCARD
+VERSION:3.0
+N:Thompson;Joe;;;
+FN:Joe Thompson
+ORG:Rock Spring Contracting (RSC)
+TEL;TYPE=CELL,VOICE:5714394687
+EMAIL;TYPE=INTERNET,WORK:jthompson@rockspringcontracting.com
+NOTE:Amgen ANC-2 (Bengal)
+END:VCARD

@@ -1,0 +1,10 @@
+BEGIN:VCARD
+VERSION:3.0
+N:ATS On-site Medic;;;;
+FN:ATS On-site Medic
+X-ABShowAs:COMPANY
+ORG:ATS
+TITLE:Site emergency contact - on-site medic
+TEL;TYPE=CELL,VOICE:3367364512
+NOTE:Amgen ANC-2 (Bengal)
+END:VCARD

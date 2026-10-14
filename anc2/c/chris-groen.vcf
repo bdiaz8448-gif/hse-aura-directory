@@ -1,0 +1,10 @@
+BEGIN:VCARD
+VERSION:3.0
+N:Groen;Chris;;;
+FN:Chris Groen
+ORG:Hallam ICS
+TITLE:Sr. PM
+TEL;TYPE=CELL,VOICE:8029632974
+EMAIL;TYPE=INTERNET,WORK:cgroen@hallam-ics.com
+NOTE:Amgen ANC-2 (Bengal)
+END:VCARD

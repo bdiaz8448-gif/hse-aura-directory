@@ -1,0 +1,10 @@
+BEGIN:VCARD
+VERSION:3.0
+N:Schroeder;David;;;
+FN:David Schroeder
+ORG:Turner
+TITLE:Superintendent
+TEL;TYPE=CELL,VOICE:4076302691
+EMAIL;TYPE=INTERNET,WORK:dschroeder@tcco.com
+NOTE:Amgen ANC-2 (Bengal)
+END:VCARD

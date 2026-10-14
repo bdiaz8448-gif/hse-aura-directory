@@ -1,0 +1,9 @@
+BEGIN:VCARD
+VERSION:3.0
+N:Wendt;Alexander;;;
+FN:Alexander Wendt
+ORG:BFPE
+TEL;TYPE=CELL,VOICE:9843668916
+EMAIL;TYPE=INTERNET,WORK:awendt@bfpe.com
+NOTE:Amgen ANC-2 (Bengal)
+END:VCARD

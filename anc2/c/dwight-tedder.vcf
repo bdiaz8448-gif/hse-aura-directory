@@ -1,0 +1,10 @@
+BEGIN:VCARD
+VERSION:3.0
+N:Tedder;Dwight;;;
+FN:Dwight Tedder
+ORG:Hallam ICS
+TITLE:PM
+TEL;TYPE=CELL,VOICE:3369632974
+EMAIL;TYPE=INTERNET,WORK:dtedder@hallam-ics.com
+NOTE:Amgen ANC-2 (Bengal)
+END:VCARD
