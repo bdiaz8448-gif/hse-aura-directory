@@ -2,8 +2,9 @@ BEGIN:VCARD
 VERSION:3.0
 N:Schroeder;David;;;
 FN:David Schroeder
+NICKNAME:Brent
 ORG:Turner
-TITLE:Superintendent
+TITLE:E&I Superintendent
 TEL;TYPE=CELL,VOICE:4076302691
 EMAIL;TYPE=INTERNET,WORK:dschroeder@tcco.com
 NOTE:Amgen ANC-2 (Bengal)

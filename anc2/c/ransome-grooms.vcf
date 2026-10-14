@@ -1,8 +1,9 @@
 BEGIN:VCARD
 VERSION:3.0
-N:Grooms;Ransome;;;
-FN:Ransome Grooms
+N:Grooms;Ransom;;;
+FN:Ransom Grooms
 ORG:Turner
+TITLE:SPO General Foreman
 TEL;TYPE=CELL,VOICE:9803846896
 EMAIL;TYPE=INTERNET,WORK:rgrooms@tcco.com
 NOTE:Amgen ANC-2 (Bengal)

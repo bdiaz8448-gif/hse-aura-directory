@@ -1,0 +1,10 @@
+BEGIN:VCARD
+VERSION:3.0
+N:Mefford;Dave;;;
+FN:Dave Mefford
+ORG:Amgen
+TITLE:Amgen EHS
+TEL;TYPE=CELL,VOICE:7192356543
+EMAIL;TYPE=INTERNET,WORK:dmefford@amgen.com
+NOTE:Amgen ANC-2 (Bengal)
+END:VCARD

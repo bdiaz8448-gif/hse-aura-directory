@@ -4,7 +4,9 @@ N:ATS On-site Medic;;;;
 FN:ATS On-site Medic
 X-ABShowAs:COMPANY
 ORG:ATS
-TITLE:Site emergency contact - on-site medic
-TEL;TYPE=CELL,VOICE:3367364512
+TITLE:Site emergency line – on-site medic
+TEL;TYPE=CELL,VOICE:9843513994
+TEL;TYPE=WORK,VOICE:3367364512
+EMAIL;TYPE=INTERNET,WORK:amontgomery@atswhs.com
 NOTE:Amgen ANC-2 (Bengal)
 END:VCARD
