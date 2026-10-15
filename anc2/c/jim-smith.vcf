@@ -1,0 +1,10 @@
+BEGIN:VCARD
+VERSION:3.0
+N:Smith;James;;;
+FN:James Smith
+NICKNAME:Jim
+ORG:Gamewell Mechanical (GMI)
+TITLE:HSE Manager
+TEL;TYPE=CELL,VOICE:7042029305
+NOTE:Amgen ANC-2 (Bengal)
+END:VCARD

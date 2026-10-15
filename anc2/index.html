@@ -499,41 +499,19 @@ db.collection(COLL).onSnapshot({includeMetadataChanges:true}, function(s){
     liveEmpty=false; liveSeen=true;
     PEOPLE=s.docs.map(function(d){ var o=d.data(); o.id=d.id; return o; });
   }
-  rebuild(); ensureSeeded(); applyPatches();
+  rebuild(); ensureSeeded();
 }, function(err){ renderStatus.cache=true; renderStatus(); console.warn(err); });
 
 db.collection('authAdmins').get().then(function(s){
   s.forEach(function(d){ var o=d.data()||{}; if(o.role==='owner'){ ownerAcct=o; ownerAcct.uid=d.id; } });
-  renderAdminBar(); ensureSeeded(); applyPatches();
+  renderAdminBar(); ensureSeeded();
 }).catch(function(){});
-auth.onAuthStateChanged(function(){ renderAdminBar(); watchRequests(); ensureSeeded(); applyPatches(); });
+auth.onAuthStateChanged(function(){ renderAdminBar(); watchRequests(); ensureSeeded(); });
 } else { renderStatus.cache=true; liveSeen=true; }
 function isUnlocked(){ return !!(FB && auth.currentUser && ownerAcct && auth.currentUser.uid===ownerAcct.uid); }
 
 fetch('c/manifest.json',{cache:'no-store'}).then(function(r){ return r.ok?r.json():null; }).then(function(m){ MANIFEST=m; }).catch(function(){});
 
-var PATCHES = [{"op":"fill","id":"chris-james","set":{"phone":"(864) 907-9906"}},{"op":"fill","id":"antonio-cooper","set":{"phone":"(336) 589-8413"}},{"op":"fill","id":"celestino-gonzalez","set":{"phone":"(919) 801-9588"}},{"op":"fill","id":"sam-ceparano","set":{"phone":"(336) 380-5680"}},{"op":"fill","id":"tommy-malena","set":{"phone":"(580) 318-3436"}},{"op":"fill","id":"epifanio-albattan","set":{"phone":"(704) 798-7689"}},{"op":"fill","id":"travis-yates","set":{"phone":"(828) 773-7221"}},{"op":"fill","id":"albert-arrey","set":{"phone2":"(575) 313-4664"}},{"op":"add","p":{"id":"nelson-lainez","name":"Nelson Lainez","company":"BFPE","phone":"(336) 512-7795","email":"","trade":"Fire sprinkler","super":"kevin-paugh","title":"Safety","phone2":"","tabs":["tpsafety"]}},{"op":"add","p":{"id":"jose-r-hernandez-ayala","name":"Jose R. Hernandez Ayala","company":"UPSI (Ultra Pure Systems)","phone":"(404) 921-7885","email":"","trade":"Process piping","super":"david-welch","title":"Safety","phone2":"","tabs":["tpsafety"]}},{"op":"add","p":{"id":"alexis-montgomery","name":"Alexis Montgomery","company":"ATS","phone":"(984) 351-3994","email":"amontgomery@atswhs.com","trade":null,"super":null,"title":"Sr. Medic","phone2":"","tabs":["amgen"]}},{"op":"add","p":{"id":"jim-smith","name":"James (Jim) Smith","company":"Gamewell Mechanical (GMI)","phone":"(704) 202-9305","email":"","trade":"Plumbing / HVAC","super":"matt-galati","title":"HSE Manager","phone2":"","tabs":["tpsafety"]}},{"op":"add","p":{"id":"jose-gallardo","name":"Jose Gallardo","company":"Donley's","phone":"(919) 437-0945","email":"","trade":null,"super":null,"title":"Safety","phone2":"","tabs":["tpsafety"]}},{"op":"add","p":{"id":"luis-hernandez","name":"Luis Hernandez","company":"Edwards","phone":"(252) 769-0849","email":"","trade":null,"super":null,"title":"Safety","phone2":"","tabs":["tpsafety"]}},{"op":"add","p":{"id":"david-garcia","name":"David Garcia","company":"Rock Spring Contracting (RSC)","title":"Safety","phone":"(336) 460-2369","email":"","tabs":["tpsafety"],"super":"jeremy-piscitelli","phone2":""}},{"op":"delete","id":"david-montano"}];
-var patching = null;
-/* One-time update from the 14 Oct 2026 walk sign-in sheets: adds new people and fills blank numbers in the live list.
-   Runs only for the owner, only on live data, never overwrites a number that is already there. */
-function applyPatches(){
-  if(!(FB && isUnlocked() && liveEmpty===false && liveSeen && !renderStatus.cache) || patching) return;
-  var have={}; PEOPLE.forEach(function(p){ have[p.id]=p; });
-  var b=db.batch(), n=0;
-  PATCHES.forEach(function(x){
-    if(x.op==='delete'){
-      if(have[x.id]){ b.delete(db.collection(COLL).doc(x.id)); n++; }
-    } else if(x.op==='add'){
-      if(!have[x.p.id]){ var o=clean(x.p); delete o.id; b.set(db.collection(COLL).doc(x.p.id), o); n++; }
-    } else {
-      var cur=have[x.id]; if(!cur) return;
-      var u={}, k; for(k in x.set){ if(!cur[k]) u[k]=x.set[k]; }
-      if(Object.keys(u).length){ b.update(db.collection(COLL).doc(x.id), u); n++; }
-    }
-  });
-  if(!n) return;
-  patching=b.commit().then(function(){ toast('Sign-in sheet updates saved ('+n+')'); }).catch(function(e){ patching=null; console.warn(e); });
-}
 /* First unlock publishes the built-in list so every later edit has a document to change. */
 function ensureSeeded(){
   if(!(isUnlocked() && liveEmpty===true)) return Promise.resolve();
