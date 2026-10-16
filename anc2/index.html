@@ -296,7 +296,7 @@
   </div>
   <footer>
     <span data-i="foot">For project communication only. Do not forward or post outside the project.</span><br>
-    <span style="opacity:.7">build v3.3 &middot; Oct 15, 2026</span>
+    <span style="opacity:.7">build v3.4 &middot; Oct 15, 2026</span>
   </footer>
 </div>
 
@@ -541,6 +541,7 @@ function render(id){
   var list=all.filter(function(p){ return matches(p,q) && (!role||p.title===role) && (!co||p.company===co); });
   if(id==='mfg') list.sort(function(a,b){ return rankMfg(a)-rankMfg(b) || byName(a,b); });
   else if(id==='tpsafety') list.sort(function(a,b){ var x=a.company.toLowerCase(), y=b.company.toLowerCase(); return x<y?-1:x>y?1:byName(a,b); });
+  else if(id==='all') list.sort(function(a,b){ return rankAll(a)-rankAll(b) || byName(a,b); });
   else list.sort(byName);
   s.querySelector('.count').textContent = list.length+' '+t('of')+' '+all.length+' '+t('people');
   var host=s.querySelector('.grid-host');
@@ -558,6 +559,8 @@ function render(id){
     }).join('');
   } else host.innerHTML='<div class="grid">'+list.map(function(p){return cardHtml(p,id);}).join('')+'</div>';
 }
+/* Main Contacts tab: Amgen first, then ATS (Amgen's site medic), then Turner, then every trade partner. */
+function rankAll(p){ var c=p.company; return c==='Amgen'?0:c==='ATS'?1:c==='Turner'?2:3; }
 function rankMfg(p){ var ti=p.title||''; if(/Building Lead/.test(ti)) return 0; if(/HSE|EHS/.test(ti)) return 3; return p.covers?1:2; }
 
 /* ---------- live data ---------- */
