@@ -7,94 +7,134 @@
 <meta name="theme-color" content="#071226">
 <title>Amgen ANC-2 &mdash; HSE Directory</title>
 <style>
+  /* Same look and layout as the Fujifilm Aura directory. Turner people carry the
+     Turner blue accent where Aura uses the Jacobs olive; Amgen / ATS stay teal. */
   :root{
-    --bg:#060d1a;
+    --bg:#050607;
     --surface-1:rgba(255,255,255,0.04);
     --surface-2:rgba(255,255,255,0.07);
-    --border-dim:rgba(255,255,255,0.10);
-    --border-bright:rgba(255,255,255,0.22);
-    --text:#eef3fb;
-    --text-2:rgba(230,238,250,0.66);
-    --text-3:rgba(230,238,250,0.40);
+    --surface-3:rgba(255,255,255,0.11);
+    --border-dim:rgba(255,255,255,0.09);
+    --border-bright:rgba(255,255,255,0.2);
+    --text:#f0f0f0;
+    --text-2:rgba(255,255,255,0.60);
+    --text-3:rgba(255,255,255,0.35);
+    --gold:#C9A84C;
+    --gold-dim:rgba(201,168,76,0.15);
+    --gold-border:rgba(201,168,76,0.45);
+    --cyan:#00d4ff;
+    --cyan-dim:rgba(0,212,255,0.10);
+    --cyan-border:rgba(0,212,255,0.38);
+    --ruby:#C0392B;
+    --ruby-dim:rgba(192,57,43,0.22);
+    --ruby-border:rgba(192,57,43,0.48);
+    --ruby-glow:rgba(192,57,43,0.35);
     --blue:#2f8cff;            /* Turner blue */
     --blue-lite:#8cc2ff;
     --blue-dim:rgba(47,140,255,0.14);
     --blue-border:rgba(47,140,255,0.55);
-    --navy:#0b2a5c;
     --teal:#22c3b5;            /* Amgen / medic */
     --teal-dim:rgba(34,195,181,0.13);
     --green:#4cd38a;
-    --ruby:#d23b2c;
-    --ruby-border:rgba(210,59,44,0.55);
     --shadow-sm:0 2px 8px rgba(0,0,0,0.45);
+    --shadow-md:0 4px 24px rgba(0,0,0,0.60);
     --shadow-lg:0 8px 40px rgba(0,0,0,0.72);
   }
   *{box-sizing:border-box}
   html,body{max-width:100%;overflow-x:hidden}
+  @supports (overflow:clip){ html,body{overflow-x:clip} }  /* hidden would stop the EMERGENCY bar from staying pinned */
   body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text);padding:16px;min-height:100vh}
   body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
-    background:radial-gradient(ellipse 130% 55% at 50% -5%,rgba(47,140,255,0.13) 0%,transparent 65%),
-               radial-gradient(ellipse 80% 40% at 90% 105%,rgba(210,59,44,0.05) 0%,transparent 60%)}
-  .wrap{max-width:1000px;margin:0 auto;position:relative;z-index:1}
+    background:radial-gradient(ellipse 130% 55% at 50% -5%,rgba(0,212,255,0.055) 0%,transparent 65%),
+               radial-gradient(ellipse 80% 40% at 90% 105%,rgba(192,57,43,0.04) 0%,transparent 60%),
+               radial-gradient(ellipse 60% 50% at 5% 80%,rgba(201,168,76,0.03) 0%,transparent 55%)}
+  .wrap{max-width:100%;margin:0 auto;position:relative;z-index:1}
 
-  .topbar{display:flex;align-items:center;justify-content:center;position:relative;margin-bottom:4px}
-  h1{color:#fff;font-size:22px;font-weight:700;margin:0;text-align:center;letter-spacing:.04em;
-     text-shadow:0 0 28px rgba(47,140,255,0.35),0 2px 4px rgba(0,0,0,0.6);padding:0 64px}
-  .lang{position:absolute;right:0;top:50%;transform:translateY(-50%);height:34px;padding:0 12px;font-size:13px;font-weight:700;
-        border-radius:8px;border:1px solid var(--border-dim);background:var(--surface-2);color:var(--text-2);cursor:pointer}
-  .sub{text-align:center;font-size:12px;color:var(--text-3);margin:6px 0 12px}
-  .sub b{color:var(--blue-lite);font-weight:600}
+  /* ── Title + status ── */
+  h1{color:#fff;font-size:22px;font-weight:700;margin:0 0 14px;text-align:center;letter-spacing:.04em;
+     text-shadow:0 0 28px rgba(0,212,255,0.28),0 2px 4px rgba(0,0,0,0.6)}
+  .status{text-align:center;font-size:12px;margin:-6px 0 12px;color:var(--text-3)}
+  .status.live{color:#6fcf6f;text-shadow:0 0 8px rgba(111,207,111,0.4)}
+  .status.off{color:#e0a64a}
 
-  .hotline-bar{display:block;width:100%;text-align:center;cursor:pointer;color:#fff;font-size:20px;font-weight:700;letter-spacing:.06em;
-    padding:14px 18px;border-radius:12px;margin-bottom:14px;border:1px solid var(--ruby-border);
-    background:linear-gradient(135deg,rgba(210,59,44,0.85),rgba(140,22,14,0.78));
-    box-shadow:0 0 32px rgba(210,59,44,0.35),inset 0 1px 0 rgba(255,255,255,0.14),0 4px 24px rgba(0,0,0,0.6)}
-  .hotline-bar small{display:block;font-size:12px;font-weight:400;letter-spacing:.02em;opacity:.85;margin-top:3px}
+  /* ── EMERGENCY bar: pinned to the top so it is reachable at any scroll position ── */
+  .hotline-bar{position:sticky;top:0;z-index:40;display:block;width:100%;height:52px;margin:0 0 14px;padding:0 18px;
+    border-radius:12px;border:1px solid var(--ruby-border);cursor:pointer;color:#fff;font-size:20px;font-weight:800;letter-spacing:1.5px;
+    background:linear-gradient(135deg,rgba(178,45,32,0.985),rgba(112,14,9,0.985));
+    box-shadow:0 0 26px rgba(192,57,43,0.32),inset 0 1px 0 rgba(255,255,255,0.14);text-shadow:0 1px 4px rgba(0,0,0,0.5)}
+  .hotline-bar:active{background:linear-gradient(135deg,rgba(160,38,26,0.82),rgba(105,12,8,0.70))}
 
-  .tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:14px}
-  .tab-btn{height:54px;font-size:15px;font-weight:600;border-radius:10px;border:1px solid var(--border-dim);
+  /* ── Tabs ── */
+  .tabs{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
+  .tab-btn{flex:1 1 30%;min-width:140px;height:54px;font-size:15px;font-weight:600;border-radius:10px;border:1px solid var(--border-dim);
     background:var(--surface-1);color:var(--text-2);cursor:pointer;padding:0 8px;line-height:1.15;
     transition:background .18s,border-color .18s,color .18s,box-shadow .18s}
-  .tab-btn:hover{background:var(--surface-2);border-color:var(--border-bright);color:var(--text)}
-  .tab-btn.active{background:linear-gradient(135deg,rgba(47,140,255,0.30),rgba(20,90,200,0.18));border-color:var(--blue-border);
-    color:#fff;box-shadow:0 0 18px rgba(47,140,255,0.22),inset 0 1px 0 rgba(140,194,255,0.25)}
-  .tab-btn .n{display:inline-block;margin-left:6px;font-size:11px;font-weight:700;color:var(--blue-lite);opacity:.9}
+  .tab-btn:not(.active):hover{border-color:rgba(0,212,255,0.60);color:#7fe3ff;background:rgba(0,212,255,0.10)}
+  .tab-btn.active{background:linear-gradient(135deg,rgba(0,212,255,0.18),rgba(0,150,200,0.11));border-color:var(--cyan-border);
+    color:var(--cyan);box-shadow:0 0 18px rgba(0,212,255,0.14),inset 0 1px 0 rgba(0,212,255,0.2)}
+  .tab-btn .n{display:inline-block;margin-left:6px;font-size:11px;font-weight:700;opacity:.75}
 
-  .hint{font-size:13px;color:var(--text-2);margin:0 0 10px;line-height:1.4}
-  .toolbar{display:flex;gap:10px;margin-bottom:10px;flex-wrap:wrap}
-  .search{flex:1;min-width:200px;height:52px;font-size:18px;padding:0 16px;border-radius:10px;border:1px solid var(--border-dim);
-    background:rgba(255,255,255,0.05);color:var(--text);outline:none}
+  /* ── Lock / pending / language row ── */
+  .sync-row{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:8px}
+  .sync-row button{flex:1 1 auto;min-width:92px;max-width:100%;white-space:nowrap;height:46px;font-size:15px;padding:0 10px;border-radius:10px;
+    background:var(--surface-1);color:var(--text-2);border:1px solid var(--border-dim);cursor:pointer}
+  .sync-row button:hover{border-color:rgba(0,212,255,0.55);color:#7fe3ff}
+  #lockStatusBtn{flex:1 1 auto}
+  #langBtn{flex:0 0 auto;min-width:96px}
+  #lockStatusBtn.unlocked{background:rgba(47,110,63,0.24);color:#6fcf6f;border-color:rgba(47,110,63,0.50);box-shadow:0 0 16px rgba(47,110,63,0.20)}
+  #pendBtn{background:rgba(230,81,0,0.16);border-color:rgba(230,81,0,0.55);color:#ffb37a;font-weight:700}
+  #pendBtn .badge{display:inline-block;background:#fff;color:#e65100;border-radius:10px;padding:0 6px;font-size:12px;font-weight:900;margin-left:4px}
+
+  /* ── Section toolbar ── */
+  .hint{text-align:center;font-size:12px;color:var(--text-3);margin:8px 0 14px;line-height:1.4}
+  .toolbar{display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+  .search{flex:1;min-width:220px;height:52px;font-size:18px;padding:0 16px;border-radius:10px;border:1px solid var(--border-dim);
+    background:rgba(255,255,255,0.05);color:var(--text);outline:none;transition:border-color .2s,box-shadow .2s}
   .search::placeholder{color:var(--text-3)}
-  .search:focus{border-color:var(--blue-border);box-shadow:0 0 0 3px rgba(47,140,255,0.15)}
+  .search:focus{border-color:var(--cyan-border);box-shadow:0 0 0 3px rgba(0,212,255,0.10)}
+  .addbtn{height:52px;padding:0 18px;font-size:16px;font-weight:700;border-radius:10px;cursor:pointer;color:#1a1200;
+    background:linear-gradient(135deg,rgba(201,168,76,0.82),rgba(185,142,45,0.70));border:1px solid var(--gold-border);
+    box-shadow:0 0 20px rgba(201,168,76,0.22),inset 0 1px 0 rgba(255,255,255,0.22)}
+  .addbtn:hover{background:linear-gradient(135deg,rgba(220,185,90,0.90),rgba(201,168,76,0.80))}
   .filters{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center}
   select{height:44px;font-size:15px;padding:0 10px;border-radius:10px;border:1px solid var(--border-dim);background:rgba(255,255,255,0.06);
     color:var(--text);outline:none;cursor:pointer;max-width:100%}
-  select option{background:#0d1626;color:var(--text)}
+  select:focus{border-color:var(--cyan-border)}
+  select option{background:#111;color:var(--text)}
   .count{color:var(--text-3);font-size:14px;margin-left:auto}
 
+  /* ── Cards ── */
   .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
-  .card{background:linear-gradient(135deg,rgba(255,255,255,0.06),rgba(255,255,255,0.028));border-radius:12px;padding:14px;display:flex;gap:12px;
-    align-items:center;cursor:pointer;border:1.5px solid var(--border-dim);min-width:0;
+  .card{background:linear-gradient(135deg,rgba(255,255,255,0.060),rgba(255,255,255,0.028));border-radius:12px;padding:14px;display:flex;gap:12px;
+    align-items:center;cursor:pointer;border:1px solid var(--border-dim);min-width:0;position:relative;
     box-shadow:var(--shadow-sm),inset 0 1px 0 rgba(255,255,255,0.07);transition:border-color .2s,box-shadow .2s,background .2s}
-  .card.turner{border-color:rgba(47,140,255,0.38)}
+  .card.turner{border-color:rgba(47,140,255,0.42)}
   .card.amgen{border-color:rgba(34,195,181,0.42)}
-  .card:hover,.card.turner:hover,.card.amgen:hover{border-color:var(--blue);
-    box-shadow:0 0 0 2px rgba(47,140,255,0.6),0 0 30px rgba(47,140,255,0.3),var(--shadow-sm);
-    background:linear-gradient(135deg,rgba(47,140,255,0.18),rgba(47,140,255,0.07))}
-  @media (hover:none){.card:hover,.card.turner:hover,.card.amgen:hover{box-shadow:var(--shadow-sm);background:linear-gradient(135deg,rgba(255,255,255,0.06),rgba(255,255,255,0.028))}
-    .card:hover{border-color:var(--border-dim)}.card.turner:hover{border-color:rgba(47,140,255,0.38)}.card.amgen:hover{border-color:rgba(34,195,181,0.42)}}
-  .card:active{background:rgba(47,140,255,0.16)}
+  /* One cyan frame on hover for every card. No transform: sub-pixel shifts make some borders soft. */
+  .card:hover,.card.turner:hover,.card.amgen:hover{border-color:#00d4ff;
+    box-shadow:0 0 0 2px rgba(0,212,255,0.70),0 0 30px rgba(0,212,255,0.32),var(--shadow-sm);
+    background:linear-gradient(135deg,rgba(0,212,255,0.17),rgba(0,212,255,0.075))}
+  .card:hover .card-name{color:#7fe3ff}
+  @media (hover:none){
+    .card:hover,.card.turner:hover,.card.amgen:hover{box-shadow:var(--shadow-sm),inset 0 1px 0 rgba(255,255,255,0.07);
+      background:linear-gradient(135deg,rgba(255,255,255,0.060),rgba(255,255,255,0.028))}
+    .card:hover{border-color:var(--border-dim)}.card.turner:hover{border-color:rgba(47,140,255,0.42)}.card.amgen:hover{border-color:rgba(34,195,181,0.42)}
+    .card:hover .card-name{color:inherit}
+  }
+  .card:active{background:rgba(201,168,76,0.09);border-color:var(--gold-border)}
   .card-body{min-width:0;flex:1}
   .avatar{width:42px;height:42px;min-width:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;
-    background:linear-gradient(135deg,#5b6b84,#3a4659);color:#fff;border:1px solid rgba(255,255,255,0.18)}
-  .avatar.turner{background:linear-gradient(135deg,#2f8cff,#1456b8);border-color:rgba(140,194,255,0.6);box-shadow:0 0 12px rgba(47,140,255,0.3)}
-  .avatar.amgen{background:linear-gradient(135deg,#22c3b5,#0f7d74);border-color:rgba(34,195,181,0.6)}
-  .card-name{font-weight:700;font-size:15px;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    background:linear-gradient(135deg,rgba(201,168,76,0.85),rgba(175,135,32,0.65));color:#1a1200;border:1px solid var(--gold-border);
+    box-shadow:0 0 12px rgba(201,168,76,0.22)}
+  .avatar.turner{background:linear-gradient(135deg,#2f8cff,#1456b8);color:#fff;border-color:rgba(140,194,255,0.6);box-shadow:0 0 12px rgba(47,140,255,0.3)}
+  .avatar.amgen{background:linear-gradient(135deg,#22c3b5,#0f7d74);color:#fff;border-color:rgba(34,195,181,0.6);box-shadow:0 0 12px rgba(34,195,181,0.25)}
+  .card-name{font-weight:700;font-size:15px;margin:0;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .card-sub{font-size:13px;color:var(--text-2);margin:1px 0 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .tags{margin-top:4px;display:flex;gap:4px;flex-wrap:wrap}
-  .tag{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:5px;color:var(--blue-lite);background:var(--blue-dim);border:1px solid rgba(47,140,255,0.3)}
+  .tag{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:5px;color:var(--gold);background:rgba(201,168,76,0.12);border:1px solid rgba(201,168,76,0.26)}
   .tag.safe{color:var(--green);background:rgba(76,211,138,0.12);border-color:rgba(76,211,138,0.32)}
   .tag.amg{color:var(--teal);background:var(--teal-dim);border-color:rgba(34,195,181,0.35)}
+  .tag.vac{color:#ffc773;background:rgba(224,166,74,0.13);border-color:rgba(224,166,74,0.4)}
 
   .group{margin:22px 0 10px;padding:10px 12px;border-radius:10px;background:var(--surface-1);border-left:4px solid var(--blue);
     display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 12px}
@@ -102,16 +142,66 @@
   .group h2{margin:0;font-size:16px;color:#fff}
   .group .meta{font-size:13px;color:var(--text-2)}
   .group .sup{font-size:13px;color:var(--blue-lite);cursor:pointer;text-decoration:underline;text-underline-offset:2px}
-  .group.contractor{border-left-color:#7d8ba3}
+  .group.contractor{border-left-color:var(--gold)}
 
   .empty{text-align:center;color:var(--text-3);padding:40px 0;font-size:16px}
   .section{display:none}.section.active{display:block}
 
+  /* ── Emergency page (same build as Aura) ── */
+  .back-btn{display:block;width:100%;height:60px;margin-bottom:10px;font-size:14px;font-weight:700;border-radius:10px;cursor:pointer;
+    border:1px solid var(--border-dim);background:var(--surface-1);color:var(--text-2)}
+  .back-btn:hover{border-color:rgba(0,212,255,0.55);color:#7fe3ff}
+  .site-strip{display:block;width:100%;text-align:center;padding:12px 14px;margin-bottom:14px;border-radius:10px;font-size:14px;line-height:1.4;font-weight:700;
+    background:linear-gradient(135deg,rgba(201,168,76,0.26),rgba(185,142,45,0.18));color:var(--gold);border:1px solid var(--gold-border);
+    box-shadow:0 0 18px rgba(201,168,76,0.16)}
+  .site-strip .addr{display:block;color:#fff;font-size:17px;margin:3px 0}
+  .site-strip a{color:#9ec7ff}
+  .es{color:#9ec7ff;font-weight:600}
+  .emergency-call-row{display:flex;gap:10px;margin-bottom:16px}
+  .emergency-call-btn{flex:1;display:block;text-decoration:none;border-radius:12px;padding:14px 10px;text-align:center;border:1px solid transparent;min-width:0}
+  .emergency-call-btn.medic{background:linear-gradient(135deg,rgba(201,168,76,0.30),rgba(185,142,45,0.20));border-color:var(--gold-border);color:#ffe8a0;
+    box-shadow:0 0 18px rgba(201,168,76,0.16)}
+  .emergency-call-btn.e911{background:linear-gradient(135deg,rgba(192,57,43,0.52),rgba(148,28,18,0.42));border-color:var(--ruby-border);color:#fff;
+    box-shadow:0 0 22px var(--ruby-glow)}
+  .emergency-call-num{font-size:26px;font-weight:800;display:block;line-height:1.2}
+  .emergency-call-label{font-size:13px;font-weight:700;display:block;margin-bottom:2px}
+  .emergency-call-sub{font-size:12px;display:block;margin-top:2px;line-height:1.3}
+  .emergency-call-btn.medic .es{color:#2a5dab}
+  .emergency-call-btn.e911 .es{color:#ffd9d4}
+  .em-alt{display:inline-block;margin-top:6px;font-size:12px;color:#ffe8a0;text-decoration:underline}
+  .emergency-section{background:linear-gradient(135deg,rgba(255,255,255,0.055),rgba(255,255,255,0.025));border:1px solid var(--border-dim);
+    border-radius:12px;padding:16px;margin-bottom:14px;box-shadow:var(--shadow-sm);color:#fff}
+  .emergency-section h3{margin:0 0 10px;font-size:16.5px;color:#fff;font-weight:700}
+  .emergency-section p{margin:0;font-size:14.5px;line-height:1.5;color:#fff}
+  .emergency-step{display:flex;gap:12px;margin-bottom:12px;align-items:flex-start}
+  .emergency-step:last-child{margin-bottom:0}
+  .emergency-step-num{width:30px;height:30px;min-width:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;
+    background:linear-gradient(135deg,rgba(192,57,43,0.75),rgba(130,18,12,0.55));color:#fff;border:1px solid var(--ruby-border);box-shadow:0 0 10px rgba(192,57,43,0.3)}
+  .emergency-step-text{font-size:14.5px;line-height:1.5;color:#fff}
+  .emergency-step-text b{display:block;margin-bottom:3px;font-weight:700}
+  .emergency-step-text .es{display:block;margin-top:4px;font-weight:400}
+  .emergency-step-text .es b{font-weight:700}
+  .emergency-list{margin:0;padding-left:20px;font-size:14.5px;line-height:1.7;color:#fff}
+  .em-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:8px}
+  .em-row{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;background:var(--surface-1);border:1px solid var(--border-dim)}
+  .em-row .t{flex:1;min-width:0}
+  .em-row .t b{display:block;font-size:15px}
+  .em-row .t span{display:block;font-size:13px;color:var(--text-2)}
+  .em-row a.dial{flex:0 0 auto;height:42px;padding:0 14px;display:flex;align-items:center;border-radius:9px;font-weight:700;font-size:14px;text-decoration:none;
+    color:#fff;background:linear-gradient(135deg,#2f8cff,#1456b8);border:1px solid var(--blue-border);white-space:nowrap}
+  .em-person{cursor:pointer}
+  .em-person:hover b{color:#7fe3ff}
+  .em-place{padding:10px 12px;border-radius:10px;background:var(--surface-1);border:1px solid var(--border-dim);font-size:14px;line-height:1.5}
+  .em-place a{color:#9ec7ff}
+  .em-place .muted{color:var(--text-2)}
+  .em-more{display:block;margin-top:8px;text-align:center;font-size:14px;color:#7fe3ff;text-decoration:underline;cursor:pointer}
+
+  /* ── Modal ── */
   #overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.74);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
     align-items:center;justify-content:center;padding:16px;z-index:1000}
   #overlay.open{display:flex}
-  #modal{background:linear-gradient(145deg,rgba(14,24,44,0.98),rgba(6,12,24,0.99));border:1px solid var(--border-bright);border-radius:16px;padding:22px;
-    max-width:460px;width:100%;max-height:88vh;overflow-y:auto;box-shadow:var(--shadow-lg),0 0 44px rgba(47,140,255,0.10);position:relative}
+  #modal{background:linear-gradient(145deg,rgba(22,24,28,0.98),rgba(8,9,11,0.99));border:1px solid var(--border-bright);border-radius:16px;padding:22px;
+    max-width:460px;width:100%;max-height:88vh;overflow-y:auto;box-shadow:var(--shadow-lg),0 0 44px rgba(0,212,255,0.08);position:relative}
   .x{position:absolute;top:10px;right:10px;width:38px;height:38px;border-radius:50%;border:1px solid var(--border-dim);background:var(--surface-2);
     color:var(--text);font-size:20px;cursor:pointer;line-height:1}
   .m-head{display:flex;gap:14px;align-items:center;margin:0 34px 14px 0}
@@ -122,8 +212,8 @@
   td{padding:9px 0;border-bottom:1px solid rgba(255,255,255,0.05);vertical-align:top}
   .lbl{color:var(--text-3);white-space:nowrap;padding-right:12px}
   .val{text-align:right;word-break:break-word}
-  .val a{color:var(--blue-lite);text-decoration:none}
-  .val .lnk{color:var(--blue-lite);cursor:pointer;text-decoration:underline;text-underline-offset:2px}
+  .val a{color:#7fe3ff;text-decoration:none}
+  .val .lnk{color:#7fe3ff;cursor:pointer;text-decoration:underline;text-underline-offset:2px}
   .actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
   .btn{display:flex;align-items:center;justify-content:center;height:50px;border-radius:10px;font-size:16px;font-weight:700;text-decoration:none;
     color:#fff;background:var(--surface-2);border:1px solid var(--border-dim);user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;touch-action:manipulation}
@@ -132,31 +222,7 @@
   .btn.full{grid-column:1/-1}
   .btn.red{background:linear-gradient(135deg,#d23b2c,#8c160e);border-color:var(--ruby-border)}
   .btn.disabled{opacity:.35;pointer-events:none}
-
-  .em-h{font-size:22px;font-weight:800;color:#ff8a7a;margin:0 34px 4px 0;letter-spacing:.04em}
-  .em-sec{margin:16px 0 6px;font-size:12px;font-weight:700;letter-spacing:.08em;color:var(--text-3);text-transform:uppercase}
-  .em-row{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;background:var(--surface-1);border:1px solid var(--border-dim);margin-bottom:6px}
-  .em-row .t{flex:1;min-width:0}
-  .em-row .t b{display:block;font-size:15px}
-  .em-row .t span{font-size:13px;color:var(--text-2)}
-  .em-row a.dial{flex:0 0 auto;height:42px;padding:0 14px;display:flex;align-items:center;border-radius:9px;font-weight:700;font-size:14px;text-decoration:none;color:#fff;
-    background:linear-gradient(135deg,#2f8cff,#1456b8);white-space:nowrap}
-  .em-row.big{border-color:var(--ruby-border);background:rgba(210,59,44,0.12)}
-  .em-row.big a.dial{background:linear-gradient(135deg,#d23b2c,#8c160e);font-size:17px;height:48px;padding:0 16px}
   .em-addr{font-size:14px;line-height:1.45;color:var(--text);padding:10px 12px;border-radius:10px;background:var(--surface-1);border:1px solid var(--border-dim);margin-bottom:6px}
-  .em-addr a{color:var(--blue-lite)}
-
-
-  .status{text-align:center;font-size:12px;margin:-6px 0 12px;color:var(--text-3)}
-  .status.live{color:#6fcf6f;text-shadow:0 0 8px rgba(111,207,111,0.4)}
-  .status.off{color:#e0a64a}
-  .adminbar{display:none;gap:8px;flex-wrap:wrap;align-items:center;justify-content:center;margin:-4px 0 12px;font-size:13px;color:var(--blue-lite)}
-  .adminbar.on{display:flex}
-  .adminbar button{height:36px;font-size:13px;padding:0 12px;border-radius:8px;border:1px solid var(--border-dim);background:var(--surface-2);color:var(--text);cursor:pointer}
-  .adminbar .pend{border-color:rgba(224,166,74,0.6);color:#ffc773}
-  .addbtn{height:52px;padding:0 18px;font-size:16px;font-weight:700;border-radius:10px;cursor:pointer;color:#fff;
-    background:linear-gradient(135deg,#2f8cff,#1456b8);border:1px solid var(--blue-border)}
-  .tag.vac{color:#ffc773;background:rgba(224,166,74,0.13);border-color:rgba(224,166,74,0.4)}
   .divider{border-top:1px solid var(--border-dim);margin:14px 0 8px;padding-top:8px;font-size:12px;color:var(--text-3)}
   .stack{display:grid;gap:8px}
   .row3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
@@ -173,52 +239,56 @@
   .f input,.f textarea,.f select{width:100%;height:46px;font-size:16px;padding:0 12px;border-radius:9px;border:1px solid var(--border-dim);
     background:rgba(255,255,255,0.06);color:var(--text);outline:none;font-family:inherit}
   .f textarea{height:80px;padding:10px 12px;resize:vertical}
-  .f input:focus,.f textarea:focus{border-color:var(--blue-border)}
+  .f input:focus,.f textarea:focus{border-color:var(--cyan-border)}
   .checks{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:4px 0 12px}
   .checks label{display:flex;gap:8px;align-items:center;font-size:14px;padding:8px 10px;border-radius:8px;background:var(--surface-1);border:1px solid var(--border-dim)}
   .checks input{width:18px;height:18px}
   .m-sub{font-size:13px;color:var(--text-2);margin:-6px 0 14px}
   .req{padding:10px 12px;border-radius:10px;background:var(--surface-1);border:1px solid var(--border-dim);margin-bottom:8px;font-size:14px;line-height:1.45}
-  .req b{color:#fff}.req .chg{color:var(--blue-lite)}
+  .req b{color:#fff}.req .chg{color:#7fe3ff}
   .req .acts{display:flex;gap:8px;margin-top:8px}
   .req .acts .btn{height:40px;flex:1;font-size:14px}
-  .toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:#0f2a52;color:#fff;border:1px solid var(--blue-border);padding:10px 16px;border-radius:10px;
+  .toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:#14181d;color:#fff;border:1px solid var(--cyan-border);padding:10px 16px;border-radius:10px;
     font-size:14px;z-index:2000;box-shadow:var(--shadow-lg);display:none;max-width:90vw;text-align:center}
-  footer{text-align:center;color:var(--text-3);font-size:11px;margin:30px 0 8px;line-height:1.6}
+
+  /* ── Fine print + footer ── */
+  .fineprint{margin:18px 4px 4px;padding:10px 14px 8px;font-size:11px;color:#999;border-top:1px solid rgba(255,255,255,0.09);line-height:1.6}
+  .fineprint p{margin:0 0 7px}
+  footer{text-align:center;color:var(--text-3);font-size:12px;margin-top:18px;letter-spacing:.04em;line-height:1.6}
 
   @media (max-width:560px){
     body{padding:12px}
-    h1{font-size:18px;padding:0 56px 0 0;text-align:left}
-    .topbar{justify-content:flex-start}
-    .tabs{grid-template-columns:repeat(2,1fr)}
-    .tab-btn{font-size:14px;height:50px}
+    h1{font-size:18px}
+    .tab-btn{flex:1 1 40%;min-width:0;font-size:14px;height:50px}
     .hotline-bar{font-size:18px}
-    .search{font-size:16px}
+    .search{font-size:16px;min-width:0}
+    .addbtn{flex:1 1 100%}
     select{flex:1 1 45%;min-width:0}
     .count{width:100%;margin-left:0}
     .grid{grid-template-columns:1fr}
+    .emergency-call-num{font-size:20px}
+    .emergency-call-btn.e911 .emergency-call-num{font-size:34px !important}
+    .em-grid{grid-template-columns:1fr}
   }
 </style>
 </head>
 <body>
 <div class="wrap">
-  <div class="topbar">
-    <h1 data-i="title">Amgen ANC-2 &mdash; HSE Directory</h1>
-    <button class="lang" id="langBtn" type="button">ES</button>
-  </div>
-  <div class="sub"><b>Bengal</b> &middot; Holly Springs, NC &middot; <span id="totalLbl"></span></div>
-  <div class="status" id="status">Connecting&hellip;</div>
-  <div class="adminbar" id="adminbar"></div>
-
-  <button class="hotline-bar" id="emBtn" type="button"><span data-i="emergency">EMERGENCY</span><small data-i="emSub">911 &middot; ATS Site Medic &middot; Amgen Security &middot; Turner Safety</small></button>
+  <h1 data-i="title">Amgen ANC-2 &mdash; HSE Directory</h1>
+  <p class="status" id="status">Connecting&hellip;</p>
+  <button class="hotline-bar" id="emBtn" type="button" data-i="emergency">EMERGENCY</button>
 
   <div class="tabs" id="tabs"></div>
+  <div class="sync-row" id="adminbar"></div>
   <div id="sections"></div>
 
+  <div class="fineprint">
+    <p>&#128274; <em data-i="privacy"></em></p>
+    <span data-i="foot2"></span>
+  </div>
   <footer>
     <span data-i="foot">For project communication only. Do not forward or post outside the project.</span><br>
-    <span data-i="foot2">Something wrong? Open the person and tap Suggest a correction.</span><br>
-    <span style="opacity:.7">build v2-live &middot; Oct 14, 2026</span>
+    <span style="opacity:.7">build v3 &middot; Oct 15, 2026</span>
   </footer>
 </div>
 
@@ -285,13 +355,13 @@ var T = {
      edit:'Edit',del:'Delete',vacBtn:'🏝 My vacation / time off status',add:'+ Add person',
      live:'Live — syncing across all devices',offline:'Offline — showing the last saved copy',connecting:'Connecting…',
      starting:'Starting list — goes live the first time the owner unlocks',
-     unlocked:'🔓 Edit mode',lock:'Lock',pending:'Pending',
+     unlocked:'🔓 Edit mode',lock:'Lock',pending:'Pending',lockedBtn:'🔒 Locked — tap to unlock editing',unlockedBtn:'🔓 Unlocked — tap to lock',langOther:'Español',back:'← Back to Contacts',
      pinTitle:'Enter edit PIN',pinSub:'Needed to add, edit or delete.',unlock:'Unlock',badPin:'Incorrect PIN.',tooMany:'Too many tries. Wait a few minutes and try again.',
      notOwner:'That PIN does not have edit rights on this directory.',
      editTitle:'Edit person',addTitle:'Add person',fName:'Full name',fTitle:'Job title / role',fCo:'Company',fTrade:'Trade (optional)',
      fCell:'Cell phone',fOffice:'Office / other phone',fEmail:'Email',fTrailer:'Trailer / office location',rosters:'Show in these tabs',
      rTurner:'Turner Contacts',rMfg:'MFG Building Team',rSafety:'Turner Safety Team',rTp:'Trade Partner Safety',rAmgen:'Amgen EHS / Medic',
-     privacy:'🔒 Contact information in this directory (phone numbers, email addresses) may be viewed, saved, or used by other members of this project. By appearing here you acknowledge this.',
+     privacy:'Contact information in this directory (phone numbers, email addresses) may be viewed, saved, or used by other members of this project. By appearing here you acknowledge this.',
      saveChanges:'✓ Save changes',saved:'Saved — everyone sees it now.',needName:'Full name and company are required.',
      confirmDel:'Delete {n} from the directory? This removes them for everyone.',deleted:'Deleted.',
      sugTitle:'Suggest a correction',sugSub:'Change what is wrong. Turner Safety reviews it before it goes live.',sugNote:'Anything else? (optional)',send:'Send',
@@ -320,13 +390,13 @@ var T = {
      edit:'Editar',del:'Borrar',vacBtn:'🏝 Mis vacaciones / días libres',add:'+ Agregar persona',
      live:'En vivo — sincronizado en todos los dispositivos',offline:'Sin conexión — mostrando la última copia',connecting:'Conectando…',
      starting:'Lista inicial — se publica la primera vez que el dueño desbloquea',
-     unlocked:'🔓 Modo edición',lock:'Bloquear',pending:'Pendientes',
+     unlocked:'🔓 Modo edición',lock:'Bloquear',pending:'Pendientes',lockedBtn:'🔒 Bloqueado — toque para editar',unlockedBtn:'🔓 Desbloqueado — toque para bloquear',langOther:'English',back:'← Volver a Contactos',
      pinTitle:'Ingrese el PIN',pinSub:'Necesario para agregar, editar o borrar.',unlock:'Desbloquear',badPin:'PIN incorrecto.',tooMany:'Demasiados intentos. Espere unos minutos.',
      notOwner:'Ese PIN no tiene permiso de edición en este directorio.',
      editTitle:'Editar persona',addTitle:'Agregar persona',fName:'Nombre completo',fTitle:'Puesto',fCo:'Compañía',fTrade:'Oficio (opcional)',
      fCell:'Celular',fOffice:'Oficina / otro teléfono',fEmail:'Correo',fTrailer:'Tráiler / oficina',rosters:'Mostrar en estas pestañas',
      rTurner:'Contactos de Turner',rMfg:'Equipo Edificio MFG',rSafety:'Equipo de Seguridad Turner',rTp:'Seguridad Contratistas',rAmgen:'Amgen EHS / Médico',
-     privacy:'🔒 La información de contacto (teléfonos, correos) puede ser vista, guardada o usada por otros miembros del proyecto. Al aparecer aquí usted lo acepta.',
+     privacy:'La información de contacto (teléfonos, correos) puede ser vista, guardada o usada por otros miembros del proyecto. Al aparecer aquí usted lo acepta.',
      saveChanges:'✓ Guardar cambios',saved:'Guardado — todos lo ven ahora.',needName:'El nombre y la compañía son obligatorios.',
      confirmDel:'¿Borrar a {n} del directorio? Se borra para todos.',deleted:'Borrado.',
      sugTitle:'Sugerir una corrección',sugSub:'Cambie lo que está mal. Seguridad de Turner lo revisa antes de publicarlo.',sugNote:'¿Algo más? (opcional)',send:'Enviar',
@@ -391,6 +461,7 @@ TABS.forEach(function(tb){
   s.querySelector('.f-role').addEventListener('change',function(){ render(tb.id); });
   s.querySelector('.f-co').addEventListener('change',function(){ render(tb.id); });
 });
+var emSec=document.createElement('div'); emSec.className='section'; emSec.id='sec_emergency'; secEl.appendChild(emSec);
 function fillSelect(sel,vals,allLabel){
   var cur=sel.value; sel.innerHTML='';
   var o=document.createElement('option'); o.value=''; o.textContent=allLabel; sel.appendChild(o);
@@ -405,10 +476,8 @@ function rebuild(){
 }
 function applyLang(){
   document.documentElement.lang=lang;
-  document.getElementById('langBtn').textContent = lang==='en'?'ES':'EN';
   document.querySelectorAll('[data-i]').forEach(function(el){ el.textContent=t(el.getAttribute('data-i')); });
   document.title = t('title');
-  document.getElementById('totalLbl').textContent = PEOPLE.length+' '+t('people');
   TABS.forEach(function(tb){
     var b=tabsEl.querySelector('[data-tab="'+tb.id+'"]');
     b.innerHTML=esc(lang==='en'?tb.en:tb.es)+'<span class="n">'+tabPeople(tb.id).length+'</span>';
@@ -422,10 +491,10 @@ function applyLang(){
     s.querySelector('.f-co').style.display = cos.length<2?'none':'';
   });
   renderStatus(); renderAdminBar();
-  setTab(state.tab);
+  if(state.em) showEmergency(); else setTab(state.tab);
 }
 function setTab(id){
-  state.tab=id;
+  state.tab=id; state.em=false;
   try{ localStorage.setItem('anc2tab',id); }catch(e){}
   tabsEl.querySelectorAll('.tab-btn').forEach(function(b){ b.classList.toggle('active',b.dataset.tab===id); });
   secEl.querySelectorAll('.section').forEach(function(s){ s.classList.toggle('active',s.id==='sec_'+id); });
@@ -552,15 +621,11 @@ function requireUnlock(action){
   inp.addEventListener('keydown',function(e){ if(e.key==='Enter') go(e); });
 }
 function renderAdminBar(){
-  var el=document.getElementById('adminbar');
-  if(!isUnlocked()){ el.className='adminbar'; el.innerHTML=''; return; }
-  var n=pendChg.length+pendRem.length;
-  el.className='adminbar on';
-  el.innerHTML='<span>'+esc(t('unlocked'))+'</span>'
-    +'<button type="button" class="'+(n?'pend':'')+'" id="pendBtn">'+esc(t('pending'))+' ('+n+')</button>'
-    +'<button type="button" id="lockBtn">'+esc(t('lock'))+'</button>';
-  document.getElementById('pendBtn').onclick=openPending;
-  document.getElementById('lockBtn').onclick=function(){ auth.signOut(); };
+  var el=document.getElementById('adminbar'); if(!el) return;
+  var un=isUnlocked(), n=pendChg.length+pendRem.length;
+  el.innerHTML='<button type="button" id="lockStatusBtn" class="'+(un?'unlocked':'')+'">'+esc(un?t('unlockedBtn'):t('lockedBtn'))+'</button>'
+    +(un?'<button type="button" id="pendBtn">🔔 '+esc(t('pending'))+' <span class="badge">'+n+'</span></button>':'')
+    +'<button type="button" id="langBtn">'+esc(t('langOther'))+'</button>';
 }
 function watchRequests(){
   unsubReq.forEach(function(u){ try{u();}catch(e){} }); unsubReq=[]; pendChg=[]; pendRem=[];
@@ -625,7 +690,7 @@ function openEdit(p, presetTab){
     +fld('e_email',t('fEmail'),p.email,'email')+fld('e_trailer',t('fTrailer'),p.trailer)
     +'<div class="f"><span>'+esc(t('rosters'))+'</span></div><div class="checks">'
     +ROSTERS.map(function(r){ return '<label><input type="checkbox" value="'+r+'"'+(tb.indexOf(r)>=0?' checked':'')+'>'+esc(labels[r])+'</label>'; }).join('')+'</div>'
-    +'<div class="em-addr" style="font-size:12px;color:#e8d9a8;background:rgba(224,166,74,0.08);border-color:rgba(224,166,74,0.3)">'+esc(t('privacy'))+'</div>'
+    +'<div class="em-addr" style="font-size:12px;color:#e8d9a8;background:rgba(224,166,74,0.08);border-color:rgba(224,166,74,0.3)">'+'🔒 '+esc(t('privacy'))+'</div>'
     +'<div class="actions" style="margin-top:12px"><a class="btn call" href="#" id="e_save">'+esc(t('saveChanges'))+'</a><a class="btn" href="#" data-close="1">'+esc(t('close'))+'</a></div>');
   var coIn=document.getElementById('e_co');
   coIn.addEventListener('change',function(){  // new Turner person -> tick Turner Contacts
@@ -781,46 +846,119 @@ function saveContact(a,ev){
   return true;
 }
 
-/* ---------- emergency panel ---------- */
-function emRow(title,sub,num,big,alt){
-  return '<div class="em-row'+(big?' big':'')+'"><div class="t"><b>'+esc(title)+'</b>'+(sub?'<span>'+esc(sub)+'</span>':'')
-    +(alt?'<span style="display:block">or <a href="tel:'+digits(alt)+'" style="color:var(--blue-lite)">'+esc(alt)+'</a></span>':'')+'</div>'
-    +'<a class="dial" href="tel:'+digits(num)+'">'+esc(num)+'</a></div>';
-}
-/* Emergency numbers come from the live cards, so fixing a number with Edit fixes the panel too. */
+/* ---------- emergency page (same layout as the Aura directory) ---------- */
+/* Numbers come from the live cards, so fixing a number with Edit fixes this page too. */
 function liveNum(id,fallback){ var p=BY[id]; return {main:(p&&(p.phone||p.phone2))||fallback, alt:(p&&p.phone&&p.phone2)?p.phone2:''}; }
+function emRow(title,es,num,label){
+  return '<div class="em-row"><div class="t"><b>'+esc(title)+'</b>'+(es?'<span class="es">'+esc(es)+'</span>':'')+'</div>'
+    +'<a class="dial" href="tel:'+digits(num)+'">'+esc(label||num)+'</a></div>';
+}
 function personRow(id){
   var p=BY[id]; if(!p||!p.phone) return '';
-  return '<div class="em-row"><div class="t em-person" data-id="'+esc(p.id)+'" style="cursor:pointer"><b>'+esc(p.name)+'</b><span>'+esc(p.title)+'</span></div>'
-    +'<a class="dial" href="tel:'+digits(p.phone)+'">'+esc(t('call'))+'</a></div>';
+  return '<div class="em-row"><div class="t em-person" data-id="'+esc(p.id)+'"><b>'+esc(p.name)+'</b><span>'+esc(p.title||'')+'</span></div>'
+    +'<a class="dial" href="tel:'+digits(p.phone)+'">'+esc(fmtPhone(p.phone))+'</a></div>';
 }
-function openEmergency(){
+function step(n,en,enTxt,es,esTxt){
+  return '<div class="emergency-step"><div class="emergency-step-num">'+n+'</div><div class="emergency-step-text"><b>'+en+'</b>'+enTxt
+    +'<span class="es"><b style="display:inline">'+es+'</b> &mdash; '+esTxt+'</span></div></div>';
+}
+var SAFETY_LEADS=['crystal-martin','luther-williams','nicole-weedon','albert-arrey','baldemar-diaz'];
+function renderEmergency(){
   var maps=function(q){ return 'https://maps.google.com/?q='+encodeURIComponent(q); };
   var site='4130 Friendship Road, Apex, NC 27539';
-  openModal('<p class="em-h">'+esc(t('emTitle'))+'</p>'
-    +emRow(t('life'),t('lifeSub'),'911',true)
-    +'<div class="em-addr"><b>'+esc(t('addr'))+'</b><br>Amgen ANC-2 · '+site+'<br><span style="color:var(--text-2)">(Holly Springs) · <a href="'+maps(site)+'" target="_blank" rel="noopener">'+esc(t('map'))+'</a></span></div>'
-    +(function(){ var a=liveNum('ats-on-site-medic','(984) 351-3994'); return emRow(t('medic'),t('medicSub'),a.main,true,a.alt); })()
-    +emRow(t('sec'),t('secSub'),liveNum('amgen-security','(984) 343-2122').main)
-    +emRow(t('hot'),t('hotSub'),'(866) 388-7637')
-    +'<p class="em-sec">'+esc(t('safeLead'))+'</p>'
-    +['crystal-martin','luther-williams','nicole-weedon','albert-arrey','baldemar-diaz'].map(personRow).join('')
-    +'<a class="btn full" data-goto="safety" href="#" style="margin:4px 0 0">'+esc(t('seeAll'))+'</a>'
-    +'<p class="em-sec">'+esc(t('muster'))+'</p>'
-    +'<div class="em-addr">'+esc(t('m1'))+'<br>'+esc(t('m2'))+'<br><span style="color:var(--text-2)">'+esc(t('mustNote'))+'</span></div>'
-    +'<p class="em-sec">'+esc(t('hosp'))+'</p>'
-    +'<div class="em-addr"><b>'+esc(t('er'))+'</b> — Rex Holly Springs Hospital<br>850 S. Main Street, Holly Springs, NC 27540 · <a href="'+maps('Rex Holly Springs Hospital, 850 S Main St, Holly Springs, NC 27540')+'" target="_blank" rel="noopener">'+esc(t('map'))+'</a></div>'
-    +'<div class="em-addr"><b>'+esc(t('clinic'))+'</b> — AFC Urgent Care<br>1298 N. Main Street, Fuquay-Varina, NC 27526 · <a href="'+maps('AFC Urgent Care, 1298 N Main St, Fuquay-Varina, NC 27526')+'" target="_blank" rel="noopener">'+esc(t('map'))+'</a><br><span style="color:var(--text-2)">'+esc(t('hours'))+'</span></div>'
-    +emRow('AFC Urgent Care','','(919) 590-4099')
-    +'<p class="em-sec">'+esc(t('other'))+'</p>'
-    +emRow(t('poison'),'','(800) 222-1222')+emRow(t('police'),'','(919) 552-7110')+emRow(t('fire'),'','(919) 567-4733'));
+  var ats=liveNum('ats-on-site-medic','(984) 351-3994'), sec=liveNum('amgen-security','(984) 343-2122');
+  var leads=SAFETY_LEADS.map(personRow).join('');
+  document.getElementById('sec_emergency').innerHTML=
+    '<button class="back-btn" type="button" id="emBack">'+esc(t('back'))+'</button>'
+    +'<div class="site-strip">Site address &mdash; give this to 911 <span class="es">/ Direcci&oacute;n del sitio &mdash; d&eacute;sela al 911</span>'
+    +'<span class="addr">Amgen ANC-2 &middot; '+site+'</span>'
+    +'<span style="font-weight:600;color:#e8d9a8">(Holly Springs) &middot; <a href="'+maps(site)+'" target="_blank" rel="noopener">Map / Mapa</a></span></div>'
+
+    +'<div class="emergency-call-row">'
+    +'<a class="emergency-call-btn medic" href="tel:'+digits(ats.main)+'">'
+    +'<span class="emergency-call-label">ATS &mdash; SITE EMERGENCY <span class="es">/ EMERGENCIA DEL SITIO</span></span>'
+    +'<span class="emergency-call-num">'+esc(fmtPhone(ats.main))+'</span>'
+    +'<span class="emergency-call-sub">On-site medic &mdash; call for any injury or medical emergency<br><span class="es">M&eacute;dico en sitio &mdash; llame por cualquier lesi&oacute;n o emergencia m&eacute;dica</span></span>'
+    +'</a>'
+    +'<a class="emergency-call-btn e911" href="tel:911">'
+    +'<span class="emergency-call-num" style="font-size:40px;">911</span>'
+    +'<span class="emergency-call-sub">Unconscious, severe bleeding, heart attack, stroke, serious fall<br><span class="es">Inconsciente, sangrado severo, ataque card&iacute;aco, derrame, ca&iacute;da grave</span></span>'
+    +'</a>'
+    +'</div>'
+    +(ats.alt?'<p style="margin:-8px 0 14px;text-align:center;font-size:13px;color:var(--text-2)">ATS second number / segundo n&uacute;mero: <a href="tel:'+digits(ats.alt)+'" style="color:#ffe8a0">'+esc(fmtPhone(ats.alt))+'</a></p>':'')
+
+    +'<div class="emergency-section"><h3>What To Do <span class="es">/ Qu&eacute; Hacer</span></h3>'
+    +step(1,'Discover &amp; Call','Life-threatening: call 911 first and give the site address above. For any injury or medical emergency, call ATS Site Emergency right away &mdash; give your name, building and level, what happened, how many are hurt, and any active hazards.',
+             'Descubrir y Llamar','Si hay peligro de muerte, llame al 911 primero y d&eacute; la direcci&oacute;n del sitio. Para cualquier lesi&oacute;n o emergencia m&eacute;dica, llame de inmediato a Emergencia del Sitio ATS &mdash; d&eacute; su nombre, edificio y nivel, qu&eacute; pas&oacute;, cu&aacute;ntos heridos hay y cualquier peligro activo.')
+    +step(2,'Notify Turner Safety &amp; Your Supervisor','Call Turner Safety (numbers below) and tell your foreman and the Turner superintendent for your area.',
+             'Avisar a Seguridad Turner y a su Supervisor','Llame a Seguridad de Turner (n&uacute;meros abajo) y avise a su capataz y al superintendente de Turner de su &aacute;rea.')
+    +step(3,'Amgen Security Brings EMS In','If 911 was called, call Amgen Security. They meet EMS and direct them through the North Gate.',
+             'Seguridad de Amgen Recibe a EMS','Si se llam&oacute; al 911, llame a Seguridad de Amgen. Ellos reciben a EMS y los dirigen por la Puerta Norte.')
+    +step(4,'Guide Responders &amp; Protect the Scene','Send one person to the building entrance to walk responders straight to the injured person. Do not move the injured unless they are in danger. No photos of the injured.',
+             'Guiar a los Socorristas y Proteger la Escena','Mande a una persona a la entrada del edificio para llevar a los socorristas directo al herido. No mueva al herido a menos que est&eacute; en peligro. No tome fotos del herido.')
+    +'</div>'
+
+    +'<div class="emergency-section"><h3>Emergency Numbers <span class="es">/ N&uacute;meros de Emergencia</span></h3><div class="em-grid">'
+    +emRow('Amgen Security','Seguridad de Amgen — recibe a EMS en la Puerta Norte',sec.main)
+    +emRow('Turner Crisis Hotline','Línea de Crisis Turner · 1-866-3-TURNER · AlertMedia','(866) 388-7637')
+    +emRow('Poison Control','Control de Envenenamiento','(800) 222-1222')
+    +emRow('Holly Springs Police (non-emergency)','Policía de Holly Springs (no emergencia)','(919) 552-7110')
+    +emRow('Holly Springs Fire (non-emergency)','Bomberos de Holly Springs (no emergencia)','(919) 567-4733')
+    +'</div></div>'
+
+    +(leads?'<div class="emergency-section"><h3>Turner Safety <span class="es">/ Seguridad Turner</span></h3><div class="em-grid">'+leads+'</div>'
+      +'<a class="em-more" data-goto="safety" href="#">See the full Turner Safety Team <span class="es">/ Ver todo el equipo</span></a></div>':'')
+
+    +'<div class="emergency-section"><h3>Muster Points <span class="es">/ Puntos de Reuni&oacute;n</span></h3>'
+    +'<ul class="emergency-list">'
+    +'<li><b>Muster Point 1</b> &mdash; Break Tent <span class="es" style="display:inline">/ Punto 1 &mdash; Carpa de descanso</span></li>'
+    +'<li><b>Muster Point 2</b> &mdash; Trade Partner parking lot, by the bathrooms <span class="es" style="display:inline">/ Punto 2 &mdash; Estacionamiento de contratistas, junto a los ba&ntilde;os</span></li>'
+    +'</ul>'
+    +'<p style="margin-top:10px">Foremen report headcount to the Turner superintendent.<br><span class="es">Los capataces reportan el conteo al superintendente de Turner.</span></p></div>'
+
+    +'<div class="emergency-section"><h3>Hospital &amp; Clinic <span class="es">/ Hospital y Cl&iacute;nica</span></h3><div class="em-grid">'
+    +'<div class="em-place"><b>Emergency Room</b> <span class="es" style="display:inline">/ Sala de Emergencias</span><br>Rex Holly Springs Hospital<br>'
+    +'<span class="muted">850 S. Main Street, Holly Springs, NC 27540</span> &middot; <a href="'+maps('Rex Holly Springs Hospital, 850 S Main St, Holly Springs, NC 27540')+'" target="_blank" rel="noopener">Map</a></div>'
+    +'<div class="em-place"><b>Occupational Clinic</b> <span class="es" style="display:inline">/ Cl&iacute;nica Ocupacional</span><br>AFC Urgent Care &middot; <a href="tel:9195904099">(919) 590-4099</a><br>'
+    +'<span class="muted">1298 N. Main Street, Fuquay-Varina, NC 27526 &middot; M&ndash;F 7:30a&ndash;8p &middot; Sat&ndash;Sun 8a&ndash;5p</span> &middot; <a href="'+maps('AFC Urgent Care, 1298 N Main St, Fuquay-Varina, NC 27526')+'" target="_blank" rel="noopener">Map</a></div>'
+    +'</div></div>'
+
+    +'<div class="emergency-section"><h3>All Incidents Must Be Reported <span class="es">/ Todos los Incidentes Deben Reportarse</span></h3>'
+    +'<ul class="emergency-list">'
+    +'<li>Work injuries <span class="es" style="display:inline">/ Lesiones laborales</span></li>'
+    +'<li>First aid cases <span class="es" style="display:inline">/ Casos de primeros auxilios</span></li>'
+    +'<li>Near misses <span class="es" style="display:inline">/ Casi-accidentes</span></li>'
+    +'<li>Vehicle and equipment incidents <span class="es" style="display:inline">/ Incidentes de veh&iacute;culos y equipos</span></li>'
+    +'<li>Property damage and utility strikes <span class="es" style="display:inline">/ Da&ntilde;os a la propiedad y golpes a servicios</span></li>'
+    +'<li>Spills and releases <span class="es" style="display:inline">/ Derrames y fugas</span></li>'
+    +'</ul>'
+    +'<p style="margin-top:10px">Report right away to your supervisor and Turner Safety.<br><span class="es">Reporte de inmediato a su supervisor y a Seguridad de Turner.</span></p></div>';
 }
-document.getElementById('emBtn').addEventListener('click',openEmergency);
-document.getElementById('langBtn').addEventListener('click',function(){
-  lang = lang==='en'?'es':'en';
-  try{ localStorage.setItem('anc2lang',lang); }catch(e){}
-  applyLang();
+function showEmergency(){
+  state.em=true;
+  tabsEl.querySelectorAll('.tab-btn').forEach(function(b){ b.classList.remove('active'); });
+  secEl.querySelectorAll('.section').forEach(function(x){ x.classList.toggle('active',x.id==='sec_emergency'); });
+  renderEmergency();
+}
+document.getElementById('emBtn').addEventListener('click',function(){
+  showEmergency();
+  /* On a phone, jump straight to the call buttons; the EMERGENCY bar stays pinned above. */
+  if(window.innerWidth<700){ var b=document.getElementById('emBack'); window.scrollTo(0, b.getBoundingClientRect().top+window.pageYOffset-76); }
+  else window.scrollTo(0,0);
 });
+document.addEventListener('click',function(e){
+  if(e.target.closest('#emBack')){ setTab('all'); window.scrollTo(0,0); return; }
+  if(e.target.closest('#langBtn')){
+    lang = lang==='en'?'es':'en';
+    try{ localStorage.setItem('anc2lang',lang); }catch(err){}
+    applyLang(); return;
+  }
+  if(e.target.closest('#pendBtn')){ openPending(); return; }
+  if(e.target.closest('#lockStatusBtn')){
+    if(isUnlocked()) auth.signOut(); else requireUnlock(function(){ toast(t('unlocked')); });
+  }
+});
+if(location.hash==='#emergency') state.em=true;
 rebuild();
 })();
 </script>
