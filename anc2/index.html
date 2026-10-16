@@ -163,7 +163,11 @@
     box-shadow:0 0 18px rgba(201,168,76,0.16)}
   .emergency-call-btn.e911{background:linear-gradient(135deg,rgba(192,57,43,0.52),rgba(148,28,18,0.42));border-color:var(--ruby-border);color:#fff;
     box-shadow:0 0 22px var(--ruby-glow)}
-  .emergency-call-num{font-size:26px;font-weight:800;display:block;line-height:1.2}
+  .emergency-call-num{font-size:26px;font-weight:800;display:block;line-height:1.2;margin:4px 0}
+  .emergency-call-num.big{font-size:40px;line-height:1.05}
+  .emergency-call-btn.security{background:linear-gradient(135deg,rgba(47,140,255,0.32),rgba(20,86,184,0.22));border-color:var(--blue-border);color:#fff;
+    box-shadow:0 0 18px rgba(47,140,255,0.18)}
+  .emergency-call-btn.security .es{color:#cfe3ff}
   .emergency-call-label{font-size:13px;font-weight:700;display:block;margin-bottom:2px}
   .emergency-call-sub{font-size:12px;display:block;margin-top:2px;line-height:1.3}
   .emergency-call-btn.medic .es{color:#2a5dab}
@@ -266,8 +270,12 @@
     select{flex:1 1 45%;min-width:0}
     .count{width:100%;margin-left:0}
     .grid{grid-template-columns:1fr}
-    .emergency-call-num{font-size:20px}
-    .emergency-call-btn.e911 .emergency-call-num{font-size:34px !important}
+    .emergency-call-row{gap:6px}
+    .emergency-call-btn{padding:10px 4px;border-radius:10px}
+    .emergency-call-label{font-size:10.5px;line-height:1.25}
+    .emergency-call-num{font-size:14.5px;letter-spacing:-.2px}
+    .emergency-call-num.big{font-size:30px}
+    .emergency-call-sub{font-size:10.5px}
     .em-grid{grid-template-columns:1fr}
   }
 </style>
@@ -288,7 +296,7 @@
   </div>
   <footer>
     <span data-i="foot">For project communication only. Do not forward or post outside the project.</span><br>
-    <span style="opacity:.7">build v3.1 &middot; Oct 15, 2026</span>
+    <span style="opacity:.7">build v3.2 &middot; Oct 15, 2026</span>
   </footer>
 </div>
 
@@ -876,14 +884,20 @@ function renderEmergency(){
     +'<span style="font-weight:600;color:#e8d9a8">(Holly Springs) &middot; <a href="'+maps(site)+'" target="_blank" rel="noopener">Map / Mapa</a></span></div>'
 
     +'<div class="emergency-call-row">'
-    +'<a class="emergency-call-btn medic" href="tel:'+digits(ats.main)+'">'
-    +'<span class="emergency-call-label">ATS &mdash; SITE EMERGENCY <span class="es">/ EMERGENCIA DEL SITIO</span></span>'
-    +'<span class="emergency-call-num">'+esc(fmtPhone(ats.main))+'</span>'
-    +'<span class="emergency-call-sub">On-site medic &mdash; call for any injury or medical emergency<br><span class="es">M&eacute;dico en sitio &mdash; llame por cualquier lesi&oacute;n o emergencia m&eacute;dica</span></span>'
-    +'</a>'
     +'<a class="emergency-call-btn e911" href="tel:911">'
-    +'<span class="emergency-call-num" style="font-size:40px;">911</span>'
+    +'<span class="emergency-call-label">1 &middot; LIFE-THREATENING <span class="es">/ PELIGRO DE MUERTE</span></span>'
+    +'<span class="emergency-call-num big">911</span>'
     +'<span class="emergency-call-sub">Unconscious, severe bleeding, heart attack, stroke, serious fall<br><span class="es">Inconsciente, sangrado severo, ataque card&iacute;aco, derrame, ca&iacute;da grave</span></span>'
+    +'</a>'
+    +'<a class="emergency-call-btn medic" href="tel:'+digits(ats.main)+'">'
+    +'<span class="emergency-call-label">2 &middot; ATS SITE EMERGENCY <span class="es">/ EMERGENCIA DEL SITIO</span></span>'
+    +'<span class="emergency-call-num">'+esc(fmtPhone(ats.main))+'</span>'
+    +'<span class="emergency-call-sub">On-site medic &mdash; any injury or medical emergency<br><span class="es">M&eacute;dico en sitio &mdash; cualquier lesi&oacute;n o emergencia m&eacute;dica</span></span>'
+    +'</a>'
+    +'<a class="emergency-call-btn security" href="tel:'+digits(sec.main)+'">'
+    +'<span class="emergency-call-label">3 &middot; AMGEN SECURITY <span class="es">/ SEGURIDAD DE AMGEN</span></span>'
+    +'<span class="emergency-call-num">'+esc(fmtPhone(sec.main))+'</span>'
+    +'<span class="emergency-call-sub">Meets EMS and brings them through the North Gate<br><span class="es">Recibe a EMS y los dirige por la Puerta Norte</span></span>'
     +'</a>'
     +'</div>'
     +(ats.alt?'<p style="margin:-8px 0 14px;text-align:center;font-size:13px;color:var(--text-2)">ATS second number / segundo n&uacute;mero: <a href="tel:'+digits(ats.alt)+'" style="color:#ffe8a0">'+esc(fmtPhone(ats.alt))+'</a></p>':'')
@@ -900,7 +914,6 @@ function renderEmergency(){
     +'</div>'
 
     +'<div class="emergency-section"><h3>Emergency Numbers <span class="es">/ N&uacute;meros de Emergencia</span></h3><div class="em-grid">'
-    +emRow('Amgen Security','Seguridad de Amgen — recibe a EMS en la Puerta Norte',sec.main)
     +emRow('Turner Crisis Hotline','Línea de Crisis Turner · 1-866-3-TURNER · AlertMedia','(866) 388-7637')
     +emRow('Poison Control','Control de Envenenamiento','(800) 222-1222')
     +emRow('Holly Springs Police (non-emergency)','Policía de Holly Springs (no emergencia)','(919) 552-7110')
