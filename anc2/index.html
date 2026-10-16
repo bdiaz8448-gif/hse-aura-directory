@@ -288,7 +288,7 @@
   </div>
   <footer>
     <span data-i="foot">For project communication only. Do not forward or post outside the project.</span><br>
-    <span style="opacity:.7">build v3 &middot; Oct 15, 2026</span>
+    <span style="opacity:.7">build v3.1 &middot; Oct 15, 2026</span>
   </footer>
 </div>
 
@@ -355,7 +355,7 @@ var T = {
      edit:'Edit',del:'Delete',vacBtn:'🏝 My vacation / time off status',add:'+ Add person',
      live:'Live — syncing across all devices',offline:'Offline — showing the last saved copy',connecting:'Connecting…',
      starting:'Starting list — goes live the first time the owner unlocks',
-     unlocked:'🔓 Edit mode',lock:'Lock',pending:'Pending',lockedBtn:'🔒 Locked — tap to unlock editing',unlockedBtn:'🔓 Unlocked — tap to lock',langOther:'Español',back:'← Back to Contacts',
+     unlocked:'🔓 Edit mode',lock:'Lock',pending:'Pending',lockedBtn:'🔒 Locked — tap to unlock editing',unlockedBtn:'🔓 Unlocked — tap to lock',langOther:'Español',back:'← Back to Contacts',editPin:'Edit PIN',pinNewTitle:'Change your PIN',pinNewSub:'Numbers only. This is the same owner PIN as the Fujifilm Aura directory, so it changes there too.',pinNew:'New PIN',pinAgain:'Type the new PIN again',pinSave:'✓ Save new PIN',pinShort:'Use at least 4 numbers.',pinDigits:'Numbers only.',pinMismatch:'The two PINs do not match.',pin1234:'Not 1234 — pick another.',pinDone:'PIN changed. Use the new PIN next time you unlock.',pinRelog:'For safety, tap Lock, unlock again with your current PIN, then change it.',
      pinTitle:'Enter edit PIN',pinSub:'Needed to add, edit or delete.',unlock:'Unlock',badPin:'Incorrect PIN.',tooMany:'Too many tries. Wait a few minutes and try again.',
      notOwner:'That PIN does not have edit rights on this directory.',
      editTitle:'Edit person',addTitle:'Add person',fName:'Full name',fTitle:'Job title / role',fCo:'Company',fTrade:'Trade (optional)',
@@ -390,7 +390,7 @@ var T = {
      edit:'Editar',del:'Borrar',vacBtn:'🏝 Mis vacaciones / días libres',add:'+ Agregar persona',
      live:'En vivo — sincronizado en todos los dispositivos',offline:'Sin conexión — mostrando la última copia',connecting:'Conectando…',
      starting:'Lista inicial — se publica la primera vez que el dueño desbloquea',
-     unlocked:'🔓 Modo edición',lock:'Bloquear',pending:'Pendientes',lockedBtn:'🔒 Bloqueado — toque para editar',unlockedBtn:'🔓 Desbloqueado — toque para bloquear',langOther:'English',back:'← Volver a Contactos',
+     unlocked:'🔓 Modo edición',lock:'Bloquear',pending:'Pendientes',lockedBtn:'🔒 Bloqueado — toque para editar',unlockedBtn:'🔓 Desbloqueado — toque para bloquear',langOther:'English',back:'← Volver a Contactos',editPin:'Cambiar PIN',pinNewTitle:'Cambiar su PIN',pinNewSub:'Solo números. Es el mismo PIN del directorio Fujifilm Aura, así que cambia allá también.',pinNew:'PIN nuevo',pinAgain:'Escriba el PIN nuevo otra vez',pinSave:'✓ Guardar PIN nuevo',pinShort:'Use al menos 4 números.',pinDigits:'Solo números.',pinMismatch:'Los dos PIN no coinciden.',pin1234:'1234 no — escoja otro.',pinDone:'PIN cambiado. Use el PIN nuevo la próxima vez.',pinRelog:'Por seguridad, toque Bloquear, desbloquee con su PIN actual y luego cámbielo.',
      pinTitle:'Ingrese el PIN',pinSub:'Necesario para agregar, editar o borrar.',unlock:'Desbloquear',badPin:'PIN incorrecto.',tooMany:'Demasiados intentos. Espere unos minutos.',
      notOwner:'Ese PIN no tiene permiso de edición en este directorio.',
      editTitle:'Editar persona',addTitle:'Agregar persona',fName:'Nombre completo',fTitle:'Puesto',fCo:'Compañía',fTrade:'Oficio (opcional)',
@@ -604,7 +604,7 @@ function requireUnlock(action){
   if(!FB){ alert(t('offline')); return; }
   if(isUnlocked()){ ensureSeeded().then(action); return; }
   openModal('<p class="m-name">'+esc(t('pinTitle'))+'</p><p class="m-sub" style="margin-top:4px">'+esc(t('pinSub'))+'</p>'
-    +'<label class="f"><input id="pinInp" type="password" inputmode="numeric" autocomplete="off"></label>'
+    +'<label class="f"><input id="pinInp" type="password" inputmode="numeric" pattern="[0-9]*" autocomplete="off"></label>'
     +'<div class="actions"><a class="btn call" href="#" id="pinGo">'+esc(t('unlock'))+'</a><a class="btn" href="#" data-close="1">'+esc(t('close'))+'</a></div>');
   var inp=document.getElementById('pinInp'); setTimeout(function(){ inp.focus(); },50);
   function go(e){
@@ -624,6 +624,7 @@ function renderAdminBar(){
   var el=document.getElementById('adminbar'); if(!el) return;
   var un=isUnlocked(), n=pendChg.length+pendRem.length;
   el.innerHTML='<button type="button" id="lockStatusBtn" class="'+(un?'unlocked':'')+'">'+esc(un?t('unlockedBtn'):t('lockedBtn'))+'</button>'
+    +(un?'<button type="button" id="pinBtn">'+esc(t('editPin'))+'</button>':'')
     +(un?'<button type="button" id="pendBtn">🔔 '+esc(t('pending'))+' <span class="badge">'+n+'</span></button>':'')
     +'<button type="button" id="langBtn">'+esc(t('langOther'))+'</button>';
 }
@@ -954,11 +955,34 @@ document.addEventListener('click',function(e){
     applyLang(); return;
   }
   if(e.target.closest('#pendBtn')){ openPending(); return; }
+  if(e.target.closest('#pinBtn')){ openChangePin(); return; }
   if(e.target.closest('#lockStatusBtn')){
     if(isUnlocked()) auth.signOut(); else requireUnlock(function(){ toast(t('unlocked')); });
   }
 });
 if(location.hash==='#emergency') state.em=true;
+
+/* Edit PIN, same as the Aura directory: changes the owner sign-in password. The PIN is never stored in the database. */
+function openChangePin(){
+  if(!isUnlocked()){ requireUnlock(openChangePin); return; }
+  var box=function(id,label){ return '<label class="f"><span>'+esc(label)+'</span><input id="'+id+'" type="password" inputmode="numeric" pattern="[0-9]*" autocomplete="new-password"></label>'; };
+  openModal('<p class="m-name">'+esc(t('pinNewTitle'))+'</p><p class="m-sub" style="margin-top:4px">'+esc(t('pinNewSub'))+'</p>'
+    +box('pinA',t('pinNew'))+box('pinB',t('pinAgain'))
+    +'<div class="actions"><a class="btn call" href="#" id="pinSave">'+esc(t('pinSave'))+'</a><a class="btn" href="#" data-close="1">'+esc(t('close'))+'</a></div>');
+  var a=document.getElementById('pinA'), b=document.getElementById('pinB'); setTimeout(function(){ a.focus(); },50);
+  function save(e){
+    if(e) e.preventDefault();
+    var p1=a.value.trim(), p2=b.value.trim();
+    if(!/^\d+$/.test(p1)){ alert(t('pinDigits')); return; }
+    if(p1.length<4){ alert(t('pinShort')); return; }
+    if(p1==='1234'){ alert(t('pin1234')); return; }
+    if(p1!==p2){ alert(t('pinMismatch')); b.value=''; b.focus(); return; }
+    auth.currentUser.updatePassword('aura!'+p1).then(function(){ closeModal(); toast(t('pinDone')); })
+      .catch(function(err){ alert(err.code==='auth/requires-recent-login'?t('pinRelog'):err.message); });
+  }
+  document.getElementById('pinSave').addEventListener('click',save);
+  b.addEventListener('keydown',function(e){ if(e.key==='Enter') save(e); });
+}
 rebuild();
 })();
 </script>
