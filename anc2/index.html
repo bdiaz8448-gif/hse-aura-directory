@@ -278,6 +278,59 @@
     .emergency-call-sub{font-size:10.5px}
     .em-grid{grid-template-columns:1fr}
   }
+
+  /* ── v3.9 look (18 Oct): brighter, whiter text; lit white tab outlines; brighter EMERGENCY ── */
+  h1{letter-spacing:.3px;text-shadow:0 0 18px rgba(255,255,255,0.12)}
+  .tabs{gap:8px}
+  .tab-btn{font-size:16.5px;font-weight:700;color:#fff;letter-spacing:.2px;border:2px solid rgba(255,255,255,0.88);
+    background:linear-gradient(135deg,rgba(255,255,255,0.075),rgba(255,255,255,0.030));
+    box-shadow:0 0 12px rgba(255,255,255,0.16),0 6px 14px rgba(0,0,0,0.45),inset 0 1px 0 rgba(255,255,255,0.18);
+    text-shadow:0 1px 3px rgba(0,0,0,0.6)}
+  .tab-btn .n{color:#fff;opacity:.9;font-size:12px}
+  .tab-btn:not(.active):hover{border-color:#00d4ff;color:#bff3ff;background:rgba(0,212,255,0.12);box-shadow:0 0 16px rgba(0,212,255,0.30),0 6px 14px rgba(0,0,0,0.45)}
+  .tab-btn.active{border:2px solid #00d4ff;color:#00d4ff;
+    background:linear-gradient(135deg,rgba(0,212,255,0.22),rgba(0,150,200,0.12));
+    box-shadow:0 0 20px rgba(0,212,255,0.45),0 6px 14px rgba(0,0,0,0.45),inset 0 1px 0 rgba(0,212,255,0.30)}
+  .tab-btn.active .n{color:#00d4ff}
+
+  .sync-row button{color:#fff;font-weight:600;border:1.5px solid rgba(255,255,255,0.70)}
+  .sync-row button:hover{border-color:#00d4ff;color:#bff3ff}
+  #lockStatusBtn.unlocked{color:#8dff8d;border:1.5px solid rgba(111,207,111,0.85)}
+  #pendBtn{color:#ffd0a8;border:1.5px solid rgba(255,140,60,0.85)}
+
+  .hint{color:#fff;font-size:13px;opacity:.95}
+  .search{color:#fff;border:1.5px solid rgba(255,255,255,0.75);background:rgba(255,255,255,0.07)}
+  .search::placeholder{color:#fff;opacity:.92}
+  select{color:#fff;border:1.5px solid rgba(255,255,255,0.55)}
+  .count{color:#fff}
+
+  /* EMERGENCY: brighter red, white outline, slow glow so it always stands out */
+  .hotline-bar{border:2px solid rgba(255,255,255,0.92);font-size:21px;letter-spacing:2.5px;
+    background:linear-gradient(135deg,#e53935,#b71c1c);
+    box-shadow:0 0 0 3px rgba(229,57,53,0.35),0 0 28px rgba(229,57,53,0.55),inset 0 1px 0 rgba(255,255,255,0.30);
+    animation:emGlow 2.4s ease-in-out infinite}
+  .hotline-bar:hover{background:linear-gradient(135deg,#ef4b46,#c62828)}
+  .hotline-bar:active{background:linear-gradient(135deg,#c62828,#8e1414)}
+  @keyframes emGlow{0%,100%{box-shadow:0 0 0 3px rgba(229,57,53,0.30),0 0 22px rgba(229,57,53,0.45),inset 0 1px 0 rgba(255,255,255,0.30)}
+    50%{box-shadow:0 0 0 4px rgba(229,57,53,0.50),0 0 38px rgba(229,57,53,0.75),inset 0 1px 0 rgba(255,255,255,0.30)}}
+  @media (prefers-reduced-motion:reduce){.hotline-bar{animation:none}}
+
+  /* Edit window / pop-ups: everything readable in white on the phone */
+  #modal{border:1.5px solid rgba(255,255,255,0.55)}
+  .m-name{color:#fff}
+  .m-title,.m-sub,.note,.divider{color:#fff;opacity:.9}
+  .f span{color:#fff;font-size:13px;font-weight:600}
+  .f input,.f textarea,.f select{color:#fff;border:1.5px solid rgba(255,255,255,0.55);background:rgba(255,255,255,0.08)}
+  .f input::placeholder,.f textarea::placeholder{color:rgba(255,255,255,0.75)}
+  .checks label{color:#fff;border:1.5px solid rgba(255,255,255,0.40)}
+  .lbl{color:rgba(255,255,255,0.85)}
+  .x{color:#fff;border:1.5px solid rgba(255,255,255,0.6)}
+  .btn.ghost,.btn.plain,#modal .btn:not(.call):not(.save):not(.red):not(.redline):not(.del):not(.vacbtn){border:1.5px solid rgba(255,255,255,0.55);color:#fff}
+
+  @media (max-width:560px){
+    .tab-btn{font-size:14.5px;height:52px}
+    .hotline-bar{font-size:19px}
+  }
 </style>
 </head>
 <body>
