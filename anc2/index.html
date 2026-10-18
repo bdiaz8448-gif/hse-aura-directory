@@ -333,6 +333,9 @@
 
   @media (max-width:560px){
     .tab-btn{font-size:14.5px;height:52px}
+    /* v3.9.3 phones: white outlines one step thinner */
+    .tab-btn,.tab-btn.active,.hotline-bar{border-width:1.5px}
+    .sync-row button,.search,select,#modal,.f input,.f textarea,.f select,.checks label,.x,.btn.ghost,.btn.plain,#modal .btn:not(.call):not(.save):not(.red):not(.redline):not(.del):not(.vacbtn){border-width:1px}
     .hotline-bar{font-size:19px}
   }
 </style>
@@ -353,7 +356,7 @@
   </div>
   <footer>
     <span data-i="foot">For project communication only. Do not forward or post outside the project.</span><br>
-    <span style="opacity:.7">build v3.9.2 &middot; Oct 18, 2026</span>
+    <span style="opacity:.7">build v3.9.3 &middot; Oct 18, 2026</span>
   </footer>
 </div>
 
@@ -1096,7 +1099,7 @@ function openChangePin(){
    The contacts already sync live through Firestore. This makes the PAGE itself update too:
    on open, when the app comes back to the screen, and every 5 minutes it reads version.json
    (never cached). If a newer build is published, the page reloads itself once. */
-var BUILD='3.9.2';
+var BUILD='3.9.3';
 function checkVersion(){
   if(!window.fetch) return;
   fetch('version.json?t='+Date.now(),{cache:'no-store'}).then(function(r){ return r.ok?r.json():null; }).then(function(v){
