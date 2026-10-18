@@ -532,7 +532,8 @@ function toast(msg){ var el=document.getElementById('toast'); el.textContent=msg
 
 /* ---------- tabs + sections ---------- */
 var state = {tab:'all'};
-try{ var st=localStorage.getItem('anc2tab'); if(st && TABS.some(function(x){return x.id===st;})) state.tab=st; }catch(e){}
+/* Always open on Contacts (he asked 18 Oct); people pick another tab from there. */
+state.tab='all'; try{ localStorage.removeItem('anc2tab'); }catch(e){}
 var tabsEl=document.getElementById('tabs'), secEl=document.getElementById('sections');
 TABS.forEach(function(tb){
   var b=document.createElement('button'); b.type='button'; b.className='tab-btn'; b.dataset.tab=tb.id; tabsEl.appendChild(b);
@@ -580,7 +581,6 @@ function applyLang(){
 }
 function setTab(id){
   state.tab=id; state.em=false;
-  try{ localStorage.setItem('anc2tab',id); }catch(e){}
   tabsEl.querySelectorAll('.tab-btn').forEach(function(b){ b.classList.toggle('active',b.dataset.tab===id); });
   secEl.querySelectorAll('.section').forEach(function(s){ s.classList.toggle('active',s.id==='sec_'+id); });
   render(id);
